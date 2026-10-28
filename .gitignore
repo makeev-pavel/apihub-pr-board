@@ -1,0 +1,7 @@
+_site/
+node_modules/
+.idea/
+.vscode/
+.playwright-mcp/
+test-results/
+playwright-report/

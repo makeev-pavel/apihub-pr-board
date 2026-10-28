@@ -1,0 +1,51 @@
+# Data
+
+## Configuration
+
+- **DATA-1** The target repository is set by the `PR_BOARD_REPO` variable as `owner/name`: a repository variable
+  in CI, an environment variable locally. The build stops with a message naming the variable when it is missing or
+  malformed. Nothing in the repository names the target organization.
+- **DATA-2** With mock data the dev server always shows the fictional `acme/widgets`, whatever `PR_BOARD_REPO`
+  says. Live mode (`npm run dev:live`) needs `PR_BOARD_REPO`, like a build.
+
+## Snapshot
+
+- **DATA-3** A scheduled workflow runs hourly from 06:00 to 17:00 UTC, Monday to Friday, on every push to `main`,
+  and on demand. It builds the page and publishes `prs.json` next to it on GitHub Pages.
+- **DATA-4** The page opens with `prs.json`, so it works for everyone without a token.
+- **DATA-5** `prs.json` holds the repository name, the generation time, the workflow run link, warnings, and the
+  normalized PRs. The page checks its shape: a file without a PR list counts as broken, and missing optional fields
+  get defaults.
+
+## Refresh
+
+- **DATA-6** **Refresh** queries GitHub from the browser with the viewer's fine-grained token (public repository
+  read access) and replaces the data on the page. The page then marks the data as live.
+- **DATA-7** A second Refresh cannot start while one is running.
+- **DATA-8** Refresh skips the parts of the query that only hidden columns show: failed check details when CI is
+  hidden, and comment and review bodies when Last comment is hidden. Search cannot match comment text until a
+  refresh with the column shown. The snapshot is shared and always complete.
+
+## Collected fields
+
+- **DATA-9** One GraphQL query, 50 PRs a page, newest first, collects for each open PR:
+  - number, title, URL, draft flag, target branch, created and updated time, and mergeability;
+  - the author and up to 10 assignees, with avatars, and whether the author is a GitHub bot;
+  - up to 30 labels with color and description;
+  - up to 10 linked issues from the Development field (number, title, URL) and up to 10 GitHub Projects;
+  - the latest decision of up to 20 reviewers and up to 20 pending review requests, users and teams;
+  - the overall CI state of the last commit and, for failing PRs only, the failed checks among the first 100;
+  - the last 5 issue comments and the last 10 review summaries.
+- **DATA-10** Only the two newest comments are kept, issue comments and review summaries together. Comments that are
+  empty or hold only HTML comment markers are skipped. Each kept body is cut at 4,000 characters and marked as cut.
+- **DATA-11** A label color that is not six hex digits is dropped, and the label shows in neutral colors.
+- **DATA-12** Entries that GitHub returns as `null` inside lists are skipped.
+
+## Errors
+
+- **DATA-13** An HTTP error, a GraphQL error, a response that is not JSON, or a network failure stops the build or
+  the refresh with a readable message. A rejected token says to create a new one.
+- **DATA-14** A forbidden Projects field is a partial error: the data loads, the page shows a warning, and project
+  membership counts as unknown instead of empty.
+- **DATA-15** When GitHub returns fewer PRs than its `totalCount`, the page shows a warning.
+- **DATA-16** When `prs.json` is missing or broken, the page says so and suggests Refresh with a token.

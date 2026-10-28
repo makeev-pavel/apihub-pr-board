@@ -1,0 +1,66 @@
+name: Publish board
+
+on:
+  schedule:
+    # Hourly, 06:00-17:00 UTC, Monday to Friday.
+    - cron: '0 6-17 * * 1-5'
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+# Never cancel a deploy that is already running; a newer run waits for it instead.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Check types
+        run: npm run typecheck
+
+      - name: Run tests
+        run: npm test
+
+      # The target repository is a repository variable, so the code never names it.
+      - name: Build page
+        env:
+          PR_BOARD_REPO: ${{ vars.PR_BOARD_REPO }}
+        run: npx vite build
+
+      # Only this step sees the token.
+      - name: Fetch pull requests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_BOARD_REPO: ${{ vars.PR_BOARD_REPO }}
+        run: node scripts/build-site.ts _site
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
