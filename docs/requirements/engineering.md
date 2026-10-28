@@ -29,7 +29,8 @@ and `npm run test:screenshots:update` (task 22).
 Now:
 
 ```text
-src/            the page: app.tsx (UI), github.ts (query and clients), model.ts (rules), settings.ts, markdown.ts
+src/            the page: app.tsx (UI), model.ts (rules), settings.ts, markdown.ts, repository.ts, config.ts
+src/github/     the GraphQL query, raw types, normalization, and the GraphQL and REST clients
 dev/            Vite plugin with the mocks, scenarios, the DEV panel, and fixtures
 scripts/        build-site.ts writes prs.json after vite build
 test/           unit tests, one file per module
@@ -37,7 +38,7 @@ docs/           requirements and decisions
 tasks/          the current plan and task list
 ```
 
-*Planned (tasks 11–18):* `src/github/`, `src/model/`, `src/board/` (logic without React), `src/hooks/`,
+*Planned (tasks 12–18):* `src/model/`, `src/board/` (logic without React), `src/hooks/`,
 `src/components/`, `src/styles/`, `dev/scenarios/`, and `e2e/` for browser and screenshot
 tests. No source file over about 300 lines.
 
@@ -75,7 +76,7 @@ export const COMMENT_BODY_LIMIT = 4000;
 
 - `npm run dev` serves the page with a Vite plugin (`dev/mock-plugin.ts`) that answers `/prs.json`, the GraphQL
   endpoint for Refresh, and the REST endpoints for the comments panel from mock scenarios, and injects the DEV
-  panel. Vite restarts when files under `dev/` or `src/github.ts` change.
+  panel. Vite restarts when files under `dev/` or `src/github/` change.
 - The DEV panel switches scenarios:
   - `prs.json` on page load: typical board and corner cases, typical board only, corner cases only, no PRs,
     300 PRs, project data unavailable, a three-day-old snapshot, a slow load, a missing file, invalid JSON, and JSON

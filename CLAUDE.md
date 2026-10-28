@@ -9,9 +9,10 @@ A board of the open pull requests of one GitHub repository, published on GitHub 
 
 ## Layout
 
-- `src/github.ts`: the GraphQL query, pagination, normalization, and the REST client for comments. Shared by the
-  scheduled build and the page, so it must not use Node APIs.
-- `src/types.ts`: the shape of `prs.json` and of derived rows. Raw GraphQL types live in `src/github.ts`.
+- `src/github/`: the GitHub side, shared by the scheduled build and the page, so it must not use Node APIs.
+  `query.ts` (the GraphQL query), `raw.ts` (raw GraphQL and REST types), `normalize.ts` (raw nodes to `PullRequest`),
+  `graphql.ts` (open PRs, page by page), `rest.ts` (all comments of one PR), `http.ts` (shared error and fetch type).
+- `src/types.ts`: the shape of `prs.json` and of derived rows. Raw GraphQL types live in `src/github/raw.ts`.
 - `src/model.ts`: rules without UI: attention, bots, areas, search, and report parsing.
 - `src/repository.ts` and `src/config.ts`: the target repository from `PR_BOARD_REPO`, passed to the page by Vite
   `define`. `vite.config.ts` parses it once; with mock data the dev server always uses `acme/widgets`.
@@ -25,15 +26,15 @@ A board of the open pull requests of one GitHub repository, published on GitHub 
 
 ## Working rules
 
-- When a field is added to the query, update the raw types, `normalizePullRequest`, `src/types.ts`, the fixtures, a
-  corner case, and the tests.
+- When a field is added to the query (`src/github/query.ts`), update `raw.ts`, `normalizePullRequest`, `src/types.ts`,
+  the fixtures, a corner case, and the tests.
 - UI text, code comments, and docs are in English. Talk to the user in Russian.
 - Never name the target organization or real people in the repository (see the boundaries in the spec).
 - Commits go to the working branch as tasks land; push only when the user confirms.
 
 ## Gotchas
 
-- The mocks run inside the Vite config, so Vite restarts when `src/github.ts` or anything under `dev/` changes.
+- The mocks run inside the Vite config, so Vite restarts when `src/github/` or anything under `dev/` changes.
   Edits to other `src/` files hot-reload.
 - The Playwright MCP browser can open the dev server and take screenshots; it writes only inside the repository
   (`.playwright-mcp/`, ignored by git).

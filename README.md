@@ -11,7 +11,7 @@ The requirements are in [docs/requirements/](docs/requirements/README.md).
 - A scheduled workflow (hourly on weekdays) queries the GitHub GraphQL API and publishes `prs.json` next to the page.
 - The page is React and TypeScript, bundled by Vite.
 - **Refresh** queries GitHub from the browser with the viewer's own fine-grained token, stored only in that browser.
-- `src/github.ts` holds the query and the normalization. The workflow and the Refresh button both use it.
+- `src/github/` holds the query, the normalization, and the GitHub clients. The workflow and the page both use it.
 
 ## Using the board
 

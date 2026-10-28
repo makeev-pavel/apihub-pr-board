@@ -1,7 +1,7 @@
 // Mock scenarios for the dev server: what /prs.json returns, and how the GraphQL mock behind Refresh behaves.
 
-import { normalizePullRequest } from '../src/github.ts';
-import type { RawActor, RawResponse, RestComment, RestReview } from '../src/github.ts';
+import { normalizePullRequest } from '../src/github/normalize.ts';
+import type { RawActor, RawResponse, RestComment, RestReview } from '../src/github/raw.ts';
 import type { Report } from '../src/types.ts';
 import { cornerCaseNodes } from './fixtures/corner-cases.ts';
 import type { FixtureEntry } from './fixtures/corner-cases.ts';

@@ -1,6 +1,6 @@
 // Shared by the corner case topics: the default PR and the clock.
 
-import type { RawPullRequest } from '../../../src/github.ts';
+import type { RawPullRequest } from '../../../src/github/raw.ts';
 import { agoFrom, conn, ISSUES_URL, PULLS_URL, rollup, user } from '../builders.ts';
 import type { FixtureEntry } from '../corner-cases.ts';
 

@@ -2,7 +2,7 @@
 
 import type {
   RawActor, RawCheckRun, RawLabel, RawReview, RawReviewRequest, RawRollup, RawStatusContext,
-} from '../../src/github.ts';
+} from '../../src/github/raw.ts';
 import { avatarUrl } from '../avatars.ts';
 import { REPO_URL } from './people.ts';
 

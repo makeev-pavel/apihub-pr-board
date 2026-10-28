@@ -230,7 +230,7 @@ after it, and no test changes except import paths.
 into `src/github/` modules.
 
 **Acceptance criteria:**
-- [ ] Each module is under about 200 lines; no module imports a Node API.
+- [x] Each module is under about 200 lines; no module imports a Node API.
 
 **Verification:** all suites and the build. **Dependencies:** checkpoint "safety net".
 **Files:** `src/github/{query,raw,normalize,graphql,rest}.ts`, importers. **Scope:** M.

@@ -3,7 +3,7 @@
 
 import { existsSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { fetchOpenPullRequests } from '../src/github.ts';
+import { fetchOpenPullRequests } from '../src/github/graphql.ts';
 import { parseRepository, REPO_VARIABLE } from '../src/repository.ts';
 
 const outDir = path.resolve(process.argv[2] || '_site');

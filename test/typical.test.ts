@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizePullRequest } from '../src/github.ts';
+import { normalizePullRequest } from '../src/github/normalize.ts';
 import { derive } from '../src/model.ts';
 import { cornerCaseNodes } from '../dev/fixtures/corner-cases.ts';
 import { BOTS, PEOPLE } from '../dev/fixtures/people.ts';

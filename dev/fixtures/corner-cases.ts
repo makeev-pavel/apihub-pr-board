@@ -1,7 +1,7 @@
 // Corner cases as raw GraphQL pull request nodes, sorted by topic under cases/. The dev server runs them through the
 // same normalizePullRequest() as real data, so they exercise parsing as well as layout.
 
-import type { RawPullRequest } from '../../src/github.ts';
+import type { RawPullRequest } from '../../src/github/raw.ts';
 import { titleCases } from './cases/titles.ts';
 import { authorCases } from './cases/authors.ts';
 import { checkCases } from './cases/checks.ts';

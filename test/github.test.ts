@@ -1,7 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { COMMENT_BODY_LIMIT, failedChecks, fetchAllComments, fetchOpenPullRequests, normalizeLabel, normalizePullRequest, recentComments, reviewState } from '../src/github.ts';
-import type { RawPullRequest } from '../src/github.ts';
+import { fetchOpenPullRequests } from '../src/github/graphql.ts';
+import {
+  COMMENT_BODY_LIMIT, failedChecks, normalizeLabel, normalizePullRequest, recentComments, reviewState,
+} from '../src/github/normalize.ts';
+import { fetchAllComments } from '../src/github/rest.ts';
+import type { RawPullRequest } from '../src/github/raw.ts';
 import { REFRESH_SCENARIOS } from '../dev/scenarios.ts';
 
 const repository = { owner: 'acme', name: 'widgets' };

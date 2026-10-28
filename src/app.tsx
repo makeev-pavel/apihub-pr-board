@@ -1,8 +1,9 @@
 import { createContext, memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, Dispatch, FormEvent, KeyboardEvent, MouseEvent, PointerEvent, ReactNode, SetStateAction } from 'react';
 import { REPOSITORY } from './config.ts';
-import { fetchAllComments, fetchOpenPullRequests, REST_URL } from './github.ts';
-import type { AllComments } from './github.ts';
+import { fetchOpenPullRequests } from './github/graphql.ts';
+import { fetchAllComments, REST_URL } from './github/rest.ts';
+import type { AllComments } from './github/rest.ts';
 import { markdownText, renderMarkdown } from './markdown.ts';
 import {
   AREAS, DEFAULT_RULES, derive, isBot, matchesQuery, parseQuery, parseReport, SEARCH_QUALIFIERS, TITLE_TYPES, toggleLabelFilter,

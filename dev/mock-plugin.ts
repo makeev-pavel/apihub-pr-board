@@ -3,7 +3,7 @@
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Plugin } from 'vite';
-import { fetchOpenPullRequests } from '../src/github.ts';
+import { fetchOpenPullRequests } from '../src/github/graphql.ts';
 import type { Repository } from '../src/repository.ts';
 import type { DevConfig } from '../src/types.ts';
 import { AVATAR_PATH, avatarSvg } from './avatars.ts';

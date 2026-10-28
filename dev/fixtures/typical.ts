@@ -1,7 +1,7 @@
 // A typical board of ordinary PRs, generated instead of copied from a real repository. States rotate by index, so
 // every CI, review, conflict, and area state appears; a seeded generator only varies texts, people, and ages.
 
-import type { RawPullRequest } from '../../src/github.ts';
+import type { RawPullRequest } from '../../src/github/raw.ts';
 import {
   agoFrom, bot, checks, conn, ISSUES_URL, label, PULLS_URL, requested, review, rollup, run, user,
 } from './builders.ts';
