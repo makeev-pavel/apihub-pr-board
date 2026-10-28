@@ -28,6 +28,7 @@ export const SEARCH_QUALIFIERS: Record<string, SearchQualifier> = {
     test: (pr, v) => (v === 'none' ? !pr.labels.length : anyIncludes(pr.labels.map((l) => l.name), v)),
   },
   base: { hint: 'base:develop', test: (pr, v) => includes(pr.base, v) },
+  repo: { hint: 'repo:widgets, repo:acme/widgets', test: (pr, v) => includes(pr.repo, v) },
   area: { hint: 'area:be, area:fe, area:other', test: (pr, v) => (v === 'other' ? !pr.areas.length : pr.areas.includes(v as AreaId)) },
   ci: { hint: 'ci:failing, ci:running, ci:passing, ci:none', test: (pr, v) => pr.ci.startsWith(v) },
   review: { hint: 'review:approved, review:changes, review:none', test: (pr, v) => pr.review.startsWith(v) },

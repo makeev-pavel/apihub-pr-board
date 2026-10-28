@@ -39,6 +39,7 @@ export function derive(pr: PullRequest, now: number, rules: Rules = DEFAULT_RULE
     commentText,
     searchText: [
       '#' + pr.number,
+      pr.repo,
       pr.title,
       authorKey,
       pr.base,

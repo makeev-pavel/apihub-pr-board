@@ -131,6 +131,6 @@ export function visibleRows(prs: DerivedPullRequest[], view: Pick<View, 'quick' 
     const kb = key(b);
     if (ka < kb) return -sign;
     if (ka > kb) return sign;
-    return b.number - a.number;
+    return b.number - a.number || a.repo.localeCompare(b.repo);
   });
 }

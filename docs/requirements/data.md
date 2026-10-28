@@ -60,11 +60,10 @@
   newest first, with the fields of **DATA-9**. A repository that does not exist or that the token cannot read is
   named in a warning, and the others load. *Planned: task R3.*
 - **DATA-19** `prs.json` lists the repositories it covers, and each PR names its repository. A file written before
-  this change, with one repository and PRs without one, still loads: its PRs belong to that repository.
-  *Planned: task R2.*
+  this change, with one repository and PRs without one, still loads: its PRs belong to that repository. A PR
+  whose repository is missing or not `owner/name` gets the file's only repository, or none when there are several.
 - **DATA-20** A PR is identified by its repository and number. Two PRs with the same number in different
   repositories are two rows with their own comments, and the comments panel reads each PR from its own repository.
-  *Planned: task R2.*
 - **DATA-21** With mock data the dev server shows `acme/widgets` alone by default. A DEV panel scenario adds the
   fictional `acme/gadgets`, with PR numbers that repeat those of `acme/widgets`. *Planned: task R3.*
 - **DATA-22** When the address asks for repositories (**FILTER-14**) that the snapshot does not cover, the page

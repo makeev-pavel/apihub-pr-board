@@ -104,12 +104,13 @@ export function failedChecks(rollup: RawRollup | null | undefined): Checks | nul
   return { failed, total: contexts.totalCount, complete: !(contexts.pageInfo && contexts.pageInfo.hasNextPage) };
 }
 
-export function normalizePullRequest(node: RawPullRequest, { projectsAvailable = true } = {}): PullRequest {
+export function normalizePullRequest(node: RawPullRequest, { repo = '', projectsAvailable = true } = {}): PullRequest {
   const commit = nodes(node.commits)[0];
   const rollup = commit && commit.commit && commit.commit.statusCheckRollup;
   const review = reviewState(nodes(node.latestOpinionatedReviews));
   const ci = (rollup && CI_BY_ROLLUP[rollup.state]) || 'none';
   return {
+    repo,
     number: node.number,
     title: node.title,
     url: node.url,

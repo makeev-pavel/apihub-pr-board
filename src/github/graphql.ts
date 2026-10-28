@@ -79,10 +79,11 @@ export async function fetchOpenPullRequests({
   if (rawNodes.length !== totalCount) {
     warnings.add('GitHub reported ' + totalCount + ' open pull requests but returned ' + rawNodes.length + '.');
   }
+  const repo = repositoryName(repository);
   return {
-    repo: repositoryName(repository),
+    repos: [repo],
     generatedAt: new Date().toISOString(),
     warnings: Array.from(warnings),
-    prs: rawNodes.map((node) => normalizePullRequest(node, { projectsAvailable })),
+    prs: rawNodes.map((node) => normalizePullRequest(node, { repo, projectsAvailable })),
   };
 }

@@ -235,3 +235,11 @@ test('PANEL-11: the comments panel reports a network failure and other HTTP erro
   const rejected = async () => new Response('{}', { status: 401 });
   await assert.rejects(fetchAllComments({ number: 7, repository, fetchImpl: rejected, restUrl }), /rejected the token/);
 });
+
+test('DATA-19: the client names the repository on the report and on every PR', async () => {
+  const report = await fetchOpenPullRequests({ token: 't', repository, fetchImpl: mockFetch('ok').fetchImpl });
+  assert.deepEqual(report.repos, ['acme/widgets']);
+  assert.ok(report.prs.length > 0);
+  assert.ok(report.prs.every((pr) => pr.repo === 'acme/widgets'));
+  assert.equal(normalizePullRequest(baseNode, { repo: 'acme/gadgets' }).repo, 'acme/gadgets');
+});

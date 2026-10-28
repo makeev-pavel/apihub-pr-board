@@ -454,8 +454,9 @@ column, the `repo:` qualifier, repositories and bots in the URL, and repositorie
 number, let `prs.json` list its repositories, and add `repo:` to search.
 
 **Acceptance criteria:**
-- [ ] Two PRs with the same number in different repositories show as two rows with separate comments.
-- [ ] Old `prs.json` files without `repo` on PRs still load.
+- [x] Two PRs with the same number in different repositories show as two rows with separate comments.
+  Unit tests cover the key; the browser check needs the two-repository scenario of R3 (DATA-21).
+- [x] Old `prs.json` files without `repo` on PRs still load.
 
 **Verification:** unit tests for normalization, `parseReport`, search, and keys; a corner case with equal numbers.
 **Dependencies:** R1. **Files:** `src/types.ts`, `src/github/normalize.ts`, `src/model/*.ts`,

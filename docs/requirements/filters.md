@@ -61,4 +61,4 @@
 ## Several repositories
 
 - **FILTER-15** The `repo:` qualifier matches the repository name or `owner/name`, such as `repo:gadgets` or
-  `-repo:acme/widgets`. Plain words match the repository name too. *Planned: task R2.*
+  `-repo:acme/widgets`. Plain words match the repository name too.

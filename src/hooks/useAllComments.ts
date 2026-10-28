@@ -1,8 +1,9 @@
 import { useContext, useEffect, useState } from 'react';
-import { REPOSITORY } from '../config.ts';
 import { ApiContext } from '../context.ts';
 import { fetchAllComments } from '../github/rest.ts';
 import type { AllComments } from '../github/rest.ts';
+import { pullRequestKey } from '../model/report.ts';
+import { isRepositoryName, parseRepository } from '../repository.ts';
 import type { Comment, DerivedPullRequest } from '../types.ts';
 
 type AllCommentsState =
@@ -19,10 +20,12 @@ export function useAllComments(pr: DerivedPullRequest, open: boolean): AllCommen
   useEffect(() => {
     if (!open) return undefined;
     let cancelled = false;
-    const key = pr.number + '@' + pr.updatedAt;
+    const key = pullRequestKey(pr) + '@' + pr.updatedAt;
     let request = allCommentsCache.get(key);
-    if (!request) {
-      request = fetchAllComments({ number: pr.number, repository: REPOSITORY, token: api.token, restUrl: api.restUrl });
+    if (!request && !isRepositoryName(pr.repo)) {
+      request = Promise.reject(new Error('The data does not say which repository PR #' + pr.number + ' belongs to.'));
+    } else if (!request) {
+      request = fetchAllComments({ number: pr.number, repository: parseRepository(pr.repo), token: api.token, restUrl: api.restUrl });
       allCommentsCache.set(key, request);
       request.catch(() => allCommentsCache.delete(key));
     }
@@ -32,6 +35,6 @@ export function useAllComments(pr: DerivedPullRequest, open: boolean): AllCommen
       (error: Error) => { if (!cancelled) setState({ status: 'error', error: error.message }); },
     );
     return () => { cancelled = true; };
-  }, [open, pr.number, pr.updatedAt, api.token, api.restUrl]);
+  }, [open, pr.repo, pr.number, pr.updatedAt, api.token, api.restUrl]);
   return state;
 }

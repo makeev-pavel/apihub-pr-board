@@ -64,3 +64,12 @@ test('FILTER-11: chips are active for labels the search asks for, not for exclud
   assert.deepEqual([...active], ['bug', 'good first issue']);
   assert.deepEqual([...activeLabelFilters(parseQuery(''))], []);
 });
+
+test('FILTER-15: repo: matches the repository name or owner/name, and plain words match it too', () => {
+  const fields = { repo: 'acme/gadgets' };
+  assert.ok(search('repo:gadgets', fields));
+  assert.ok(search('repo:ACME/Gadgets', fields));
+  assert.ok(!search('repo:widgets', fields));
+  assert.ok(!search('-repo:acme/gadgets', fields));
+  assert.ok(search('gadgets', fields));
+});

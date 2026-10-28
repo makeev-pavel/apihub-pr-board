@@ -21,12 +21,12 @@ function report(entries: FixtureEntry[], { now, warnings = [], projectsAvailable
   generatedAt?: number;
 }): Report {
   return {
-    repo: DEV_REPOSITORY,
+    repos: [DEV_REPOSITORY],
     generatedAt: new Date(generatedAt).toISOString(),
     runUrl: null,
     warnings,
     prs: entries.map(({ node, note }) => {
-      const pr = normalizePullRequest(node, { projectsAvailable });
+      const pr = normalizePullRequest(node, { repo: DEV_REPOSITORY, projectsAvailable });
       return note ? { ...pr, example: true, note } : pr;
     }),
   };

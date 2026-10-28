@@ -22,6 +22,7 @@ import { REST_URL } from './github/rest.ts';
 import { useColumnWidths } from './hooks/useColumnWidths.ts';
 import { useReportData } from './hooks/useReportData.ts';
 import { derive } from './model/derive.ts';
+import { pullRequestKey } from './model/report.ts';
 import { activeLabelFilters, parseQuery, toggleLabelFilter } from './model/search.ts';
 import { repositoryName } from './repository.ts';
 import { loadSettings, saveSettings } from './settings.ts';
@@ -117,7 +118,7 @@ export function App() {
   return (
     <ApiContext.Provider value={api}><RulesContext.Provider value={rules}>
       <header className="masthead">
-        <h1><span className="repo">{report ? report.repo : repositoryName(REPOSITORY)}</span>Open pull requests</h1>
+        <h1><span className="repo">{report ? report.repos.join(', ') : repositoryName(REPOSITORY)}</span>Open pull requests</h1>
         <div className="masthead-side">
           <Tiles base={base} active={view.quick} setQuick={(quick) => patch({ quick })} />
           {report ? <UpdateInfo report={report} live={data.source === 'live'} now={now} /> : null}
@@ -162,7 +163,7 @@ export function App() {
           <thead><tr>{columns.map((col, index) => <HeaderCell key={col.id} col={col} index={index} view={view} onSort={onSort} width={widths[col.id]} resize={resize} />)}</tr></thead>
           <tbody>
             {data.status === 'loading' ? <tr><td colSpan={columns.length}><div className="empty">Loading pull requests…</div></td></tr>
-              : rows.length ? rows.map((pr) => <Row key={pr.number} pr={pr} now={now} columns={columns} activeLabels={activeLabels} onToggleLabel={onToggleLabel} />)
+              : rows.length ? rows.map((pr) => <Row key={pullRequestKey(pr)} pr={pr} now={now} columns={columns} activeLabels={activeLabels} onToggleLabel={onToggleLabel} />)
                 : (
                   <tr><td colSpan={columns.length}><div className="empty">
                     <strong>No pull requests match this view</strong>

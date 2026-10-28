@@ -59,6 +59,8 @@ export interface Comment {
 }
 
 export interface PullRequest {
+  // owner/name; empty only when a broken prs.json left it unknown.
+  repo: string;
   number: number;
   title: string;
   url: string;
@@ -87,7 +89,8 @@ export interface PullRequest {
 }
 
 export interface Report {
-  repo: string;
+  // owner/name of every repository the report covers.
+  repos: string[];
   generatedAt: string;
   runUrl?: string | null;
   warnings: string[];
