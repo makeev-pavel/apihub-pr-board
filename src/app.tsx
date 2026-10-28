@@ -1,5 +1,20 @@
 import { createContext, memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import type { CSSProperties, Dispatch, FormEvent, KeyboardEvent, MouseEvent, PointerEvent, ReactNode, SetStateAction } from 'react';
+import type {
+  CSSProperties, Dispatch, FormEvent, KeyboardEvent, MouseEvent, PointerEvent, ReactNode, SetStateAction,
+} from 'react';
+import { authorsSummary, collectAuthors, selectedAuthors, toggleAuthor } from './board/authors.ts';
+import type { AuthorEntry } from './board/authors.ts';
+import { CONCLUSION_LABELS, groupChecks } from './board/checks.ts';
+import { COLUMNS, DEFAULT_WIDTHS, fitToWidth, FLEX_COLUMNS, MIN_COLUMN_PX, RESIZE_STEP_PX } from './board/columns.ts';
+import type { Column, Widths } from './board/columns.ts';
+import { displayLogin, formatAge, formatAgo, initials, labelTextColor, plural } from './board/format.ts';
+import { CI, DECISION_BY_REVIEW, LEGEND, MERGE, REVIEW, REVIEW_SECTIONS } from './board/states.ts';
+import type { StateInfo } from './board/states.ts';
+import { readColumnWidths, readToken, storeToken, writeColumnWidths } from './board/storage.ts';
+import {
+  AREA_OPTIONS, DEFAULT_VIEW, DRAFT_OPTIONS, filterPullRequests, QUICK, readView, visibleRows, writeView,
+} from './board/view.ts';
+import type { AuthorsFilter, SortKey, View } from './board/view.ts';
 import { REPOSITORY } from './config.ts';
 import { fetchOpenPullRequests } from './github/graphql.ts';
 import { fetchAllComments, REST_URL } from './github/rest.ts';
@@ -9,16 +24,16 @@ import { AREAS } from './model/areas.ts';
 import { derive } from './model/derive.ts';
 import { parseReport } from './model/report.ts';
 import { DEFAULT_RULES, isBot, TITLE_TYPES } from './model/rules.ts';
-import { matchesQuery, parseQuery, SEARCH_QUALIFIERS, toggleLabelFilter } from './model/search.ts';
 import type { Rules } from './model/rules.ts';
+import { parseQuery, SEARCH_QUALIFIERS, toggleLabelFilter } from './model/search.ts';
 import { repositoryName } from './repository.ts';
 import {
-  DEFAULT_SETTINGS, DENSITIES, isValidStaleDays, loadSettings, MAX_STALE_DAYS, MIN_STALE_DAYS, parseList, rulesAreDefault,
-  saveSettings, THEMES,
+  DEFAULT_SETTINGS, DENSITIES, isValidStaleDays, loadSettings, MAX_STALE_DAYS, MIN_STALE_DAYS, parseList,
+  rulesAreDefault, saveSettings, THEMES,
 } from './settings.ts';
 import type { Settings } from './settings.ts';
 import type {
-  Actor, AreaId, CiState, Comment, DerivedPullRequest, DevConfig, FailedCheck, Label, MergeState, PullRequest, Report, RequestedReviewer, Reviewer, ReviewState,
+  Actor, AreaId, Comment, DerivedPullRequest, DevConfig, Label, PullRequest, Report, RequestedReviewer, Reviewer,
 } from './types.ts';
 
 declare global {
@@ -28,15 +43,17 @@ declare global {
 }
 
 const DATA_URL = 'prs.json';
-const TOKEN_KEY = 'apihub-pr-board.token';
+
 const TOKEN_HELP_URL = 'https://github.com/settings/personal-access-tokens/new';
 const COPIED_FEEDBACK_MS = 1800;
 const CLOCK_TICK_MS = 60 * 1000;
 const POPOVER_GAP_PX = 6;
 const POPOVER_EDGE_PX = 16;
+
 // Open a popover upward when less than this much room is left below its trigger.
 const POPOVER_FLIP_PX = 260;
 const ATTENTION_POPOVER_PX = 300;
+
 // Comments open in a panel along the right edge of the window, so long reports have the full height.
 const COMMENTS_PANEL_PX = 560;
 const COMMENTS_PANEL_STYLE: CSSProperties = { top: POPOVER_EDGE_PX, right: POPOVER_EDGE_PX, bottom: POPOVER_EDGE_PX, width: COMMENTS_PANEL_PX };
@@ -44,149 +61,13 @@ const CHECKS_POPOVER_PX = 400;
 const REVIEW_POPOVER_PX = 320;
 const RULES_POPOVER_PX = 440;
 const UPDATE_POPOVER_PX = 280;
-// The reviewer state that stands behind each review code; the pill counts these reviewers.
-const DECISION_BY_REVIEW: Record<ReviewState, string | null> = {
-  approved: 'APPROVED', changes_requested: 'CHANGES_REQUESTED', none: null,
-};
-const REVIEW_SECTIONS = [
-  { state: 'APPROVED', title: 'Approved by' },
-  { state: 'CHANGES_REQUESTED', title: 'Changes requested by' },
-  { state: 'DISMISSED', title: 'Dismissed reviews' },
-];
-// Aggregate jobs that fail whenever anything else fails; listed last so the real cause comes first.
-const SUMMARY_CHECKS = new Set(['ci-ok']);
-const CONCLUSION_LABELS: Record<string, string> = {
-  failure: 'Failed', timed_out: 'Timed out', startup_failure: 'Did not start', action_required: 'Action required', error: 'Error',
-};
-const COLUMNS_KEY = 'apihub-pr-board.columns';
-const MIN_COLUMN_PX = 56;
-const RESIZE_STEP_PX = 16;
+
 const VISIBLE_LABELS = 4;
+
 // Header cells stack above the rows from this layer up; see .col-resizer in styles.css.
 const HEADER_LAYER = 2;
-// Relative luminance above which a label background needs dark text.
-const LIGHT_LABEL_LUMINANCE = 0.45;
+
 const DEV = window.PR_BOARD_DEV || null;
-
-interface StateInfo {
-  short: string;
-  label: string;
-  tone: string;
-  rank: number;
-  hint?: string;
-}
-
-// Cells show the short code; the full label is in the tooltip, the accessible name, and the legend.
-const CI: Record<CiState, StateInfo> = {
-  failing: { short: 'F', label: 'Failing', tone: 'bad', rank: 0, hint: 'At least one check failed' },
-  running: { short: 'R', label: 'Running', tone: 'warn running', rank: 1, hint: 'Checks are still running' },
-  none: { short: '—', label: 'No checks', tone: 'idle', rank: 2, hint: 'No checks reported for the last commit' },
-  passing: { short: 'P', label: 'Passing', tone: 'good', rank: 3, hint: 'All checks passed' },
-};
-const REVIEW: Record<ReviewState, StateInfo> = {
-  changes_requested: { short: 'CR', label: 'Changes requested', tone: 'bad', rank: 0 },
-  none: { short: '—', label: 'No approval', tone: 'idle', rank: 1 },
-  approved: { short: '✓', label: 'Approved', tone: 'good', rank: 2 },
-};
-const MERGE: Record<MergeState, StateInfo> = {
-  conflicts: { short: 'C', label: 'Conflicts', tone: 'bad', rank: 0, hint: 'Rebase or merge the target branch' },
-  unknown: { short: '?', label: 'Checking', tone: 'idle', rank: 1, hint: 'GitHub has not computed mergeability yet' },
-  clean: { short: 'OK', label: 'No conflicts', tone: 'good', rank: 2, hint: 'Merges cleanly into the target branch' },
-};
-const LEGEND: [string, Record<string, StateInfo>][] = [['CI', CI], ['Review', REVIEW], ['Conflicts', MERGE]];
-
-interface QuickFilter {
-  id: string;
-  label: string;
-  tone: string;
-  test: (pr: DerivedPullRequest) => boolean;
-}
-
-const QUICK: QuickFilter[] = [
-  { id: 'ci', label: 'CI failing', tone: 'bad', test: (pr) => pr.ci === 'failing' },
-  { id: 'review', label: 'Without approval', tone: 'warn', test: (pr) => pr.review !== 'approved' },
-  { id: 'conflicts', label: 'Merge conflicts', tone: 'bad', test: (pr) => pr.mergeable === 'conflicts' },
-  { id: 'attention', label: 'Need attention', tone: 'bad', test: (pr) => pr.attention.length > 0 },
-];
-
-type SortKey = 'number' | 'title' | 'author' | 'ci' | 'review' | 'merge' | 'age' | 'attention';
-type SortDir = 'asc' | 'desc';
-
-const SORTS: Record<SortKey, (pr: DerivedPullRequest) => number | string> = {
-  number: (pr) => pr.number,
-  title: (pr) => pr.title.toLowerCase(),
-  author: (pr) => pr.authorKey.toLowerCase(),
-  ci: (pr) => CI[pr.ci].rank,
-  review: (pr) => REVIEW[pr.review].rank,
-  merge: (pr) => MERGE[pr.mergeable].rank,
-  age: (pr) => -Date.parse(pr.createdAt),
-  attention: (pr) => pr.attention.length,
-};
-const isSortKey = (value: string | null): value is SortKey => value !== null && value in SORTS;
-
-interface Column {
-  id: string;
-  sort: SortKey | null;
-  label: string;
-  cls: string;
-  width: number;
-  hint?: string;
-  // Always shown: a row makes no sense without it.
-  required?: boolean;
-}
-
-type Widths = Record<string, number>;
-
-const COLUMNS: Column[] = [
-  { id: 'number', sort: 'number', label: '#', cls: 'c-num', width: 72, required: true },
-  { id: 'title', sort: 'title', label: 'Pull request', cls: 'c-title', width: 460, required: true },
-  { id: 'author', sort: 'author', label: 'Author', cls: 'c-person', width: 170 },
-  { id: 'ci', sort: 'ci', label: 'CI', cls: 'c-state', width: 60 },
-  { id: 'review', sort: 'review', label: 'Review', cls: 'c-state', width: 80 },
-  { id: 'merge', sort: 'merge', label: 'Conflicts', cls: 'c-state', width: 96 },
-  { id: 'age', sort: 'age', label: 'Age · activity', cls: 'c-age', width: 132 },
-  { id: 'assignee', sort: null, label: 'Assignee', cls: 'c-person', width: 170 },
-  { id: 'comment', sort: null, label: 'Last comment', cls: 'c-comment', width: 300 },
-  { id: 'attention', sort: 'attention', label: 'Attention', cls: 'c-attn', width: 104, hint: 'Click an icon to see why the PR needs attention' },
-];
-const DEFAULT_WIDTHS: Widths = Object.fromEntries(COLUMNS.map((c) => [c.id, c.width]));
-// Columns that absorb spare width so the table always fills the window.
-const FLEX_COLUMNS = ['title', 'comment'];
-
-// Widen flexible columns until the table fills the available width. The column being resized is
-// left alone so it follows the pointer, and saved widths stay as the user set them. When the flexible columns are
-// hidden or being resized, the last visible column takes the spare width.
-function fitToWidth(base: Widths, available: number, resizingId: string | null, columns: Column[]): Widths {
-  const total = columns.reduce((sum, c) => sum + base[c.id], 0);
-  if (!available || total >= available) return base;
-  let flex = FLEX_COLUMNS.filter((id) => id !== resizingId && columns.some((c) => c.id === id));
-  if (!flex.length) flex = [columns[columns.length - 1].id];
-  const extra = available - total;
-  const share = Math.floor(extra / flex.length);
-  const fitted = { ...base };
-  flex.forEach((id, i) => { fitted[id] += share + (i === 0 ? extra - share * flex.length : 0); });
-  return fitted;
-}
-
-type AreaFilter = 'all' | 'other' | AreaId;
-type DraftFilter = 'all' | 'ready' | 'draft';
-const AREA_OPTIONS: [AreaFilter, string][] = [['all', 'All'], ...AREAS.map((a): [AreaFilter, string] => [a.id, a.label]), ['other', 'Other']];
-const DRAFT_OPTIONS: [DraftFilter, string][] = [['all', 'All'], ['ready', 'Ready for review'], ['draft', 'Drafts']];
-
-// Authors: null shows people (no bots), 'all' and 'bots' are presets, a list names the selected logins.
-type AuthorsFilter = null | 'all' | 'bots' | string[];
-
-interface View {
-  q: string;
-  authors: AuthorsFilter;
-  draft: DraftFilter;
-  area: AreaFilter;
-  quick: string[];
-  sort: SortKey;
-  dir: SortDir;
-}
-
-const DEFAULT_VIEW: View = { q: '', authors: null, draft: 'ready', area: 'all', quick: [], sort: 'attention', dir: 'desc' };
 
 // The viewer's attention rules, for components deep in the table.
 const RulesContext = createContext<Rules>(DEFAULT_RULES);
@@ -197,93 +78,6 @@ interface Api {
   restUrl: string;
 }
 const ApiContext = createContext<Api>({ token: '', restUrl: REST_URL });
-
-function readToken(): string {
-  try { return localStorage.getItem(TOKEN_KEY) || ''; } catch { return ''; }
-}
-function storeToken(token: string) {
-  try {
-    if (token) localStorage.setItem(TOKEN_KEY, token); else localStorage.removeItem(TOKEN_KEY);
-  } catch { /* storage is blocked; the token lives only for this page load */ }
-}
-
-// Column widths are kept in this browser under their own key, apart from the other settings.
-function readColumnWidths(): Widths {
-  try {
-    const saved: Record<string, unknown> = JSON.parse(localStorage.getItem(COLUMNS_KEY) || '{}');
-    return Object.fromEntries(Object.entries(saved).filter((pair): pair is [string, number] => {
-      const [id, w] = pair;
-      return id in DEFAULT_WIDTHS && typeof w === 'number' && Number.isFinite(w) && w >= MIN_COLUMN_PX;
-    }));
-  } catch {
-    return {};
-  }
-}
-function writeColumnWidths(widths: Widths) {
-  try {
-    if (Object.keys(widths).length) localStorage.setItem(COLUMNS_KEY, JSON.stringify(widths)); else localStorage.removeItem(COLUMNS_KEY);
-  } catch { /* storage is blocked; widths live only for this page load */ }
-}
-
-function readView(): View {
-  const view = { ...DEFAULT_VIEW };
-  const params = new URLSearchParams(window.location.search);
-  const q = params.get('q');
-  if (q !== null) view.q = q;
-  const authors = params.get('authors');
-  if (authors !== null) {
-    view.authors = authors === 'all' || authors === 'bots' ? authors : authors.split(',').filter(Boolean);
-  }
-  const draft = DRAFT_OPTIONS.find(([id]) => id === params.get('draft'));
-  if (draft) view.draft = draft[0];
-  const area = AREA_OPTIONS.find(([id]) => id === params.get('area'));
-  if (area) view.area = area[0];
-  const quick = params.get('quick');
-  if (quick !== null) {
-    view.quick = quick.split(',').filter((id) => QUICK.some((f) => f.id === id));
-  }
-  const sort = params.get('sort');
-  if (isSortKey(sort)) view.sort = sort;
-  const dir = params.get('dir');
-  if (dir === 'asc' || dir === 'desc') view.dir = dir;
-  return view;
-}
-function writeView(view: View) {
-  const params = new URLSearchParams();
-  if (view.q) params.set('q', view.q);
-  if (view.authors) params.set('authors', typeof view.authors === 'string' ? view.authors : view.authors.join(','));
-  if (view.draft !== DEFAULT_VIEW.draft) params.set('draft', view.draft);
-  if (view.area !== DEFAULT_VIEW.area) params.set('area', view.area);
-  if (view.quick.length) params.set('quick', view.quick.join(','));
-  if (view.sort !== DEFAULT_VIEW.sort || view.dir !== DEFAULT_VIEW.dir) {
-    params.set('sort', view.sort);
-    params.set('dir', view.dir);
-  }
-  const query = params.toString();
-  history.replaceState(null, '', window.location.pathname + (query ? '?' + query : ''));
-}
-
-function plural(n: number, word: string): string {
-  return n + ' ' + word + (n === 1 ? '' : 's');
-}
-function formatAge(days: number): string {
-  return days === 0 ? 'today' : plural(days, 'day');
-}
-function formatAgo(iso: string, now: number): string {
-  const minutes = Math.floor((now - Date.parse(iso)) / 60000);
-  if (minutes < 60) return minutes <= 1 ? 'just now' : minutes + ' min ago';
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return plural(hours, 'hour') + ' ago';
-  const days = Math.floor(hours / 24);
-  return days === 1 ? 'yesterday' : days + ' days ago';
-}
-function displayLogin(actor: Actor): string {
-  return actor.login.replace(/\[bot\]$/, '');
-}
-function initials(login: string): string {
-  const parts = login.replace(/\[bot\]$/, '').split(/[-_.\s]+/).filter(Boolean);
-  return (parts.length > 1 ? parts[0][0] + parts[1][0] : login.slice(0, 2)).toUpperCase();
-}
 
 function Avatar({ actor, small = false }: { actor: Actor | null; small?: boolean }) {
   const [failed, setFailed] = useState(false);
@@ -310,14 +104,6 @@ function Person({ actor }: { actor: Actor | null }) {
       {isBot(actor, extraBots) ? <span className="chip bot">bot</span> : null}
     </div>
   );
-}
-
-function labelTextColor(hex: string): string {
-  const [r, g, b] = [0, 2, 4].map((i) => {
-    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
-    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  });
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b > LIGHT_LABEL_LUMINANCE ? 'var(--label-ink-dark)' : 'var(--label-ink-light)';
 }
 
 function LabelChip({ label, active, onToggle }: { label: Label; active: boolean; onToggle: (name: string) => void }) {
@@ -497,23 +283,6 @@ function ReviewCell({ pr, now }: { pr: DerivedPullRequest; now: number }) {
   );
 }
 
-interface CheckGroup extends FailedCheck {
-  count: number;
-  summary: boolean;
-}
-
-// The same job can report from several workflows or events; show it once with a count.
-function groupChecks(failed: FailedCheck[]): CheckGroup[] {
-  const groups = new Map<string, CheckGroup>();
-  for (const c of failed) {
-    const key = [c.name, c.workflow, c.conclusion, c.description].join('|');
-    const group = groups.get(key) || { ...c, count: 0, summary: SUMMARY_CHECKS.has(c.name) };
-    group.count += 1;
-    groups.set(key, group);
-  }
-  return Array.from(groups.values()).sort((a, b) => Number(a.summary) - Number(b.summary));
-}
-
 function CiCell({ pr }: { pr: DerivedPullRequest }) {
   const { open, position, ref, toggle } = usePopover(CHECKS_POPOVER_PX);
   const state = CI[pr.ci];
@@ -662,13 +431,6 @@ function Tiles({ base, active, setQuick }: { base: DerivedPullRequest[]; active:
   );
 }
 
-interface AuthorEntry {
-  login: string;
-  actor: Actor | null;
-  bot: boolean;
-  count: number;
-}
-
 function AuthorMenu({ authors, selected, mode, setAuthors }: {
   authors: AuthorEntry[];
   selected: Set<string>;
@@ -678,26 +440,8 @@ function AuthorMenu({ authors, selected, mode, setAuthors }: {
   const [open, setOpen] = useState(false);
   const ref = useDismiss(open, setOpen);
 
-  let summary;
-  if (mode === null) summary = 'People';
-  else if (mode === 'all') summary = 'Everyone';
-  else if (mode === 'bots') summary = 'Bots';
-  else if (selected.size === 0) summary = 'Nobody';
-  else if (selected.size === 1) summary = Array.from(selected)[0];
-  else summary = selected.size + ' selected';
-
-  const toggle = (login: string) => {
-    const next = new Set(selected);
-    if (next.has(login)) next.delete(login); else next.add(login);
-    const people = authors.filter((a) => !a.bot).map((a) => a.login);
-    const bots = authors.filter((a) => a.bot).map((a) => a.login);
-    const everyone = authors.map((a) => a.login);
-    const same = (list: string[]) => list.length === next.size && list.every((l) => next.has(l));
-    if (same(people)) setAuthors(null);
-    else if (same(everyone)) setAuthors('all');
-    else if (bots.length && same(bots)) setAuthors('bots');
-    else setAuthors(everyone.filter((l) => next.has(l)));
-  };
+  const summary = authorsSummary(mode, selected);
+  const toggle = (login: string) => setAuthors(toggleAuthor(login, selected, authors));
   const group = (title: string, list: AuthorEntry[]) => list.length ? (
     <>
       <div className="group">{title}</div>
@@ -1223,36 +967,17 @@ export function App() {
     return (data.report ? data.report.prs : []).map((pr) => derive(pr, now, rules));
   }, [data.report, now, rules]);
 
-  const authors = useMemo(() => {
-    const byLogin = new Map<string, AuthorEntry>();
-    for (const pr of prs) {
-      const entry = byLogin.get(pr.authorKey) || { login: pr.authorKey, actor: pr.author, bot: pr.bot, count: 0 };
-      entry.count += 1;
-      byLogin.set(pr.authorKey, entry);
-    }
-    return Array.from(byLogin.values()).sort((a, b) => a.login.localeCompare(b.login, 'en', { sensitivity: 'base' }));
-  }, [prs]);
-
-  const selected = useMemo(() => {
-    if (view.authors === 'all') return new Set(authors.map((a) => a.login));
-    if (view.authors === 'bots') return new Set(authors.filter((a) => a.bot).map((a) => a.login));
-    // A chosen login without open PRs in the current data is left out, so counts match what is shown.
-    if (view.authors) return new Set(authors.map((a) => a.login).filter((login) => view.authors!.includes(login)));
-    return new Set(authors.filter((a) => !a.bot).map((a) => a.login));
-  }, [view.authors, authors]);
+  const authors = useMemo(() => collectAuthors(prs), [prs]);
+  const selected = useMemo(() => selectedAuthors(view.authors, authors), [view.authors, authors]);
 
   const parsedQuery = useMemo(() => parseQuery(view.q), [view.q]);
   const activeLabels = useMemo(() => new Set(parsedQuery.filters
     .filter((f) => f.key === 'label' && !f.negate).map((f) => f.value)), [parsedQuery]);
 
-  const base = useMemo(() => prs.filter((pr) => {
-    if (!selected.has(pr.authorKey)) return false;
-    if (view.draft === 'ready' && pr.draft) return false;
-    if (view.draft === 'draft' && !pr.draft) return false;
-    if (view.area === 'other' && pr.areas.length) return false;
-    if (view.area !== 'all' && view.area !== 'other' && !pr.areas.includes(view.area)) return false;
-    return matchesQuery(pr, parsedQuery);
-  }), [prs, selected, view.draft, view.area, parsedQuery]);
+  const base = useMemo(
+    () => filterPullRequests(prs, { draft: view.draft, area: view.area }, selected, parsedQuery),
+    [prs, selected, view.draft, view.area, parsedQuery],
+  );
 
   const onToggleLabel = useCallback((name: string) => {
     setView((prev) => ({ ...prev, q: toggleLabelFilter(prev.q, name) }));
@@ -1284,18 +1009,10 @@ export function App() {
     },
   };
 
-  const rows = useMemo(() => {
-    const tests = QUICK.filter((q) => view.quick.includes(q.id));
-    const key = SORTS[view.sort];
-    const sign = view.dir === 'asc' ? 1 : -1;
-    return base.filter((pr) => tests.every((q) => q.test(pr))).sort((a, b) => {
-      const ka = key(a);
-      const kb = key(b);
-      if (ka < kb) return -sign;
-      if (ka > kb) return sign;
-      return b.number - a.number;
-    });
-  }, [base, view.quick, view.sort, view.dir]);
+  const rows = useMemo(
+    () => visibleRows(base, { quick: view.quick, sort: view.sort, dir: view.dir }),
+    [base, view.quick, view.sort, view.dir],
+  );
 
   const onSort = (key: SortKey) => {
     if (view.sort === key) patch({ dir: view.dir === 'asc' ? 'desc' : 'asc' });

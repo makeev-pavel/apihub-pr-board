@@ -251,7 +251,7 @@ into `src/github/` modules.
 filters, author list and selection, check grouping, label text color, formatting, and storage into `src/board/`.
 
 **Acceptance criteria:**
-- [ ] `src/board/` has no React import; `app.tsx` shrinks by the moved code.
+- [x] `src/board/` has no React import; `app.tsx` shrinks by the moved code.
 
 **Verification:** all suites and the build. **Dependencies:** Task 12.
 **Files:** `src/board/{states,columns,view,authors,checks,format,storage}.ts`, `src/app.tsx`. **Scope:** M.

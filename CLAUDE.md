@@ -17,6 +17,8 @@ A board of the open pull requests of one GitHub repository, published on GitHub 
   `derive.ts` (per-PR fields), `comments.ts`, `report.ts` (`prs.json` shape). Tests mirror it in `test/model/`.
 - `src/repository.ts` and `src/config.ts`: the target repository from `PR_BOARD_REPO`, passed to the page by Vite
   `define`. `vite.config.ts` parses it once; with mock data the dev server always uses `acme/widgets`.
+- `src/board/`: board logic without React: state codes (`states.ts`), columns and widths, the view and its URL,
+  filtering and sorting rows (`view.ts`), authors, failed-check grouping, text formatting, and `localStorage`.
 - `src/settings.ts`: personal settings in `localStorage`, validated on load.
 - `src/markdown.ts`: comment Markdown through `marked` and DOMPurify; browser only.
 - `src/app.tsx`: the React UI; `src/main.tsx`: the entry point; `src/styles.css`: theme tokens and styles.

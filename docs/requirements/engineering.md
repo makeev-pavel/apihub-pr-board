@@ -31,6 +31,7 @@ Now:
 ```text
 src/            the page: app.tsx (UI), settings.ts, markdown.ts, repository.ts, config.ts
 src/model/      rules without UI: attention, bots, areas, search, derived fields, prs.json shape
+src/board/      board logic without React: states, columns, the view and its URL, rows, authors, formatting, storage
 src/github/     the GraphQL query, raw types, normalization, and the GraphQL and REST clients
 dev/            Vite plugin with the mocks, scenarios, the DEV panel, and fixtures
 scripts/        build-site.ts writes prs.json after vite build
@@ -39,7 +40,7 @@ docs/           requirements and decisions
 tasks/          the current plan and task list
 ```
 
-*Planned (tasks 13–18):* `src/board/` (logic without React), `src/hooks/`,
+*Planned (tasks 14–18):* `src/hooks/`,
 `src/components/`, `src/styles/`, `dev/scenarios/`, and `e2e/` for browser and screenshot
 tests. No source file over about 300 lines.
 
