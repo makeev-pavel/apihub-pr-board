@@ -9,6 +9,8 @@ import type { RawPullRequest } from '../src/github/raw.ts';
 import { REFRESH_SCENARIOS } from '../dev/scenarios/refresh.ts';
 
 const repository = { owner: 'acme', name: 'widgets' };
+const gadgets = { owner: 'acme', name: 'gadgets' };
+const missing = { owner: 'acme', name: 'missing' };
 
 const baseNode: RawPullRequest = {
   number: 1,
@@ -103,31 +105,31 @@ function mockFetch(scenarioId: string) {
 }
 
 test('DATA-9: pagination collects every page', async () => {
-  const single = await fetchOpenPullRequests({ token: 't', repository, fetchImpl: mockFetch('ok').fetchImpl });
+  const single = await fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl: mockFetch('ok').fetchImpl });
   const paged = mockFetch('paginated');
-  const report = await fetchOpenPullRequests({ token: 't', repository, fetchImpl: paged.fetchImpl });
+  const report = await fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl: paged.fetchImpl });
   assert.ok(paged.calls() > 1);
   assert.equal(report.prs.length, single.prs.length);
   assert.deepEqual(report.warnings, []);
 });
 
 test('DATA-14: a forbidden projects field becomes a warning and unknown projects', async () => {
-  const report = await fetchOpenPullRequests({ token: 't', repository, fetchImpl: mockFetch('projects-error').fetchImpl });
+  const report = await fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl: mockFetch('projects-error').fetchImpl });
   assert.equal(report.warnings.length, 1);
   assert.ok(report.prs.every((pr) => pr.projects === null));
 });
 
 test('DATA-15: a short page against totalCount is reported', async () => {
-  const report = await fetchOpenPullRequests({ token: 't', repository, fetchImpl: mockFetch('count-mismatch').fetchImpl });
+  const report = await fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl: mockFetch('count-mismatch').fetchImpl });
   assert.match(report.warnings[0], /reported \d+ open pull requests but returned \d+/);
 });
 
 test('DATA-13: HTTP and GraphQL failures throw readable errors', async () => {
-  await assert.rejects(fetchOpenPullRequests({ token: 't', repository, fetchImpl: mockFetch('unauthorized').fetchImpl }), { status: 401 });
-  await assert.rejects(fetchOpenPullRequests({ token: 't', repository, fetchImpl: mockFetch('server-error').fetchImpl }), /HTTP 502/);
-  await assert.rejects(fetchOpenPullRequests({ token: 't', repository, fetchImpl: mockFetch('repo-not-found').fetchImpl }), /at repository/);
-  await assert.rejects(fetchOpenPullRequests({ token: 't', repository, fetchImpl: mockFetch('network').fetchImpl }), /Cannot reach api.github.com/);
-  await assert.rejects(fetchOpenPullRequests({ token: '', repository }), /token is required/);
+  await assert.rejects(fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl: mockFetch('unauthorized').fetchImpl }), { status: 401 });
+  await assert.rejects(fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl: mockFetch('server-error').fetchImpl }), /HTTP 502/);
+  await assert.rejects(fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl: mockFetch('repo-not-found').fetchImpl }), /at repository/);
+  await assert.rejects(fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl: mockFetch('network').fetchImpl }), /Cannot reach api.github.com/);
+  await assert.rejects(fetchOpenPullRequests({ token: '', repositories: [repository] }), /token is required/);
 });
 
 test('RULE-4: failed checks keep real failures and skip cancelled and passing runs', () => {
@@ -164,8 +166,8 @@ test('DATA-8: hidden columns drop their parts of the query', async () => {
     sent.push(JSON.parse(String(init.body)).variables);
     return mockFetch('ok').fetchImpl(_url, init);
   };
-  await fetchOpenPullRequests({ token: 't', repository, fetchImpl });
-  await fetchOpenPullRequests({ token: 't', repository, fetchImpl, parts: { checks: false, comments: false } });
+  await fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl });
+  await fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl, parts: { checks: false, comments: false } });
   assert.deepEqual([sent[0].withChecks, sent[0].withComments], [true, true]);
   assert.deepEqual([sent.at(-1)!.withChecks, sent.at(-1)!.withComments], [false, false]);
 });
@@ -224,7 +226,7 @@ test('RULE-3: mergeability maps to No conflicts, Conflicts, or Checking', () => 
 
 test('DATA-13: a GraphQL answer that is not JSON fails with a readable message', async () => {
   const fetchImpl = async () => new Response('<html>Gateway</html>', { status: 200 });
-  await assert.rejects(fetchOpenPullRequests({ token: 't', repository, fetchImpl }), /response that is not JSON/);
+  await assert.rejects(fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl }), /response that is not JSON/);
 });
 
 test('PANEL-11: the comments panel reports a network failure and other HTTP errors', async () => {
@@ -237,9 +239,33 @@ test('PANEL-11: the comments panel reports a network failure and other HTTP erro
 });
 
 test('DATA-19: the client names the repository on the report and on every PR', async () => {
-  const report = await fetchOpenPullRequests({ token: 't', repository, fetchImpl: mockFetch('ok').fetchImpl });
+  const report = await fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl: mockFetch('ok').fetchImpl });
   assert.deepEqual(report.repos, ['acme/widgets']);
   assert.ok(report.prs.length > 0);
   assert.ok(report.prs.every((pr) => pr.repo === 'acme/widgets'));
   assert.equal(normalizePullRequest(baseNode, { repo: 'acme/gadgets' }).repo, 'acme/gadgets');
+});
+
+test('DATA-18: every repository is read, and the PRs come newest first across them', async () => {
+  const report = await fetchOpenPullRequests({ token: 't', repositories: [repository, gadgets], fetchImpl: mockFetch('ok').fetchImpl });
+  assert.deepEqual(report.repos, ['acme/widgets', 'acme/gadgets']);
+  const repos = new Set(report.prs.map((pr) => pr.repo));
+  assert.deepEqual([...repos], ['acme/widgets', 'acme/gadgets'].filter((r) => repos.has(r)));
+  assert.equal(repos.size, 2);
+  const times = report.prs.map((pr) => pr.createdAt);
+  assert.deepEqual(times, [...times].sort().reverse());
+  assert.deepEqual(report.warnings, []);
+});
+
+test('DATA-18: a repository that cannot be read is a warning, and the others load', async () => {
+  const report = await fetchOpenPullRequests({ token: 't', repositories: [missing, repository], fetchImpl: mockFetch('ok').fetchImpl });
+  assert.deepEqual(report.repos, ['acme/widgets']);
+  assert.ok(report.prs.length > 0);
+  assert.deepEqual(report.warnings, ['Repository acme/missing was not found, or the token cannot read it.']);
+  await assert.rejects(fetchOpenPullRequests({ token: 't', repositories: [missing], fetchImpl: mockFetch('ok').fetchImpl }), /at repository/);
+});
+
+test('DATA-15 DATA-18: with several repositories, a short page names its repository', async () => {
+  const report = await fetchOpenPullRequests({ token: 't', repositories: [repository, gadgets], fetchImpl: mockFetch('count-mismatch').fetchImpl });
+  assert.match(report.warnings[0], /^GitHub reported \d+ open pull requests in acme\/widgets but returned \d+\.$/);
 });

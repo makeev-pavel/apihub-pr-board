@@ -20,9 +20,9 @@ const LIVE_CACHE_MS = 5 * 60 * 1000;
 const REST_PREFIX = '/__dev/rest';
 
 // /repos/<owner>/<repo>/issues/<n>/comments or /repos/<owner>/<repo>/pulls/<n>/reviews
-const REST_ROUTE = /^\/repos\/[^/]+\/[^/]+\/(issues|pulls)\/(\d+)\/(comments|reviews)$/;
+const REST_ROUTE = /^\/repos\/([^/]+\/[^/]+)\/(issues|pulls)\/(\d+)\/(comments|reviews)$/;
 
-export function devMocks({ repository }: { repository: Repository }): Plugin {
+export function devMocks({ repositories }: { repositories: Repository[] }): Plugin {
   const state = { report: REPORT_SCENARIOS[0].id, refresh: REFRESH_SCENARIOS[0].id };
   // Mock answers use this clock; the live cache below keeps real time.
   const now = mockClock();
@@ -37,7 +37,7 @@ export function devMocks({ repository }: { repository: Repository }): Plugin {
       return;
     }
     if (!liveCache || Date.now() - liveCache.at > LIVE_CACHE_MS) {
-      const report = await fetchOpenPullRequests({ token, repository });
+      const report = await fetchOpenPullRequests({ token, repositories });
       liveCache = { at: Date.now(), body: JSON.stringify({ ...report, runUrl: null }) };
       console.log('Fetched ' + report.prs.length + ' open PRs from GitHub');
     }
@@ -52,9 +52,9 @@ export function devMocks({ repository }: { repository: Repository }): Plugin {
 
   function serveRest(res: ServerResponse, pathname: string) {
     const match = REST_ROUTE.exec(pathname.slice(REST_PREFIX.length));
-    const found = match ? restComments(Number(match[2]), now()) : null;
+    const found = match ? restComments(match[1], Number(match[3]), now()) : null;
     if (!match || !found) return send(res, 404, JSON.stringify({ message: 'Not Found' }), JSON_TYPE);
-    return send(res, 200, JSON.stringify(match[3] === 'comments' ? found.comments : found.reviews), JSON_TYPE);
+    return send(res, 200, JSON.stringify(match[4] === 'comments' ? found.comments : found.reviews), JSON_TYPE);
   }
 
   // Generated avatars for the fictional cast; anything under missing/ is a broken image on purpose.

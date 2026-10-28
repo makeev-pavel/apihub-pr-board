@@ -6,6 +6,8 @@ export type MockResponse =
   | { destroy: true; delayMs?: number };
 
 export interface GraphqlVariables {
+  owner: string;
+  repo: string;
   first: number;
   after: string | null;
 }

@@ -4,7 +4,8 @@ import { normalizePullRequest } from '../../src/github/normalize.ts';
 import type { Report } from '../../src/types.ts';
 import { cornerCaseNodes } from '../fixtures/corner-cases.ts';
 import type { FixtureEntry } from '../fixtures/builders.ts';
-import { DEV_REPOSITORY } from '../fixtures/people.ts';
+import { gadgetsEntries } from '../fixtures/gadgets.ts';
+import { DEV_REPOSITORY, GADGETS_REPOSITORY } from '../fixtures/people.ts';
 import { typicalNodes } from '../fixtures/typical.ts';
 import { MANY_PRS, manyEntries, mixedEntries } from './entries.ts';
 import type { MockResponse, ReportScenario } from './types.ts';
@@ -14,21 +15,24 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const STALE_SNAPSHOT_DAYS = 3;
 const SLOW_REPORT_MS = 3000;
 
-function report(entries: FixtureEntry[], { now, warnings = [], projectsAvailable = true, generatedAt = now }: {
+function report(entries: FixtureEntry[], { now, warnings = [], projectsAvailable = true, generatedAt = now, gadgets = false }: {
   now: number;
   warnings?: string[];
   projectsAvailable?: boolean;
   generatedAt?: number;
+  // Adds the second mock repository.
+  gadgets?: boolean;
 }): Report {
+  const normalize = (repo: string) => ({ node, note }: FixtureEntry) => {
+    const pr = normalizePullRequest(node, { repo, projectsAvailable });
+    return note ? { ...pr, example: true, note } : pr;
+  };
   return {
-    repos: [DEV_REPOSITORY],
+    repos: gadgets ? [DEV_REPOSITORY, GADGETS_REPOSITORY] : [DEV_REPOSITORY],
     generatedAt: new Date(generatedAt).toISOString(),
     runUrl: null,
     warnings,
-    prs: entries.map(({ node, note }) => {
-      const pr = normalizePullRequest(node, { repo: DEV_REPOSITORY, projectsAvailable });
-      return note ? { ...pr, example: true, note } : pr;
-    }),
+    prs: [...entries.map(normalize(DEV_REPOSITORY)), ...(gadgets ? gadgetsEntries(now).map(normalize(GADGETS_REPOSITORY)) : [])],
   };
 }
 
@@ -38,6 +42,7 @@ export const REPORT_SCENARIOS: ReportScenario[] = [
   { id: 'mixed', label: 'Typical board + corner cases', respond: (now) => json(report(mixedEntries(now), { now })) },
   { id: 'typical', label: 'Typical board only', respond: (now) => json(report(typicalNodes(now), { now })) },
   { id: 'corner', label: 'Corner cases only', respond: (now) => json(report(cornerCaseNodes(now), { now })) },
+  { id: 'two-repos', label: 'Two repositories', respond: (now) => json(report(typicalNodes(now), { now, gadgets: true })) },
   { id: 'empty', label: 'No open PRs', respond: (now) => json(report([], { now })) },
   { id: 'many', label: MANY_PRS + ' PRs', respond: (now) => json(report(manyEntries(now), { now })) },
   {

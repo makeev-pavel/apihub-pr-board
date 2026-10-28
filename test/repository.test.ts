@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { DEFAULT_RULES } from '../src/model/rules.ts';
-import { parseRepository, repositoryName } from '../src/repository.ts';
+import { parseRepositories, parseRepository, repositoryName } from '../src/repository.ts';
 
 test('DATA-1: PR_BOARD_REPO names the repository as owner/name', () => {
   assert.deepEqual(parseRepository('acme/widgets'), { owner: 'acme', name: 'widgets' });
@@ -19,4 +19,19 @@ test('DATA-1: a missing or malformed PR_BOARD_REPO stops with the variable named
 
 test('RULE-10: no service account counts as a bot by default', () => {
   assert.deepEqual(DEFAULT_RULES.extraBots, []);
+});
+
+test('DATA-17: PR_BOARD_REPO lists repositories, ignoring spaces and repeats', () => {
+  const names = (value: string) => parseRepositories(value).map(repositoryName);
+  assert.deepEqual(names('acme/widgets'), ['acme/widgets']);
+  assert.deepEqual(names(' acme/widgets, acme/gadgets ,ACME/Widgets,,'), ['acme/widgets', 'acme/gadgets']);
+  const ten = Array.from({ length: 10 }, (_, i) => 'acme/r' + i).join(',');
+  assert.equal(parseRepositories(ten).length, 10);
+});
+
+test('DATA-17: an empty list, a malformed entry, or more than 10 repositories stops with the variable named', () => {
+  for (const value of [undefined, '', ' , ']) assert.throws(() => parseRepositories(value), /PR_BOARD_REPO is not set/);
+  assert.throws(() => parseRepositories('acme/widgets, gadgets'), /PR_BOARD_REPO must be "owner\/name", such as acme\/widgets, not "gadgets"/);
+  const eleven = Array.from({ length: 11 }, (_, i) => 'acme/r' + i).join(',');
+  assert.throws(() => parseRepositories(eleven), /PR_BOARD_REPO lists 11 repositories; the board reads at most 10/);
 });

@@ -2,6 +2,8 @@
 
 import { nodes } from '../../src/github/normalize.ts';
 import type { RawActor, RestComment, RestReview } from '../../src/github/raw.ts';
+import { gadgetsEntries } from '../fixtures/gadgets.ts';
+import { DEV_REPOSITORY, GADGETS_REPOSITORY } from '../fixtures/people.ts';
 import { mixedEntries } from './entries.ts';
 
 function restUser(actor: RawActor | null | undefined) {
@@ -9,8 +11,9 @@ function restUser(actor: RawActor | null | undefined) {
 }
 
 // The REST answers behind the comments panel: every comment and review of a mock PR, or null when it does not exist.
-export function restComments(number: number, now: number): { comments: RestComment[]; reviews: RestReview[] } | null {
-  const entry = mixedEntries(now).find(({ node }) => node.number === number);
+export function restComments(repo: string, number: number, now: number): { comments: RestComment[]; reviews: RestReview[] } | null {
+  const entries = repo === DEV_REPOSITORY ? mixedEntries(now) : repo === GADGETS_REPOSITORY ? gadgetsEntries(now) : [];
+  const entry = entries.find(({ node }) => node.number === number);
   if (!entry) return null;
   return {
     comments: nodes(entry.node.comments).map((c) => ({ created_at: c.createdAt, body: c.body, html_url: c.url, user: restUser(c.author) })),

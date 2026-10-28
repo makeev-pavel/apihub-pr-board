@@ -2,7 +2,8 @@
 
 import type { RawResponse } from '../../src/github/raw.ts';
 import type { FixtureEntry } from '../fixtures/builders.ts';
-import { DEV_REPOSITORY } from '../fixtures/people.ts';
+import { gadgetsEntries } from '../fixtures/gadgets.ts';
+import { DEV_REPOSITORY, GADGETS_REPOSITORY } from '../fixtures/people.ts';
 import { typicalNodes } from '../fixtures/typical.ts';
 import { mixedEntries } from './entries.ts';
 import type { GraphqlVariables, MockResponse, RefreshScenario } from './types.ts';
@@ -36,24 +37,36 @@ function graphqlPage(entries: FixtureEntry[], variables: GraphqlVariables, { pag
   return { status: 200, body: JSON.stringify(body) };
 }
 
+function notFound(variables: GraphqlVariables): MockResponse {
+  const name = variables.owner + '/' + variables.repo;
+  return {
+    status: 200,
+    body: JSON.stringify({
+      data: { repository: null },
+      errors: [{ type: 'NOT_FOUND', path: ['repository'], message: "Could not resolve to a Repository with the name '" + name + "'." }],
+    }),
+  };
+}
+
+// The scenario's PRs for the mock repository, the gadgets PRs for the second one, and NOT_FOUND for any other.
+function board(widgets: (now: number) => FixtureEntry[], options: Parameters<typeof graphqlPage>[2] = {}) {
+  return (variables: GraphqlVariables, now: number): MockResponse => {
+    const name = variables.owner + '/' + variables.repo;
+    if (name === DEV_REPOSITORY) return graphqlPage(widgets(now), variables, options);
+    return name === GADGETS_REPOSITORY ? graphqlPage(gadgetsEntries(now), variables, options) : notFound(variables);
+  };
+}
+
+const ok = board(mixedEntries);
+
 export const REFRESH_SCENARIOS: RefreshScenario[] = [
-  { id: 'ok', label: 'Success', respond: (v, now) => graphqlPage(mixedEntries(now), v) },
-  { id: 'paginated', label: 'Success over several pages', respond: (v, now) => graphqlPage(mixedEntries(now), v, { pageSize: SMALL_PAGE }) },
-  { id: 'projects-error', label: 'Partial error: projects forbidden', respond: (v, now) => graphqlPage(typicalNodes(now), v, { projectsError: true }) },
-  { id: 'count-mismatch', label: 'Fewer PRs than totalCount', respond: (v, now) => graphqlPage(typicalNodes(now), v, { totalExtra: MISSING_PRS }) },
-  { id: 'slow', label: 'Slow response (4 s)', respond: (v, now) => ({ ...graphqlPage(mixedEntries(now), v), delayMs: SLOW_REFRESH_MS }) },
+  { id: 'ok', label: 'Success', respond: ok },
+  { id: 'paginated', label: 'Success over several pages', respond: board(mixedEntries, { pageSize: SMALL_PAGE }) },
+  { id: 'projects-error', label: 'Partial error: projects forbidden', respond: board(typicalNodes, { projectsError: true }) },
+  { id: 'count-mismatch', label: 'Fewer PRs than totalCount', respond: board(typicalNodes, { totalExtra: MISSING_PRS }) },
+  { id: 'slow', label: 'Slow response (4 s)', respond: (v, now) => ({ ...ok(v, now), delayMs: SLOW_REFRESH_MS }) },
   { id: 'unauthorized', label: '401 Bad credentials', respond: () => ({ status: 401, body: JSON.stringify({ message: 'Bad credentials' }) }) },
   { id: 'server-error', label: '502 from GitHub', respond: () => ({ status: 502, body: 'Server Error' }) },
-  {
-    id: 'repo-not-found',
-    label: 'Repository not found',
-    respond: () => ({
-      status: 200,
-      body: JSON.stringify({
-        data: { repository: null },
-        errors: [{ type: 'NOT_FOUND', path: ['repository'], message: "Could not resolve to a Repository with the name '" + DEV_REPOSITORY + "'." }],
-      }),
-    }),
-  },
+  { id: 'repo-not-found', label: 'Repository not found', respond: notFound },
   { id: 'network', label: 'Network failure', respond: () => ({ destroy: true }) },
 ];

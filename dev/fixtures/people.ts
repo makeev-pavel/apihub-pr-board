@@ -3,6 +3,8 @@
 // The mock repository, used whenever PR_BOARD_REPO is not set in development.
 export const DEV_REPOSITORY = 'acme/widgets';
 export const REPO_URL = 'https://github.com/' + DEV_REPOSITORY;
+// The second mock repository, served only by the scenarios with several repositories.
+export const GADGETS_REPOSITORY = 'acme/gadgets';
 
 export const PEOPLE = [
   'anna-dev', 'boris-k', 'chen-li', 'dara-ops', 'emil-qa', 'farah-ui', 'gleb-be', 'hana-docs',

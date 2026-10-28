@@ -15,7 +15,7 @@ import { Row } from './components/table/Row.tsx';
 import { AuthorMenu } from './components/toolbar/AuthorMenu.tsx';
 import { CopyLink } from './components/toolbar/CopyLink.tsx';
 import { SearchHelp } from './components/toolbar/SearchHelp.tsx';
-import { REPOSITORY } from './config.ts';
+import { REPOSITORIES } from './config.ts';
 import { ApiContext, RulesContext } from './context.ts';
 import { fetchOpenPullRequests } from './github/graphql.ts';
 import { REST_URL } from './github/rest.ts';
@@ -24,7 +24,7 @@ import { useReportData } from './hooks/useReportData.ts';
 import { derive } from './model/derive.ts';
 import { pullRequestKey } from './model/report.ts';
 import { activeLabelFilters, parseQuery, toggleLabelFilter } from './model/search.ts';
-import { repositoryName } from './repository.ts';
+import { parseRepository, repositoryName } from './repository.ts';
 import { loadSettings, saveSettings } from './settings.ts';
 import type { Settings } from './settings.ts';
 import type { DevConfig } from './types.ts';
@@ -76,7 +76,9 @@ export function App() {
     setRefreshError(null);
     // Skip the heavy parts of the query that only hidden columns would show.
     const parts = { checks: columns.some((c) => c.id === 'ci'), comments: columns.some((c) => c.id === 'comment') };
-    const options = { token: withToken, repository: REPOSITORY, parts };
+    // Refresh reads the repositories on the page, which the build's list only gives before the data loads.
+    const repositories = report && report.repos.length ? report.repos.map(parseRepository) : REPOSITORIES;
+    const options = { token: withToken, repositories, parts };
     fetchOpenPullRequests(DEV ? { ...options, endpoint: DEV.graphqlUrl } : options)
       .then((report) => {
         setData({ status: 'ready', report, source: 'live', error: null });
@@ -118,7 +120,7 @@ export function App() {
   return (
     <ApiContext.Provider value={api}><RulesContext.Provider value={rules}>
       <header className="masthead">
-        <h1><span className="repo">{report ? report.repos.join(', ') : repositoryName(REPOSITORY)}</span>Open pull requests</h1>
+        <h1><span className="repo">{report ? report.repos.join(', ') : REPOSITORIES.map(repositoryName).join(', ')}</span>Open pull requests</h1>
         <div className="masthead-side">
           <Tiles base={base} active={view.quick} setQuick={(quick) => patch({ quick })} />
           {report ? <UpdateInfo report={report} live={data.source === 'live'} now={now} /> : null}

@@ -184,8 +184,9 @@ settings panel gets a field to edit the repository list.
 3. Repositories and extra bots live in the URL, not in `localStorage`: the address always shows them, and editing
    them in Settings updates the address. Without them in the URL, the board uses the build's list and no extra bots.
    The other settings stay in the browser.
-4. One GraphQL `search` query reads all repositories page by page, instead of one query per repository. GitHub caps
-   a search at 1,000 results, far above the board's size.
+4. Changed in R3: each repository is read with its own query, one after another, instead of one `search` query.
+   This removes the 256-character limit of a search and a missing repository failing the whole search, and it
+   keeps the query that is already tested. Ten repositories cost at most ten queries per page of 50 PRs.
 5. A PR is identified by repository and number everywhere: row keys, the comments cache, and the URL.
 6. The area lists, attention rules, and title rule stay shared by all repositories.
 7. The default mock board stays one repository, so the existing tests keep their layout; a DEV scenario adds the
@@ -198,9 +199,9 @@ settings panel gets a field to edit the repository list.
 | --- | --- | --- |
 | PR numbers repeat across repositories | High | Repository and number as the key; a corner case with equal numbers. |
 | A shared link with many repositories gets long | Low | Short parameter names; a test with ten repositories. |
-| Search results differ from the repository query | Medium | Client tests against the mocks for both shapes; a live check with `dev:live`. |
-| GitHub limits a search query to 256 characters | Medium | Ten long names may not fit: R3 splits the repositories into several searches when needed. |
-| A missing repository fails the whole search | Medium | R3 checks the repositories first and leaves the missing ones out with a warning (DATA-18). |
+| Search results differ from the repository query | — | Gone: R3 keeps the repository query. |
+| GitHub limits a search query to 256 characters | — | Gone: R3 reads each repository with its own query. |
+| A missing repository fails the whole read | — | Gone: a missing repository is a warning (DATA-18). |
 
 **Estimate.** About 4 to 5 hours of agent work in six tasks, plus your review at two checkpoints. Screenshot
 baselines (task 22) should come after this work, or they need a second capture.

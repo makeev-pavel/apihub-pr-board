@@ -28,11 +28,24 @@ test('every scenario answers the same at the same moment', () => {
   for (const scenario of REPORT_SCENARIOS) {
     assert.deepEqual(scenario.respond(at), scenario.respond(at), scenario.id);
   }
-  const variables = { first: 50, after: null };
+  const variables = { owner: 'acme', repo: 'widgets', first: 50, after: null };
   for (const scenario of REFRESH_SCENARIOS) {
     assert.deepEqual(scenario.respond(variables, at), scenario.respond(variables, at), scenario.id);
   }
   const corner = JSON.parse((REPORT_SCENARIOS.find((s) => s.id === 'corner')!.respond(at) as { body: string }).body);
   const number = corner.prs[0].number;
-  assert.deepEqual(restComments(number, at), restComments(number, at));
+  assert.deepEqual(restComments('acme/widgets', number, at), restComments('acme/widgets', number, at));
+});
+
+test('DATA-21: the two-repository scenario repeats PR numbers, and the REST mock answers each repository', () => {
+  const at = Date.parse(FIXED);
+  const report = JSON.parse((REPORT_SCENARIOS.find((s) => s.id === 'two-repos')!.respond(at) as { body: string }).body);
+  assert.deepEqual(report.repos, ['acme/widgets', 'acme/gadgets']);
+  const numbers = (repo: string) => new Set(report.prs.filter((pr: { repo: string }) => pr.repo === repo).map((pr: { number: number }) => pr.number));
+  const repeated = [...numbers('acme/gadgets')].filter((n) => numbers('acme/widgets').has(n));
+  assert.ok(repeated.length >= 3, 'numbers repeat: ' + repeated.join(', '));
+  assert.notDeepEqual(restComments('acme/gadgets', 101, at), restComments('acme/widgets', 101, at));
+  assert.equal(restComments('acme/missing', 101, at), null);
+  const mixed = JSON.parse((REPORT_SCENARIOS.find((s) => s.id === 'mixed')!.respond(at) as { body: string }).body);
+  assert.deepEqual(mixed.repos, ['acme/widgets'], 'the default board stays one repository');
 });

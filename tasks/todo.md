@@ -464,12 +464,14 @@ number, let `prs.json` list its repositories, and add `repo:` to search.
 
 ### Task R3: Read several repositories (about 1 hour)
 
-**Description:** One GraphQL `search` query over all repositories, page by page; `PR_BOARD_REPO` takes a comma list;
-the build script and the comments client take each PR's repository; mock scenarios serve two repositories.
+**Description:** One GraphQL query per repository, one after another (changed from one `search`; see the plan).
+`PR_BOARD_REPO` takes a comma list; the build script and Refresh read every repository; mock scenarios serve two
+repositories.
 
 **Acceptance criteria:**
-- [ ] The snapshot and Refresh read every listed repository; a missing repository is a warning, not a failure.
-- [ ] The build stops on a malformed list with the variable named.
+- [x] The snapshot and Refresh read every listed repository; a missing repository is a warning, not a failure.
+- [x] The build stops on a malformed list with the variable named.
+- [ ] `dev:live` against two real repositories, by hand: needs a token on your machine.
 
 **Verification:** client tests against the mock scenarios; `dev:live` against two real repositories by hand.
 **Dependencies:** R2. **Files:** `src/github/query.ts`, `src/github/graphql.ts`, `src/github/rest.ts`,

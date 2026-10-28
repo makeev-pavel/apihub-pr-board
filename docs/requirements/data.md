@@ -55,17 +55,18 @@
 - **DATA-17** `PR_BOARD_REPO` takes up to 10 repositories separated by commas, such as
   `acme/widgets, acme/gadgets`. Spaces are ignored and a repeated repository counts once, without regard to case.
   An entry that is not `owner/name` stops the build with a message naming the variable and the entry.
-  *Planned: task R3.*
-- **DATA-18** The snapshot and Refresh read the open PRs of every repository in one GitHub search, 50 PRs a page,
-  newest first, with the fields of **DATA-9**. A repository that does not exist or that the token cannot read is
-  named in a warning, and the others load. *Planned: task R3.*
+- **DATA-18** The snapshot reads every repository of `PR_BOARD_REPO`, and Refresh every repository on the page,
+  one after another with the query of **DATA-9**. The PRs of all repositories come newest first. A repository that
+  does not exist or that the token cannot read is named in a warning, and the others load; with one repository, or
+  when none can be read, it fails as in **DATA-13**. With several repositories, the **DATA-15** warning names the
+  repository.
 - **DATA-19** `prs.json` lists the repositories it covers, and each PR names its repository. A file written before
   this change, with one repository and PRs without one, still loads: its PRs belong to that repository. A PR
   whose repository is missing or not `owner/name` gets the file's only repository, or none when there are several.
 - **DATA-20** A PR is identified by its repository and number. Two PRs with the same number in different
   repositories are two rows with their own comments, and the comments panel reads each PR from its own repository.
 - **DATA-21** With mock data the dev server shows `acme/widgets` alone by default. A DEV panel scenario adds the
-  fictional `acme/gadgets`, with PR numbers that repeat those of `acme/widgets`. *Planned: task R3.*
+  fictional `acme/gadgets`, with PR numbers that repeat those of `acme/widgets`.
 - **DATA-22** When the address asks for repositories (**FILTER-14**) that the snapshot does not cover, the page
   shows the PRs of the requested repositories it has and a banner naming the missing ones. **Refresh** with a token
   then loads every requested repository. Without a token, the banner suggests adding one. *Planned: task R5.*
