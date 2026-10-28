@@ -10,6 +10,8 @@ export interface Area {
   path: RegExp;
 }
 
+// Module labels follow the monorepo layout: module:<dir> for each dir under frontend/ or backend/.
+// ui-tests live under tests/ but cover the UI, so they count as frontend.
 export const AREAS: Area[] = [
   {
     id: 'be',

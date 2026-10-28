@@ -55,9 +55,6 @@ export function attentionReasons(pr: Pick<PullRequest, 'title' | 'issues' | 'pro
   return reasons;
 }
 
-// Module labels follow the monorepo layout: module:<dir> for each dir under frontend/ or backend/.
-// ui-tests live under tests/ but cover the UI, so they count as frontend.
-
 export const DEFAULT_RULES: Rules = {
   staleDays: STALE_DAYS,
   checkTitle: true,
