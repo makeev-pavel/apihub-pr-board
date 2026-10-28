@@ -194,7 +194,7 @@ click, Escape, page scroll), and the comments panel: the latest two at once, the
 rate-limit messages, and Markdown sanitizing.
 
 **Acceptance criteria:**
-- [ ] Each popover's content matches its corner case; no script from a comment runs.
+- [x] Each popover's content matches its corner case; no script from a comment runs.
 
 **Verification:**
 - [ ] `npm run test:e2e`.

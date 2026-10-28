@@ -37,6 +37,12 @@ export const test = base.extend<{ pageErrors: string[] }>({
   },
   page: async ({ page }, use) => {
     await page.clock.setFixedTime(MOCK_NOW);
+    // The DEV panel is dev tooling, not part of the board, and it covers the bottom-right corner.
+    await page.addInitScript(() => document.addEventListener('DOMContentLoaded', () => {
+      const style = document.createElement('style');
+      style.textContent = '#dev-panel { display: none !important; }';
+      document.head.append(style);
+    }));
     await use(page);
     await setScenarios(page, 'mixed', 'ok');
   },
