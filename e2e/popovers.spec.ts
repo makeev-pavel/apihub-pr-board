@@ -17,10 +17,6 @@ async function expectInsideWindow(page: Page, popover: Locator) {
   expect(box.y + box.height).toBeLessThanOrEqual(view.height);
 }
 
-// Wide enough that every column is in view: a click on a hidden icon would scroll the table, and scrolling closes
-// popovers by design (PANEL-1).
-test.use({ viewport: { width: 1800, height: 900 } });
-
 test.describe('popovers', () => {
   test('PANEL-1 PANEL-2: attention opens on click and closes on a second click, Escape, or a click outside', async ({ page }) => {
     const row = await onlyCase(page, 'WIP export');

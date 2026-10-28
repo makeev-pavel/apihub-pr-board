@@ -11,7 +11,9 @@ export default defineConfig({
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL: 'http://localhost:' + E2E_PORT,
-    viewport: { width: 1600, height: 900 },
+    // Wide enough that every column is in view: a click on a hidden cell scrolls the table, and scrolling closes
+    // popovers by design (PANEL-1).
+    viewport: { width: 1800, height: 900 },
     trace: 'retain-on-failure',
   },
   projects: [{ name: 'e2e', use: { browserName: 'chromium' } }],

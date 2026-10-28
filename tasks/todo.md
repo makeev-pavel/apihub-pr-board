@@ -208,7 +208,7 @@ filling the window with hidden columns, and every setting: rules, areas, bots, t
 to defaults, and the custom-rules indicators.
 
 **Acceptance criteria:**
-- [ ] Each setting changes the board as the spec says and survives a reload; invalid stored values fall back.
+- [x] Each setting changes the board as the spec says and survives a reload; invalid stored values fall back.
 
 **Verification:**
 - [ ] `npm run test:e2e`.
@@ -216,7 +216,7 @@ to defaults, and the custom-rules indicators.
 **Dependencies:** Task 6. **Files:** `e2e/columns.spec.ts`, `e2e/settings.spec.ts`. **Scope:** S.
 
 ### Checkpoint: safety net
-- [ ] The full browser suite passes on the unrefactored code, twice in a row.
+- [x] The full browser suite passes on the unrefactored code, twice in a row.
 - [ ] Review with the user.
 
 ## Phase 3: Split the large files

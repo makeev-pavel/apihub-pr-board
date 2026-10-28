@@ -10,8 +10,6 @@ async function openComments(page: Page, title: string) {
   return page.getByRole('dialog', { name: /^Comments on PR/ });
 }
 
-test.use({ viewport: { width: 1800, height: 900 } });
-
 test.describe('comments panel', () => {
   test('PANEL-9 PANEL-10: the panel docks to the right and loads every comment', async ({ page }) => {
     const panel = await openComments(page, 'import packages from an OpenAPI registry');

@@ -109,11 +109,11 @@ Full tasks with acceptance criteria and verification are in `tasks/todo.md`.
 - [x] Task 7: Browser tests for data loading and Refresh scenarios
 - [x] Task 8: Browser tests for sorting, filters, search, and URL state
 - [x] Task 9: Browser tests for popovers and the comments panel
-- [ ] Task 10: Browser tests for columns and settings
+- [x] Task 10: Browser tests for columns and settings
 
 ### Checkpoint: safety net
 
-- [ ] The full browser suite passes on the unrefactored code; review with the user
+- [x] The full browser suite passes on the unrefactored code (100 tests, twice in a row); review with the user
 
 ### Phase 3: Split the large files
 

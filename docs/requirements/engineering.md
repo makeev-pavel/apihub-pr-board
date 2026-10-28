@@ -60,8 +60,8 @@ export const COMMENT_BODY_LIMIT = 4000;
   Markdown sanitizing, and the GitHub clients against the mock scenarios, so the mocks and the clients stay in sync.
 - **Browser tests** (Playwright, Chromium, `e2e/`) drive the page on the mock dev server and cover every user flow.
   `e2e/helpers.ts` pins the clock, resets the scenarios, and collects page errors; tests run one at a time because
-  the server keeps the chosen scenario. Test titles start with the requirement ids they cover. *Planned: the flows
-  in tasks 7–10.*
+  the server keeps the chosen scenario. Test titles start with the requirement ids they cover. Each test was seen
+  failing in a mutation pass before it was kept.
 - **Screenshot tests** (Playwright, Windows baselines, run locally) cover the visual states in both themes and both
   densities. *Planned: tasks 21–22.*
 - All test data is mock data: a seeded typical board and topic-sorted corner cases on fictional people, with a fixed
