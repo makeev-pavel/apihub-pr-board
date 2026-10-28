@@ -14,11 +14,14 @@ export interface Column {
   hint?: string;
   // Always shown: a row makes no sense without it.
   required?: boolean;
+  // Shown only when the data covers more than one repository.
+  severalRepos?: boolean;
 }
 
 export type Widths = Record<string, number>;
 
 export const COLUMNS: Column[] = [
+  { id: 'repo', sort: 'repo', label: 'Repository', cls: 'c-repo', width: 130, severalRepos: true },
   { id: 'number', sort: 'number', label: '#', cls: 'c-num', width: 72, required: true },
   { id: 'title', sort: 'title', label: 'Pull request', cls: 'c-title', width: 460, required: true },
   { id: 'author', sort: 'author', label: 'Author', cls: 'c-person', width: 170 },
@@ -34,6 +37,11 @@ export const DEFAULT_WIDTHS: Widths = Object.fromEntries(COLUMNS.map((c) => [c.i
 
 // Columns that absorb spare width so the table always fills the window.
 export const FLEX_COLUMNS = ['title', 'comment'];
+
+// The columns the board offers for data from this many repositories, before the viewer hides any.
+export function boardColumns(repoCount: number): Column[] {
+  return COLUMNS.filter((column) => !column.severalRepos || repoCount > 1);
+}
 
 export function isColumnShown(column: Column, hiddenColumns: string[]): boolean {
   return !!column.required || !hiddenColumns.includes(column.id);

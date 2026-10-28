@@ -7,6 +7,22 @@ const LIGHT_LABEL_LUMINANCE = 0.45;
 
 const MINUTE_MS = 60 * 1000;
 
+const HEADER_REPOSITORIES = 2;
+
+const owner = (repo: string) => repo.slice(0, repo.indexOf('/')).toLowerCase();
+
+// owner/name, or just the name when every repository on the board has the same owner.
+export function repositoryLabel(repo: string, repos: string[]): string {
+  const shared = repos.every((other) => owner(other) === owner(repo));
+  return shared ? repo.slice(repo.indexOf('/') + 1) : repo;
+}
+
+// The repositories named in the header: one or two in full, more as the first one and a count.
+export function repositoriesSummary(repos: string[]): string {
+  if (repos.length <= HEADER_REPOSITORIES) return repos.join(', ');
+  return repos[0] + ' +' + (repos.length - 1) + ' more';
+}
+
 export function plural(n: number, word: string): string {
   return n + ' ' + word + (n === 1 ? '' : 's');
 }

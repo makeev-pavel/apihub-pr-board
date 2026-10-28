@@ -119,6 +119,9 @@
 .pill.short.running { animation: pulse 1.4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .pill.short.running { animation: none; } }
 .c-state { text-align: center; }
+.c-repo { font-size: 12px; }
+.c-repo a { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+.c-repo a:hover { color: var(--fg); }
 .board > thead > tr > th.c-state > button, .board > thead > tr > th.c-state > span:not(.col-resizer) { justify-content: center; }
 .pill.as-button { border: 0; cursor: pointer; font: inherit; font-size: 12px; font-weight: 600; line-height: 20px; }
 .pill.as-button:hover, .pill.as-button[aria-expanded="true"] { box-shadow: inset 0 0 0 1.5px currentColor; }

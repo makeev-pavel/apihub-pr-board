@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { collectAuthors, selectedAuthors } from './board/authors.ts';
-import { COLUMNS, isColumnShown } from './board/columns.ts';
+import { boardColumns, isColumnShown } from './board/columns.ts';
+import { repositoriesSummary } from './board/format.ts';
 import { readToken, storeToken } from './board/storage.ts';
 import {
   AREA_OPTIONS, DEFAULT_VIEW, DRAFT_OPTIONS, filterPullRequests, firstDirection, readView, visibleRows, writeView,
@@ -63,7 +64,9 @@ export function App() {
 
   const setSettings = (next: Settings) => { saveSettings(next); setSettingsState(next); };
   const rules = settings.rules;
-  const columns = useMemo(() => COLUMNS.filter((c) => isColumnShown(c, settings.hiddenColumns)), [settings.hiddenColumns]);
+  const repos = useMemo(() => (report ? report.repos : REPOSITORIES.map(repositoryName)), [report]);
+  const offeredColumns = useMemo(() => boardColumns(repos.length), [repos.length]);
+  const columns = useMemo(() => offeredColumns.filter((c) => isColumnShown(c, settings.hiddenColumns)), [offeredColumns, settings.hiddenColumns]);
   const { tableWrapRef, widths, tableWidth, resize, canResetWidths, resetWidths } = useColumnWidths(columns);
   const patch = useCallback((changes: Partial<View>) => setView((prev) => ({ ...prev, ...changes })), []);
   const onToggleLabel = useCallback((name: string) => {
@@ -120,12 +123,14 @@ export function App() {
   return (
     <ApiContext.Provider value={api}><RulesContext.Provider value={rules}>
       <header className="masthead">
-        <h1><span className="repo">{report ? report.repos.join(', ') : REPOSITORIES.map(repositoryName).join(', ')}</span>Open pull requests</h1>
+        <h1>
+          <span className="repo" title={repos.length > 2 ? repos.join(', ') : undefined}>{repositoriesSummary(repos)}</span>Open pull requests
+        </h1>
         <div className="masthead-side">
           <Tiles base={base} active={view.quick} setQuick={(quick) => patch({ quick })} />
           {report ? <UpdateInfo report={report} live={data.source === 'live'} now={now} /> : null}
           <RefreshControl token={token} setToken={setToken} refreshing={refreshing} onRefresh={refresh}
-            settings={settings} onSettingsChange={setSettings}
+            settings={settings} onSettingsChange={setSettings} columns={offeredColumns}
             canResetWidths={canResetWidths} onResetWidths={resetWidths} />
         </div>
       </header>
@@ -165,7 +170,7 @@ export function App() {
           <thead><tr>{columns.map((col, index) => <HeaderCell key={col.id} col={col} index={index} view={view} onSort={onSort} width={widths[col.id]} resize={resize} />)}</tr></thead>
           <tbody>
             {data.status === 'loading' ? <tr><td colSpan={columns.length}><div className="empty">Loading pull requests…</div></td></tr>
-              : rows.length ? rows.map((pr) => <Row key={pullRequestKey(pr)} pr={pr} now={now} columns={columns} activeLabels={activeLabels} onToggleLabel={onToggleLabel} />)
+              : rows.length ? rows.map((pr) => <Row key={pullRequestKey(pr)} pr={pr} now={now} columns={columns} repos={repos} activeLabels={activeLabels} onToggleLabel={onToggleLabel} />)
                 : (
                   <tr><td colSpan={columns.length}><div className="empty">
                     <strong>No pull requests match this view</strong>

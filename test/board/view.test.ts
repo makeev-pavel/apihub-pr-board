@@ -35,6 +35,7 @@ test('TABLE-16: text columns sort A to Z first, the others highest first', () =>
   assert.equal(firstDirection('author'), 'asc');
   assert.equal(firstDirection('age'), 'desc');
   assert.equal(firstDirection('number'), 'desc');
+  assert.equal(firstDirection('repo'), 'asc');
 });
 
 test('FILTER-5 FILTER-6: authors, draft status, area, and the search narrow the rows', () => {
@@ -76,4 +77,12 @@ test('FILTER-13: the page reads the view from its address and writes it back wit
   assert.deepEqual(calls, ['/board/?q=fix', '/board/']);
   delete (globalThis as { window?: unknown }).window;
   delete (globalThis as { history?: unknown }).history;
+});
+
+test('TABLE-26: the Repository column sorts A to Z first, with ties by PR number, newest first', () => {
+  const prs = [pr(5, { repo: 'acme/widgets' }), pr(9, { repo: 'acme/Gadgets' }), pr(7, { repo: 'acme/widgets' }), pr(2, { repo: 'acme/gadgets' })];
+  const keys = (list: DerivedPullRequest[]) => list.map((p) => p.repo + '#' + p.number);
+  assert.deepEqual(keys(visibleRows(prs, { quick: [], sort: 'repo', dir: 'asc' })), ['acme/Gadgets#9', 'acme/gadgets#2', 'acme/widgets#7', 'acme/widgets#5']);
+  assert.deepEqual(keys(visibleRows(prs, { quick: [], sort: 'repo', dir: 'desc' })), ['acme/widgets#7', 'acme/widgets#5', 'acme/Gadgets#9', 'acme/gadgets#2']);
+  assert.equal(parseView('?sort=repo&dir=asc').sort, 'repo');
 });

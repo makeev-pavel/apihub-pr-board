@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import type { ReactNode } from 'react';
 import type { Column } from '../../board/columns.ts';
-import { formatAge, formatAgo } from '../../board/format.ts';
+import { formatAge, formatAgo, repositoryLabel } from '../../board/format.ts';
 import { MERGE } from '../../board/states.ts';
 import type { DerivedPullRequest } from '../../types.ts';
 import { AttentionBadge } from '../cells/AttentionBadge.tsx';
@@ -13,10 +13,12 @@ import { LabelList } from '../common/LabelList.tsx';
 import { Person } from '../common/Person.tsx';
 import { Pill } from '../common/Pill.tsx';
 
-export const Row = memo(function Row({ pr, now, columns, activeLabels, onToggleLabel }: {
+export const Row = memo(function Row({ pr, now, columns, repos, activeLabels, onToggleLabel }: {
   pr: DerivedPullRequest;
   now: number;
   columns: Column[];
+  // Every repository on the board, so the Repository cell can leave out a shared owner.
+  repos: string[];
   activeLabels: Set<string>;
   onToggleLabel: (name: string) => void;
 }) {
@@ -24,6 +26,12 @@ export const Row = memo(function Row({ pr, now, columns, activeLabels, onToggleL
   const merge = MERGE[pr.mergeable];
   const link = (content: ReactNode) => <a href={pr.url} target="_blank" rel="noopener">{content}</a>;
   const cells: Record<string, ReactNode> = {
+    repo: (
+      <td key="repo" className="c-repo mono">
+        {pr.repo ? <a href={'https://github.com/' + pr.repo} target="_blank" rel="noopener" title={pr.repo}>{repositoryLabel(pr.repo, repos)}</a>
+          : <span className="dash">—</span>}
+      </td>
+    ),
     number: <td key="number" className="c-num mono num">{link('#' + pr.number)}</td>,
     title: (
       <td key="title" className="c-title">

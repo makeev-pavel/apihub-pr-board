@@ -20,10 +20,11 @@ export const QUICK: QuickFilter[] = [
   { id: 'attention', label: 'Need attention', tone: 'bad', test: (pr) => pr.attention.length > 0 },
 ];
 
-export type SortKey = 'number' | 'title' | 'author' | 'ci' | 'review' | 'merge' | 'age' | 'attention';
+export type SortKey = 'repo' | 'number' | 'title' | 'author' | 'ci' | 'review' | 'merge' | 'age' | 'attention';
 type SortDir = 'asc' | 'desc';
 
 const SORTS: Record<SortKey, (pr: DerivedPullRequest) => number | string> = {
+  repo: (pr) => pr.repo.toLowerCase(),
   number: (pr) => pr.number,
   title: (pr) => pr.title.toLowerCase(),
   author: (pr) => pr.authorKey.toLowerCase(),
@@ -37,7 +38,7 @@ const isSortKey = (value: string | null): value is SortKey => value !== null && 
 
 // Text columns sort A to Z first; the others start with the highest value.
 export function firstDirection(key: SortKey): SortDir {
-  return key === 'title' || key === 'author' ? 'asc' : 'desc';
+  return key === 'repo' || key === 'title' || key === 'author' ? 'asc' : 'desc';
 }
 
 type AreaFilter = 'all' | 'other' | AreaId;

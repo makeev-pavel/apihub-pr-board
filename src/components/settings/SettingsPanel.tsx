@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { COLUMNS, isColumnShown } from '../../board/columns.ts';
+import { isColumnShown } from '../../board/columns.ts';
+import type { Column } from '../../board/columns.ts';
 import { AREAS } from '../../model/areas.ts';
 import type { Rules } from '../../model/rules.ts';
 import {
@@ -15,7 +16,7 @@ function joinAreas(modules: Rules['areaModules']) {
   return { be: modules.be.join(', '), fe: modules.fe.join(', ') };
 }
 
-export function SettingsPanel({ settings, onChange, token, setToken, refreshing, askForToken, onRefresh, canResetWidths, onResetWidths }: {
+export function SettingsPanel({ settings, onChange, token, setToken, refreshing, askForToken, onRefresh, columns, canResetWidths, onResetWidths }: {
   settings: Settings;
   onChange: (settings: Settings) => void;
   token: string;
@@ -23,6 +24,7 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
   refreshing: boolean;
   askForToken: boolean;
   onRefresh: (token: string) => void;
+  columns: Column[];
   canResetWidths: boolean;
   onResetWidths: () => void;
 }) {
@@ -112,7 +114,7 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
       <section>
         <h2>Columns</h2>
         <div className="column-options">
-          {COLUMNS.map((col) => (
+          {columns.map((col) => (
             <label key={col.id} title={col.required ? 'This column is always shown' : undefined}>
               <input type="checkbox" checked={isColumnShown(col, settings.hiddenColumns)} disabled={col.required}
                 onChange={() => toggleColumn(col.id)} />

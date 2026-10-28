@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { displayLogin, formatAge, formatAgo, initials, labelTextColor, plural } from '../../src/board/format.ts';
+import {
+  displayLogin, formatAge, formatAgo, initials, labelTextColor, plural, repositoriesSummary, repositoryLabel,
+} from '../../src/board/format.ts';
 
 const NOW = Date.parse('2026-10-28T12:00:00Z');
 const ago = (ms: number) => new Date(NOW - ms).toISOString();
@@ -37,4 +39,18 @@ test('TABLE-7: light label colors get dark text and dark ones light text', () =>
   assert.equal(labelTextColor('fbca04'), 'var(--label-ink-dark)');
   assert.equal(labelTextColor('000000'), 'var(--label-ink-light)');
   assert.equal(labelTextColor('1d76db'), 'var(--label-ink-light)');
+});
+
+test('TABLE-26: the Repository cell leaves out the owner when every repository shares one', () => {
+  assert.equal(repositoryLabel('acme/gadgets', ['acme/widgets', 'acme/gadgets']), 'gadgets');
+  assert.equal(repositoryLabel('acme/gadgets', ['ACME/widgets', 'acme/gadgets']), 'gadgets', 'owners compare without case');
+  assert.equal(repositoryLabel('acme/gadgets', ['acme/widgets', 'globex/gadgets', 'acme/gadgets']), 'acme/gadgets');
+});
+
+test('TABLE-27: the header names one or two repositories, and more as the first one and +N more', () => {
+  assert.equal(repositoriesSummary(['acme/widgets']), 'acme/widgets');
+  assert.equal(repositoriesSummary(['acme/widgets', 'acme/gadgets']), 'acme/widgets, acme/gadgets');
+  assert.equal(repositoriesSummary(['acme/widgets', 'acme/gadgets', 'acme/gizmos']), 'acme/widgets +2 more');
+  assert.equal(repositoriesSummary(['acme/widgets', 'acme/gadgets', 'acme/gizmos', 'acme/tools']), 'acme/widgets +3 more');
+  assert.equal(repositoriesSummary([]), '');
 });

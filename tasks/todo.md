@@ -483,7 +483,7 @@ repositories.
 names the repositories; Settings lists the column only then.
 
 **Acceptance criteria:**
-- [ ] One repository: the board looks as it does now. Two or more: the column appears and sorts.
+- [x] One repository: the board looks as it does now. Two or more: the column appears and sorts.
 
 **Verification:** browser tests for both cases; the existing suite passes unchanged.
 **Dependencies:** R3. **Files:** `src/board/columns.ts`, `src/App.tsx`, `src/components/table/*.tsx`,

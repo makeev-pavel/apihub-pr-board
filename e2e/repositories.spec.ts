@@ -32,4 +32,29 @@ test.describe('several repositories', () => {
     await expect(rows(page)).toHaveCount(79);
     await expect(page.locator('h1 .repo')).toHaveText('acme/widgets, acme/gadgets');
   });
+
+  test('TABLE-26: one repository has no Repository column and no setting for it', async ({ page }) => {
+    await openBoard(page, { report: 'typical', query: ALL });
+    await expect(page.locator('.board > thead > tr > th').first()).toHaveText('#');
+    await page.getByRole('button', { name: /^Settings/ }).click();
+    const settings = page.getByRole('dialog', { name: 'Settings' });
+    await expect(settings.getByRole('checkbox', { name: 'Author' })).toBeVisible();
+    await expect(settings.getByRole('checkbox', { name: 'Repository' })).toHaveCount(0);
+  });
+
+  test('TABLE-26: with two repositories the Repository column comes first, sorts, and can be hidden', async ({ page }) => {
+    await openBoard(page, { report: 'two-repos', query: ALL });
+    const header = page.locator('.board > thead > tr > th').first();
+    await expect(header).toHaveText('Repository');
+    const firstCell = rows(page).first().locator('td').first();
+    await header.getByRole('button').click();
+    await expect(firstCell).toHaveText('gadgets');
+    await expect(firstCell.getByRole('link')).toHaveAttribute('href', 'https://github.com/acme/gadgets');
+    await expect(rows(page).first().getByRole('link', { name: '#107', exact: true })).toBeVisible();
+    await header.getByRole('button').click();
+    await expect(firstCell).toHaveText('widgets');
+    await page.getByRole('button', { name: /^Settings/ }).click();
+    await page.getByRole('dialog', { name: 'Settings' }).getByRole('checkbox', { name: 'Repository' }).uncheck();
+    await expect(header).toHaveText('#');
+  });
 });
