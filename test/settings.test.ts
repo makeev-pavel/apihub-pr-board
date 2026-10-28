@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { areasOf, attentionReasons, DEFAULT_RULES, isBot } from '../src/model.ts';
+import { areasOf } from '../src/model/areas.ts';
+import { attentionReasons, DEFAULT_RULES, isBot } from '../src/model/rules.ts';
 import { DEFAULT_SETTINGS, parseList, parseSettings, rulesAreDefault } from '../src/settings.ts';
 import type { PullRequest } from '../src/types.ts';
 

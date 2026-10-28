@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_RULES } from '../src/model.ts';
+import { DEFAULT_RULES } from '../src/model/rules.ts';
 import { parseRepository, repositoryName } from '../src/repository.ts';
 
 test('DATA-1: PR_BOARD_REPO names the repository as owner/name', () => {

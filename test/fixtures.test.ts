@@ -4,7 +4,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { avatarSvg, AVATAR_PATH } from '../dev/avatars.ts';
 import { cornerCaseNodes } from '../dev/fixtures/corner-cases.ts';
 import { BOTS, PEOPLE, TEAMS } from '../dev/fixtures/people.ts';
-import { SEARCH_QUALIFIERS } from '../src/model.ts';
+import { SEARCH_QUALIFIERS } from '../src/model/search.ts';
 
 const NOW = Date.parse('2026-10-28T12:00:00Z');
 const json = JSON.stringify(cornerCaseNodes(NOW));

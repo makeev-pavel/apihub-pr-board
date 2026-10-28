@@ -29,7 +29,8 @@ and `npm run test:screenshots:update` (task 22).
 Now:
 
 ```text
-src/            the page: app.tsx (UI), model.ts (rules), settings.ts, markdown.ts, repository.ts, config.ts
+src/            the page: app.tsx (UI), settings.ts, markdown.ts, repository.ts, config.ts
+src/model/      rules without UI: attention, bots, areas, search, derived fields, prs.json shape
 src/github/     the GraphQL query, raw types, normalization, and the GraphQL and REST clients
 dev/            Vite plugin with the mocks, scenarios, the DEV panel, and fixtures
 scripts/        build-site.ts writes prs.json after vite build
@@ -38,7 +39,7 @@ docs/           requirements and decisions
 tasks/          the current plan and task list
 ```
 
-*Planned (tasks 12–18):* `src/model/`, `src/board/` (logic without React), `src/hooks/`,
+*Planned (tasks 13–18):* `src/board/` (logic without React), `src/hooks/`,
 `src/components/`, `src/styles/`, `dev/scenarios/`, and `e2e/` for browser and screenshot
 tests. No source file over about 300 lines.
 

@@ -240,7 +240,7 @@ into `src/github/` modules.
 **Description:** Move attention rules and bots, areas, search, derive, and `parseReport` into `src/model/` modules.
 
 **Acceptance criteria:**
-- [ ] Each module has one concern and its own unit test file.
+- [x] Each module has one concern and its own unit test file.
 
 **Verification:** all suites and the build. **Dependencies:** Task 11.
 **Files:** `src/model/{rules,areas,search,derive,report}.ts`, `test/model/*.test.ts`. **Scope:** M.

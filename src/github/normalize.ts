@@ -1,6 +1,6 @@
 // Turns raw GraphQL nodes into the PullRequest shape of prs.json.
 
-import { stripHtmlComments } from '../model.ts';
+import { stripHtmlComments } from '../model/comments.ts';
 import type {
   Actor, Checks, CiState, Comment, FailedCheck, Label, MergeState, PullRequest, RequestedReviewer, ReviewState,
 } from '../types.ts';

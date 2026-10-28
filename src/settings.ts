@@ -1,8 +1,9 @@
 // Personal settings, kept in this browser's localStorage. Stored values are untrusted: anything missing or invalid
 // falls back to the default, so an old or hand-edited entry never breaks the page.
 
-import { AREAS, DEFAULT_RULES } from './model.ts';
-import type { Rules } from './model.ts';
+import { AREAS } from './model/areas.ts';
+import { DEFAULT_RULES } from './model/rules.ts';
+import type { Rules } from './model/rules.ts';
 
 export type Theme = 'system' | 'light' | 'dark';
 export type Density = 'comfortable' | 'compact';

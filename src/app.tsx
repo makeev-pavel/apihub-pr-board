@@ -5,10 +5,12 @@ import { fetchOpenPullRequests } from './github/graphql.ts';
 import { fetchAllComments, REST_URL } from './github/rest.ts';
 import type { AllComments } from './github/rest.ts';
 import { markdownText, renderMarkdown } from './markdown.ts';
-import {
-  AREAS, DEFAULT_RULES, derive, isBot, matchesQuery, parseQuery, parseReport, SEARCH_QUALIFIERS, TITLE_TYPES, toggleLabelFilter,
-} from './model.ts';
-import type { Rules } from './model.ts';
+import { AREAS } from './model/areas.ts';
+import { derive } from './model/derive.ts';
+import { parseReport } from './model/report.ts';
+import { DEFAULT_RULES, isBot, TITLE_TYPES } from './model/rules.ts';
+import { matchesQuery, parseQuery, SEARCH_QUALIFIERS, toggleLabelFilter } from './model/search.ts';
+import type { Rules } from './model/rules.ts';
 import { repositoryName } from './repository.ts';
 import {
   DEFAULT_SETTINGS, DENSITIES, isValidStaleDays, loadSettings, MAX_STALE_DAYS, MIN_STALE_DAYS, parseList, rulesAreDefault,

@@ -118,7 +118,7 @@ Full tasks with acceptance criteria and verification are in `tasks/todo.md`.
 ### Phase 3: Split the large files
 
 - [x] Task 11: Split `src/github.ts`
-- [ ] Task 12: Split `src/model.ts`
+- [x] Task 12: Split `src/model.ts`
 - [ ] Task 13: Extract pure board logic from `src/app.tsx`
 - [ ] Task 14: Extract hooks
 - [ ] Task 15: Split table cell components

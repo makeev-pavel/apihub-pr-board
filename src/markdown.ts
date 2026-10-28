@@ -3,7 +3,7 @@
 
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
-import { stripHtmlComments } from './model.ts';
+import { stripHtmlComments } from './model/comments.ts';
 
 // Rendering is cached per comment body; the board holds at most a few hundred comments.
 const MAX_CACHED = 1000;

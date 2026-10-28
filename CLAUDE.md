@@ -13,7 +13,8 @@ A board of the open pull requests of one GitHub repository, published on GitHub 
   `query.ts` (the GraphQL query), `raw.ts` (raw GraphQL and REST types), `normalize.ts` (raw nodes to `PullRequest`),
   `graphql.ts` (open PRs, page by page), `rest.ts` (all comments of one PR), `http.ts` (shared error and fetch type).
 - `src/types.ts`: the shape of `prs.json` and of derived rows. Raw GraphQL types live in `src/github/raw.ts`.
-- `src/model.ts`: rules without UI: attention, bots, areas, search, and report parsing.
+- `src/model/`: rules without UI, one concern each: `rules.ts` (attention, bots, titles), `areas.ts`, `search.ts`,
+  `derive.ts` (per-PR fields), `comments.ts`, `report.ts` (`prs.json` shape). Tests mirror it in `test/model/`.
 - `src/repository.ts` and `src/config.ts`: the target repository from `PR_BOARD_REPO`, passed to the page by Vite
   `define`. `vite.config.ts` parses it once; with mock data the dev server always uses `acme/widgets`.
 - `src/settings.ts`: personal settings in `localStorage`, validated on load.
