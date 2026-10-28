@@ -429,3 +429,82 @@ rewrite the local branch into commits that contain neither, then push only after
 ### Checkpoint: complete
 - [ ] Definition of done: tests pass, no regressions, behavior checked in the browser, docs updated.
 - [ ] Review with the user.
+
+## Backlog: several repositories and shareable settings
+
+Waits for the decisions in `tasks/plan.md` ("Backlog"). Estimates are agent working time.
+
+### Task R1: Spec for several repositories and settings in the URL (about 20 min)
+
+**Description:** Update `docs/requirements/` (DATA, TABLE, FILTER, SET) for several repositories, the Repository
+column, the `repo:` qualifier, repositories and bots in the URL, and repositories outside the snapshot.
+
+**Acceptance criteria:**
+- [ ] Every new behavior has a requirement id; DATA-1 and DATA-2 describe a list of repositories.
+
+**Verification:** `npm run test:requirements` lists the new ids as missing until their tests land; the user approves.
+**Dependencies:** your decisions. **Files:** `docs/requirements/*.md`. **Scope:** S.
+
+### Task R2: Repository on every PR (about 45 min)
+
+**Description:** Add `repo` to `PullRequest` and to normalization, key rows and the comments cache by repository and
+number, let `prs.json` list its repositories, and add `repo:` to search.
+
+**Acceptance criteria:**
+- [ ] Two PRs with the same number in different repositories show as two rows with separate comments.
+- [ ] Old `prs.json` files without `repo` on PRs still load.
+
+**Verification:** unit tests for normalization, `parseReport`, search, and keys; a corner case with equal numbers.
+**Dependencies:** R1. **Files:** `src/types.ts`, `src/github/normalize.ts`, `src/model/*.ts`,
+`src/hooks/useAllComments.ts`, `src/components/table/Row.tsx`. **Scope:** M.
+
+### Task R3: Read several repositories (about 1 hour)
+
+**Description:** One GraphQL `search` query over all repositories, page by page; `PR_BOARD_REPO` takes a comma list;
+the build script and the comments client take each PR's repository; mock scenarios serve two repositories.
+
+**Acceptance criteria:**
+- [ ] The snapshot and Refresh read every listed repository; a missing repository is a warning, not a failure.
+- [ ] The build stops on a malformed list with the variable named.
+
+**Verification:** client tests against the mock scenarios; `dev:live` against two real repositories by hand.
+**Dependencies:** R2. **Files:** `src/github/query.ts`, `src/github/graphql.ts`, `src/github/rest.ts`,
+`src/repository.ts`, `scripts/build-site.ts`, `dev/scenarios/*.ts`. **Scope:** M.
+
+### Task R4: Repository column and header (about 45 min)
+
+**Description:** Show a sortable Repository column only when the data covers more than one repository; the header
+names the repositories; Settings lists the column only then.
+
+**Acceptance criteria:**
+- [ ] One repository: the board looks as it does now. Two or more: the column appears and sorts.
+
+**Verification:** browser tests for both cases; the existing suite passes unchanged.
+**Dependencies:** R3. **Files:** `src/board/columns.ts`, `src/App.tsx`, `src/components/table/*.tsx`,
+`src/components/header/*.tsx`. **Scope:** M.
+
+### Task R5: Repositories and bots in the URL, with a field in Settings (about 1 hour)
+
+**Description:** Read `repos` and `bots` from the URL, write them back from Settings, and keep them in Copy link.
+Repositories the snapshot does not cover show a banner that offers Refresh.
+
+**Acceptance criteria:**
+- [ ] A copied link opens the same repositories and bots in a fresh browser.
+- [ ] Editing the repository field updates the address; an invalid entry is rejected with the reason.
+- [ ] Repositories outside the snapshot are named in a banner, and Refresh loads them.
+
+**Verification:** unit tests for parsing and writing the parameters; browser tests for the field, the link, and the
+banner. **Dependencies:** R3. **Files:** `src/board/view.ts`, `src/settings.ts`,
+`src/components/settings/SettingsPanel.tsx`, `src/App.tsx`. **Scope:** M.
+
+### Task R6: Docs, review, and checks (about 30 min)
+
+**Description:** README, `CLAUDE.md`, and the workflow note for a list in `PR_BOARD_REPO`; a fresh review; all checks.
+
+**Acceptance criteria:**
+- [ ] `npm run test:requirements`, `npm run test:coverage`, the browser suite, and the build pass.
+
+**Verification:** the commands above. **Dependencies:** R4, R5. **Files:** docs. **Scope:** S.
+
+### Checkpoint: several repositories
+- [ ] Review with the user, then the screenshot phase (tasks 21–22) captures the new layout once.

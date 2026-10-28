@@ -168,6 +168,37 @@ Full tasks with acceptance criteria and verification are in `tasks/todo.md`.
 | Self-hosted fonts change the published page | Low | The same IBM Plex families, one external host fewer. |
 | No git history to undo a bad step | High | Task 0 commits the baseline; then one commit per task. |
 
+## Backlog: several repositories and shareable settings
+
+Requested on October 28, 2026. Not started; it waits for the decisions below. Tasks are in `tasks/todo.md` under
+"Backlog".
+
+**Goal.** The board shows open PRs of several repositories at once. With more than one, a Repository column appears.
+The repositories and the extra bot logins live in the URL, so a link shares them and a bookmark keeps them; the
+settings panel gets a field to edit the repository list.
+
+**Assumptions (correct them before the work starts)**
+1. The hourly snapshot covers a list of repositories: `PR_BOARD_REPO` accepts several, separated by commas.
+2. Repositories in the URL that the snapshot does not cover need live data: the page says so and offers Refresh
+   with a token. GitHub's GraphQL API needs a token, so there is no way around it.
+3. Repositories and extra bots live in the URL, not in `localStorage`: the address always shows them, and editing
+   them in Settings updates the address. Without them in the URL, the board uses the build's list and no extra bots.
+   The other settings stay in the browser.
+4. One GraphQL `search` query reads all repositories page by page, instead of one query per repository. GitHub caps
+   a search at 1,000 results, far above the board's size.
+5. A PR is identified by repository and number everywhere: row keys, the comments cache, and the URL.
+6. The area lists, attention rules, and title rule stay shared by all repositories.
+
+**Risks**
+| Risk | Impact | Mitigation |
+| --- | --- | --- |
+| PR numbers repeat across repositories | High | Repository and number as the key; a corner case with equal numbers. |
+| A shared link with many repositories gets long | Low | Short parameter names; a test with ten repositories. |
+| Search results differ from the repository query | Medium | Client tests against the mocks for both shapes; a live check with `dev:live`. |
+
+**Estimate.** About 4 to 5 hours of agent work in six tasks, plus your review at two checkpoints. Screenshot
+baselines (task 22) should come after this work, or they need a second capture.
+
 ## Decisions taken (October 28, 2026)
 
 1. Commits: yes. A working branch, one commit for the baseline, then one commit per task.
