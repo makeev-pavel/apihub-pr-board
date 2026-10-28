@@ -19,6 +19,8 @@ A board of the open pull requests of one GitHub repository, published on GitHub 
   `define`. `vite.config.ts` parses it once; with mock data the dev server always uses `acme/widgets`.
 - `src/board/`: board logic without React: state codes (`states.ts`), columns and widths, the view and its URL,
   filtering and sorting rows (`view.ts`), authors, failed-check grouping, text formatting, and `localStorage`.
+- `src/hooks/`: `usePopover` (and `useDismiss`), `useReportData` (loads `prs.json`), `useAllComments` (the comments
+  panel's REST load, cached per PR version). `src/context.ts`: the viewer's rules and the comments API.
 - `src/settings.ts`: personal settings in `localStorage`, validated on load.
 - `src/markdown.ts`: comment Markdown through `marked` and DOMPurify; browser only.
 - `src/app.tsx`: the React UI; `src/main.tsx`: the entry point; `src/styles.css`: theme tokens and styles.

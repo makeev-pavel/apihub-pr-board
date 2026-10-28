@@ -120,7 +120,7 @@ Full tasks with acceptance criteria and verification are in `tasks/todo.md`.
 - [x] Task 11: Split `src/github.ts`
 - [x] Task 12: Split `src/model.ts`
 - [x] Task 13: Extract pure board logic from `src/app.tsx`
-- [ ] Task 14: Extract hooks
+- [x] Task 14: Extract hooks
 - [ ] Task 15: Split table cell components
 - [ ] Task 16: Split header, toolbar, settings, and table components
 - [ ] Task 17: Split `src/styles.css`

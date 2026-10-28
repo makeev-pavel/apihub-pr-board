@@ -1,7 +1,5 @@
-import { createContext, memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import type {
-  CSSProperties, Dispatch, FormEvent, KeyboardEvent, MouseEvent, PointerEvent, ReactNode, SetStateAction,
-} from 'react';
+import { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import type { CSSProperties, FormEvent, KeyboardEvent, PointerEvent, ReactNode } from 'react';
 import { authorsSummary, collectAuthors, selectedAuthors, toggleAuthor } from './board/authors.ts';
 import type { AuthorEntry } from './board/authors.ts';
 import { CONCLUSION_LABELS, groupChecks } from './board/checks.ts';
@@ -16,13 +14,16 @@ import {
 } from './board/view.ts';
 import type { AuthorsFilter, SortKey, View } from './board/view.ts';
 import { REPOSITORY } from './config.ts';
+import { ApiContext, RulesContext } from './context.ts';
 import { fetchOpenPullRequests } from './github/graphql.ts';
-import { fetchAllComments, REST_URL } from './github/rest.ts';
-import type { AllComments } from './github/rest.ts';
+import { REST_URL } from './github/rest.ts';
+import { useAllComments } from './hooks/useAllComments.ts';
+import { useDismiss } from './hooks/useDismiss.ts';
+import { POPOVER_EDGE_PX, usePopover } from './hooks/usePopover.ts';
+import { useReportData } from './hooks/useReportData.ts';
 import { markdownText, renderMarkdown } from './markdown.ts';
 import { AREAS } from './model/areas.ts';
 import { derive } from './model/derive.ts';
-import { parseReport } from './model/report.ts';
 import { DEFAULT_RULES, isBot, TITLE_TYPES } from './model/rules.ts';
 import type { Rules } from './model/rules.ts';
 import { parseQuery, SEARCH_QUALIFIERS, toggleLabelFilter } from './model/search.ts';
@@ -33,7 +34,7 @@ import {
 } from './settings.ts';
 import type { Settings } from './settings.ts';
 import type {
-  Actor, AreaId, Comment, DerivedPullRequest, DevConfig, Label, PullRequest, Report, RequestedReviewer, Reviewer,
+  Actor, AreaId, DerivedPullRequest, DevConfig, Label, PullRequest, Report, RequestedReviewer, Reviewer,
 } from './types.ts';
 
 declare global {
@@ -42,16 +43,10 @@ declare global {
   }
 }
 
-const DATA_URL = 'prs.json';
-
 const TOKEN_HELP_URL = 'https://github.com/settings/personal-access-tokens/new';
 const COPIED_FEEDBACK_MS = 1800;
 const CLOCK_TICK_MS = 60 * 1000;
-const POPOVER_GAP_PX = 6;
-const POPOVER_EDGE_PX = 16;
 
-// Open a popover upward when less than this much room is left below its trigger.
-const POPOVER_FLIP_PX = 260;
 const ATTENTION_POPOVER_PX = 300;
 
 // Comments open in a panel along the right edge of the window, so long reports have the full height.
@@ -68,16 +63,6 @@ const VISIBLE_LABELS = 4;
 const HEADER_LAYER = 2;
 
 const DEV = window.PR_BOARD_DEV || null;
-
-// The viewer's attention rules, for components deep in the table.
-const RulesContext = createContext<Rules>(DEFAULT_RULES);
-
-// Where the comments panel loads the full list, and the viewer's token if there is one.
-interface Api {
-  token: string;
-  restUrl: string;
-}
-const ApiContext = createContext<Api>({ token: '', restUrl: REST_URL });
 
 function Avatar({ actor, small = false }: { actor: Actor | null; small?: boolean }) {
   const [failed, setFailed] = useState(false);
@@ -160,62 +145,6 @@ function IssueLine({ pr }: { pr: PullRequest }) {
 function Pill({ state, hint }: { state: StateInfo; hint?: string }) {
   const tooltip = state.label + (hint || state.hint ? ': ' + (hint || state.hint) : '');
   return <span className={'pill short ' + state.tone} title={tooltip} aria-label={state.label}>{state.short}</span>;
-}
-
-function useDismiss(open: boolean, setOpen: Dispatch<SetStateAction<boolean>>) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!open) return undefined;
-    const onDoc = (event: globalThis.MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
-    };
-    const onKey = (event: globalThis.KeyboardEvent) => { if (event.key === 'Escape') setOpen(false); };
-    document.addEventListener('mousedown', onDoc);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('mousedown', onDoc);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [open, setOpen]);
-  return ref;
-}
-
-// Popovers are position: fixed so the scrolling table container cannot clip them.
-// Page scroll closes them; scrolling inside the popover itself does not.
-function usePopover(width: number) {
-  const [open, setOpen] = useState(false);
-  const [position, setPosition] = useState<CSSProperties | undefined>(undefined);
-  const ref = useDismiss(open, setOpen);
-  useEffect(() => {
-    if (!open) return undefined;
-    const onScroll = (event: Event) => {
-      if (!(ref.current && ref.current.contains(event.target as Node))) setOpen(false);
-    };
-    const close = () => setOpen(false);
-    window.addEventListener('scroll', onScroll, true);
-    window.addEventListener('resize', close);
-    return () => {
-      window.removeEventListener('scroll', onScroll, true);
-      window.removeEventListener('resize', close);
-    };
-  }, [open, ref]);
-
-  const toggle = (event: MouseEvent<HTMLElement>) => {
-    if (open) {
-      setOpen(false);
-      return;
-    }
-    const rect = event.currentTarget.getBoundingClientRect();
-    const horizontal = rect.left + width > window.innerWidth - POPOVER_EDGE_PX
-      ? { right: Math.max(POPOVER_EDGE_PX, window.innerWidth - rect.right) }
-      : { left: Math.max(POPOVER_EDGE_PX, rect.left) };
-    const vertical = window.innerHeight - rect.bottom < POPOVER_FLIP_PX
-      ? { bottom: window.innerHeight - rect.top + POPOVER_GAP_PX }
-      : { top: rect.bottom + POPOVER_GAP_PX };
-    setPosition({ ...horizontal, ...vertical, width });
-    setOpen(true);
-  };
-  return { open, position, ref, toggle };
 }
 
 function AttentionBadge({ reasons, number }: { reasons: string[]; number: number }) {
@@ -326,37 +255,6 @@ function CiCell({ pr }: { pr: DerivedPullRequest }) {
       ) : null}
     </div>
   );
-}
-
-type AllCommentsState =
-  | { status: 'loading' }
-  | { status: 'ready'; comments: Comment[]; complete: boolean }
-  | { status: 'error'; error: string };
-
-// One request per PR version: a newer updatedAt means new activity, so the list is loaded again.
-const allCommentsCache = new Map<string, Promise<AllComments>>();
-
-function useAllComments(pr: DerivedPullRequest, open: boolean): AllCommentsState {
-  const api = useContext(ApiContext);
-  const [state, setState] = useState<AllCommentsState>({ status: 'loading' });
-  useEffect(() => {
-    if (!open) return undefined;
-    let cancelled = false;
-    const key = pr.number + '@' + pr.updatedAt;
-    let request = allCommentsCache.get(key);
-    if (!request) {
-      request = fetchAllComments({ number: pr.number, repository: REPOSITORY, token: api.token, restUrl: api.restUrl });
-      allCommentsCache.set(key, request);
-      request.catch(() => allCommentsCache.delete(key));
-    }
-    setState({ status: 'loading' });
-    request.then(
-      (result) => { if (!cancelled) setState({ status: 'ready', ...result }); },
-      (error: Error) => { if (!cancelled) setState({ status: 'error', error: error.message }); },
-    );
-    return () => { cancelled = true; };
-  }, [open, pr.number, pr.updatedAt, api.token, api.restUrl]);
-  return state;
 }
 
 function CommentCell({ pr, now }: { pr: DerivedPullRequest; now: number }) {
@@ -886,28 +784,6 @@ function LegendBar() {
       <RulesButton />
     </footer>
   );
-}
-
-interface ReportData {
-  status: 'loading' | 'ready' | 'error';
-  report: Report | null;
-  source: 'scheduled' | 'live' | null;
-  error: string | null;
-}
-
-function useReportData() {
-  const [state, setState] = useState<ReportData>({ status: 'loading', report: null, source: null, error: null });
-  useEffect(() => {
-    fetch(DATA_URL, { cache: 'no-store' })
-      .then((response) => {
-        if (!response.ok) throw new Error('HTTP ' + response.status);
-        return response.json();
-      })
-      .then(parseReport)
-      .then((report) => setState({ status: 'ready', report, source: 'scheduled', error: null }))
-      .catch((error: Error) => setState({ status: 'error', report: null, source: null, error: 'Cannot load ' + DATA_URL + ' (' + error.message + ').' }));
-  }, []);
-  return [state, setState] as const;
 }
 
 export function App() {

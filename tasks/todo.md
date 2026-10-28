@@ -262,7 +262,7 @@ filters, author list and selection, check grouping, label text color, formatting
 into `src/hooks/`.
 
 **Acceptance criteria:**
-- [ ] Each hook is its own file; `App` only composes them.
+- [x] Each hook is its own file; `App` only composes them.
 
 **Verification:** all suites and the build. **Dependencies:** Task 13.
 **Files:** `src/hooks/*.ts`, `src/app.tsx`. **Scope:** S.
