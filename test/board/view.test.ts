@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_VIEW, filterPullRequests, firstDirection, parseView, viewQuery, visibleRows } from '../../src/board/view.ts';
+import {
+  DEFAULT_VIEW, filterPullRequests, firstDirection, parseView, readView, viewQuery, visibleRows, writeView,
+} from '../../src/board/view.ts';
 import { parseQuery } from '../../src/model/search.ts';
 import type { DerivedPullRequest } from '../../src/types.ts';
 
@@ -60,4 +62,18 @@ test('FILTER-2 TABLE-17 TABLE-18: quick filters combine with AND, then rows sort
   assert.deepEqual(ids(visibleRows(prs, { quick: ['ci', 'review'], sort: 'number', dir: 'asc' })), [1]);
   assert.deepEqual(ids(visibleRows(prs, { quick: [], sort: 'ci', dir: 'asc' })), [2, 1, 4, 3]);
   assert.deepEqual(visibleRows([], { quick: ['ci'], sort: 'number', dir: 'asc' }), []);
+});
+
+test('FILTER-13: the page reads the view from its address and writes it back without a reload', () => {
+  const calls: string[] = [];
+  Object.assign(globalThis, {
+    window: { location: { search: '?area=fe', pathname: '/board/' } },
+    history: { replaceState: (_state: unknown, _title: string, url: string) => { calls.push(url); } },
+  });
+  assert.equal(readView().area, 'fe');
+  writeView({ ...DEFAULT_VIEW, q: 'fix' });
+  writeView(DEFAULT_VIEW);
+  assert.deepEqual(calls, ['/board/?q=fix', '/board/']);
+  delete (globalThis as { window?: unknown }).window;
+  delete (globalThis as { history?: unknown }).history;
 });

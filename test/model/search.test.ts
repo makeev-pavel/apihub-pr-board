@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { derive } from '../../src/model/derive.ts';
-import { matchesQuery, parseQuery, toggleLabelFilter } from '../../src/model/search.ts';
+import { activeLabelFilters, matchesQuery, parseQuery, toggleLabelFilter } from '../../src/model/search.ts';
 import type { PullRequest } from '../../src/types.ts';
 
 const NOW = Date.parse('2026-10-28T12:00:00Z');
@@ -57,4 +57,10 @@ test('FILTER-8: search finds a PR by the number of its linked issue', () => {
   assert.ok(search('885', fields));
   assert.ok(search('#885', fields));
   assert.ok(!search('886', fields));
+});
+
+test('FILTER-11: chips are active for labels the search asks for, not for excluded ones', () => {
+  const active = activeLabelFilters(parseQuery('label:Bug -label:wontfix label:"good first issue" ci:failing'));
+  assert.deepEqual([...active], ['bug', 'good first issue']);
+  assert.deepEqual([...activeLabelFilters(parseQuery(''))], []);
 });

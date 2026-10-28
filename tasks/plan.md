@@ -132,8 +132,8 @@ Full tasks with acceptance criteria and verification are in `tasks/todo.md`.
 
 ### Phase 4: Unit coverage
 
-- [ ] Task 19: Unit tests for the extracted modules
-- [ ] Task 20: Coverage gate
+- [x] Task 19: Unit tests for the extracted modules
+- [x] Task 20: Coverage gate
 - [x] Task S2: Requirement coverage check
 
 ### Phase 5: Screenshot tests

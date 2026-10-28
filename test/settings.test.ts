@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { areasOf } from '../src/model/areas.ts';
 import { attentionReasons, DEFAULT_RULES, isBot } from '../src/model/rules.ts';
-import { DEFAULT_SETTINGS, parseList, parseSettings, rulesAreDefault } from '../src/settings.ts';
+import { DEFAULT_SETTINGS, loadSettings, parseList, parseSettings, rulesAreDefault, saveSettings } from '../src/settings.ts';
 import type { PullRequest } from '../src/types.ts';
 
 test('SET-11: missing or invalid stored settings fall back to the defaults', () => {
@@ -58,4 +58,32 @@ test('RULE-11: area lists match plain labels, module: labels, and title scopes',
   assert.deepEqual(areasOf(pr({ labels: [{ name: 'module:ui' }] }), modules), ['fe']);
   assert.deepEqual(areasOf(pr({ title: 'fix(ui): x' }), modules), ['fe']);
   assert.deepEqual(areasOf(pr({ labels: [{ name: 'module:agent' }] }), modules), []);
+});
+
+// A Map-backed localStorage, or one that throws like a browser with storage blocked.
+function useStorage(blocked = false) {
+  const data = new Map<string, string>();
+  const fail = () => { throw new Error('storage is blocked'); };
+  Object.assign(globalThis, {
+    localStorage: { getItem: blocked ? fail : (key: string) => data.get(key) ?? null, setItem: blocked ? fail : (key: string, value: string) => { data.set(key, value); } },
+  });
+  return data;
+}
+
+test('SET-11: settings survive a reload through localStorage, and an unreadable entry gives the defaults', () => {
+  const data = useStorage();
+  assert.deepEqual(loadSettings(), DEFAULT_SETTINGS);
+  const changed = { ...DEFAULT_SETTINGS, theme: 'dark' as const, hiddenColumns: ['ci'] };
+  saveSettings(changed);
+  assert.deepEqual(loadSettings(), changed);
+  data.set('apihub-pr-board.settings', '{broken');
+  assert.deepEqual(loadSettings(), DEFAULT_SETTINGS);
+  delete (globalThis as { localStorage?: unknown }).localStorage;
+});
+
+test('SET-11: blocked storage gives the defaults and never throws', () => {
+  useStorage(true);
+  assert.deepEqual(loadSettings(), DEFAULT_SETTINGS);
+  assert.doesNotThrow(() => saveSettings(DEFAULT_SETTINGS));
+  delete (globalThis as { localStorage?: unknown }).localStorage;
 });

@@ -324,7 +324,7 @@ imported in order from `main.tsx`.
 and the settings and Markdown modules.
 
 **Acceptance criteria:**
-- [ ] Every exported function has a test of its normal case and its edge cases (empty, null, boundary values).
+- [x] Every exported function has a test of its normal case and its edge cases (empty, null, boundary values).
 
 **Verification:** `npm test`. **Dependencies:** checkpoint "structure".
 **Files:** `test/board/*.test.ts` and gaps elsewhere. **Scope:** M.
@@ -334,7 +334,8 @@ and the settings and Markdown modules.
 **Description:** Run unit tests with Node's built-in coverage and fail below the agreed threshold for `src/**/*.ts`.
 
 **Acceptance criteria:**
-- [ ] `npm run test:coverage` reports per file and fails under 90% of lines.
+- [x] `npm run test:coverage` reports per file and fails under 95% of lines or 90% of branches or functions
+  (now 100% of lines, 96% of branches, 94% of functions).
 
 **Verification:** `npm run test:coverage`. **Dependencies:** Task 19. **Files:** `package.json`. **Scope:** XS.
 

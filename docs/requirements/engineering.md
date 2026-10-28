@@ -19,10 +19,11 @@ npm test                  # unit tests (node --test)
 npm run typecheck         # tsc for the browser code and the Node code
 npm run test:e2e          # browser tests (Playwright) on the mock server, port 5174, pinned clock
 npm run test:requirements # every requirement in docs/requirements/ has a test
+npm run test:coverage     # unit tests with coverage of src/**/*.ts: lines 95%, branches and functions 90%
 npm run build             # vite build into _site/, then prs.json; needs GITHUB_TOKEN and PR_BOARD_REPO
 ```
 
-*Planned:* `npm run test:coverage` (task 20), `npm run test:screenshots`
+*Planned:* `npm run test:screenshots`
 and `npm run test:screenshots:update` (task 22).
 
 ## Project structure
@@ -60,8 +61,11 @@ export const COMMENT_BODY_LIMIT = 4000;
 
 ## Testing strategy
 
-- **Unit tests** (`node --test`, `test/`) cover every module without React: normalization, rules, search, settings,
-  Markdown sanitizing, and the GitHub clients against the mock scenarios, so the mocks and the clients stay in sync.
+- **Unit tests** (`node --test`, `test/`) cover every module without React, one test file per module: the board
+  logic, rules, search, settings, Markdown sanitizing, the project files (workflow, versions, color tokens), and the
+  GitHub clients against the mock scenarios, so the mocks and the clients stay in sync. `npm run test:coverage` fails
+  below 95% of lines or 90% of branches or functions of the `src/` modules they load. Hooks, components, and
+  `config.ts` need a browser, so the browser tests cover them.
 - **Browser tests** (Playwright, Chromium, `e2e/`) drive the page on the mock dev server and cover every user flow.
   `e2e/helpers.ts` pins the clock, resets the scenarios, and collects page errors; tests run one at a time because
   the server keeps the chosen scenario. Test titles start with the requirement ids they cover. Each test was seen

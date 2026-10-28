@@ -221,3 +221,17 @@ test('RULE-3: mergeability maps to No conflicts, Conflicts, or Checking', () => 
   assert.equal(merge('UNKNOWN'), 'unknown');
   assert.equal(merge(null), 'unknown');
 });
+
+test('DATA-13: a GraphQL answer that is not JSON fails with a readable message', async () => {
+  const fetchImpl = async () => new Response('<html>Gateway</html>', { status: 200 });
+  await assert.rejects(fetchOpenPullRequests({ token: 't', repository, fetchImpl }), /response that is not JSON/);
+});
+
+test('PANEL-11: the comments panel reports a network failure and other HTTP errors', async () => {
+  const offline = async () => { throw new TypeError('Failed to fetch'); };
+  await assert.rejects(fetchAllComments({ number: 7, repository, fetchImpl: offline, restUrl }), /Cannot reach api.github.com: Failed to fetch/);
+  const failing = async () => new Response('{}', { status: 500 });
+  await assert.rejects(fetchAllComments({ number: 7, repository, fetchImpl: failing, restUrl }), /GitHub API returned HTTP 500/);
+  const rejected = async () => new Response('{}', { status: 401 });
+  await assert.rejects(fetchAllComments({ number: 7, repository, fetchImpl: rejected, restUrl }), /rejected the token/);
+});

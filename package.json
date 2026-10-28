@@ -14,7 +14,8 @@
     "build": "vite build && node scripts/build-site.ts _site",
     "preview": "vite preview",
     "test:e2e": "playwright test --project=e2e",
-    "test:requirements": "node scripts/check-requirements.ts"
+    "test:requirements": "node scripts/check-requirements.ts",
+    "test:coverage": "node --test --experimental-test-coverage --test-coverage-include=\"src/**/*.ts\" --test-coverage-lines=95 --test-coverage-branches=90 --test-coverage-functions=90"
   },
   "dependencies": {
     "dompurify": "3.4.17",
