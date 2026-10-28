@@ -107,7 +107,7 @@ Full tasks with acceptance criteria and verification are in `tasks/todo.md`.
 
 - [x] Task 6: Playwright setup with the mock server
 - [x] Task 7: Browser tests for data loading and Refresh scenarios
-- [ ] Task 8: Browser tests for sorting, filters, search, and URL state
+- [x] Task 8: Browser tests for sorting, filters, search, and URL state
 - [ ] Task 9: Browser tests for popovers and the comments panel
 - [ ] Task 10: Browser tests for columns and settings
 

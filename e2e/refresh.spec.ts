@@ -1,8 +1,7 @@
 import type { Page } from '@playwright/test';
-import { expect, openBoard, test } from './helpers.ts';
+import { ALL, expect, openBoard, test } from './helpers.ts';
 
 const TOKEN_KEY = 'apihub-pr-board.token';
-const ALL = 'authors=all&draft=all';
 
 // Puts a token into the browser before the page loads; the mock accepts any token.
 async function withToken(page: Page) {

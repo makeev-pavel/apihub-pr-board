@@ -1,6 +1,4 @@
-import { expect, openBoard, test } from './helpers.ts';
-
-const ALL = 'authors=all&draft=all';
+import { ALL, expect, openBoard, test } from './helpers.ts';
 
 test.describe('loading prs.json', () => {
   test('DATA-4 TABLE-2: the snapshot opens with a gray dot and its age', async ({ page }) => {

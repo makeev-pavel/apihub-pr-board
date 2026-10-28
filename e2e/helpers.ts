@@ -43,3 +43,21 @@ export const test = base.extend<{ pageErrors: string[] }>({
 });
 
 export { expect };
+
+// Shows every PR in the data: all authors, drafts included.
+export const ALL = 'authors=all&draft=all';
+
+export function rows(page: Page) {
+  return page.locator('.board > tbody > tr');
+}
+
+// PR numbers of the visible rows, top to bottom.
+export async function numbers(page: Page): Promise<number[]> {
+  const cells = await page.locator('.board > tbody > tr > td.c-num').allTextContents();
+  return cells.map((text) => Number(text.replace('#', '')));
+}
+
+// The current URL query as an object, for checks on the view state.
+export function query(page: Page): Record<string, string> {
+  return Object.fromEntries(new URL(page.url()).searchParams);
+}

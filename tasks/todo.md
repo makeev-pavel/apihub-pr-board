@@ -180,7 +180,7 @@ manual choice, refresh keeps it current), draft and area filters, search words a
 issue numbers, Reset view, and reload from a copied URL.
 
 **Acceptance criteria:**
-- [ ] Each control is checked by the rows it leaves and by the URL it writes.
+- [x] Each control is checked by the rows it leaves and by the URL it writes.
 
 **Verification:**
 - [ ] `npm run test:e2e`.
