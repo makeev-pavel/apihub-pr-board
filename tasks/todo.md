@@ -284,7 +284,8 @@ and attention cells into `src/components/`.
 copy link, table, header cell, resizer, row, legend, and rules into `src/components/`.
 
 **Acceptance criteria:**
-- [ ] `src/app.tsx` becomes `src/App.tsx` under about 200 lines; no file in `src/` over about 300.
+- [x] `src/app.tsx` becomes `src/App.tsx` under about 200 lines (183); no file in `src/` over about 300. The settings
+  panel stays one 144-line component: splitting its sections would add props plumbing without making it clearer.
 
 **Verification:** all suites and the build. **Dependencies:** Task 15.
 **Files:** `src/components/{header,toolbar,settings,table,legend}/*.tsx`, `src/App.tsx`, `src/main.tsx`. **Scope:** M.

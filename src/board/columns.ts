@@ -49,3 +49,9 @@ export function fitToWidth(base: Widths, available: number, resizingId: string |
   flex.forEach((id, i) => { fitted[id] += share + (i === 0 ? extra - share * flex.length : 0); });
   return fitted;
 }
+
+export interface ResizeHandlers {
+  onResize: (id: string, width: number) => void;
+  onCommit: (id: string, width: number) => void;
+  onReset: (id: string) => void;
+}

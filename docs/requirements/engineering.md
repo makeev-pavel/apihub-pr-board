@@ -29,11 +29,10 @@ and `npm run test:screenshots:update` (task 22).
 Now:
 
 ```text
-src/            the page: app.tsx (UI), settings.ts, markdown.ts, repository.ts, config.ts
+src/            the page: App.tsx and main.tsx, settings.ts, markdown.ts, repository.ts, config.ts, context.ts
 src/model/      rules without UI: attention, bots, areas, search, derived fields, prs.json shape
-src/hooks/      popovers, loading prs.json, and loading all comments of a PR
-src/components/ React components: common/ (avatar, person, pill, labels, issue line) and cells/ (CI, review,
-                comments, attention)
+src/hooks/      popovers, loading prs.json, loading all comments of a PR, and column widths
+src/components/ React components, one per file: common/, cells/, header/, toolbar/, table/, legend/, settings/
 src/board/      board logic without React: states, columns, the view and its URL, rows, authors, formatting, storage
 src/github/     the GraphQL query, raw types, normalization, and the GraphQL and REST clients
 dev/            Vite plugin with the mocks, scenarios, the DEV panel, and fixtures
@@ -44,8 +43,8 @@ docs/           requirements and decisions
 tasks/          the current plan and task list
 ```
 
-*Planned (tasks 16–18):* the rest of the components in `src/components/`, `src/styles/`, and `dev/scenarios/`. No
-source file over about 300 lines.
+*Planned (tasks 17–18):* `src/styles/` and `dev/scenarios/`. No source file over about 300 lines; the largest is
+`App.tsx` at under 200.
 
 ## Code style
 
