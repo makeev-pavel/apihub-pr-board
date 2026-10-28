@@ -151,7 +151,7 @@ Full tasks with acceptance criteria and verification are in `tasks/todo.md`.
 - [ ] Task 24: Docs and conventions
 - [ ] Task 25: Final review with a fresh reviewer
 
-- [ ] Task P: Squash the local history before the first push, so no real data or organization name is published
+- [x] Task P: Squash the local history before the first push, so no real data or organization name is published
 
 ### Checkpoint: complete
 

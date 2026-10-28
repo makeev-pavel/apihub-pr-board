@@ -416,7 +416,8 @@ the screenshot project, with the HTML report as an artifact when it fails, and t
 rewrite the local branch into commits that contain neither, then push only after the user confirms.
 
 **Acceptance criteria:**
-- [ ] `git log -p` on the branch to be pushed has no organization name and no real login.
+- [x] `git log -p` on the branch to be pushed has no organization name and no real login (squashed early, on
+  October 28, 2026, at the user's request).
 
 **Verification:** the grep over `git log -p`; the user confirms the push. **Dependencies:** Task 25.
 **Files:** git history only. **Scope:** XS.

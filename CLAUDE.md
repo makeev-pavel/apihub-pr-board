@@ -47,5 +47,5 @@ A board of the open pull requests of one GitHub repository, published on GitHub 
 ## Status
 
 Built and tested locally, committed on `refactor/final-structure`, not pushed or deployed. Before the first deploy:
-set **Settings → Pages → Source** to **GitHub Actions** and add the `PR_BOARD_REPO` repository variable. The early
-commits still hold real data: squash the history before the first push (task P in `tasks/todo.md`).
+set **Settings → Pages → Source** to **GitHub Actions** and add the `PR_BOARD_REPO` repository variable. History was
+squashed on October 28, 2026, so no commit holds real data; keep it that way.
