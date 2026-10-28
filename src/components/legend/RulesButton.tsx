@@ -1,11 +1,8 @@
 import { useContext } from 'react';
-import { CI } from '../../board/states.ts';
 import { RulesContext } from '../../context.ts';
 import { usePopover } from '../../hooks/usePopover.ts';
 import { DEFAULT_RULES, TITLE_TYPES } from '../../model/rules.ts';
-import type { Rules } from '../../model/rules.ts';
 import { rulesAreDefault } from '../../settings.ts';
-import type { Settings } from '../../settings.ts';
 
 const RULES_POPOVER_PX = 440;
 

@@ -1,7 +1,7 @@
 // The sets of mock PRs that scenarios serve.
 
 import { cornerCaseNodes } from '../fixtures/corner-cases.ts';
-import type { FixtureEntry } from '../fixtures/corner-cases.ts';
+import type { FixtureEntry } from '../fixtures/builders.ts';
 import { typicalNodes } from '../fixtures/typical.ts';
 
 export const MANY_PRS = 300;

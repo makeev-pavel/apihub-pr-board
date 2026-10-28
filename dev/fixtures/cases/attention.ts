@@ -1,7 +1,7 @@
 // Corner cases. Attention: the age limit and PRs with several problems at once.
 
-import { checks, conn, requested, review, rollup, run, user } from '../builders.ts';
-import type { FixtureEntry } from '../corner-cases.ts';
+import { checks, conn, review, rollup, run, user } from '../builders.ts';
+import type { FixtureEntry } from '../builders.ts';
 import { caseKit } from './kit.ts';
 
 const FIRST_NUMBER = 9700;

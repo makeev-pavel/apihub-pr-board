@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { collectAuthors, selectedAuthors } from './board/authors.ts';
-import { COLUMNS } from './board/columns.ts';
+import { COLUMNS, isColumnShown } from './board/columns.ts';
 import { readToken, storeToken } from './board/storage.ts';
 import {
-  AREA_OPTIONS, DEFAULT_VIEW, DRAFT_OPTIONS, filterPullRequests, readView, visibleRows, writeView,
+  AREA_OPTIONS, DEFAULT_VIEW, DRAFT_OPTIONS, filterPullRequests, firstDirection, readView, visibleRows, writeView,
 } from './board/view.ts';
 import type { SortKey, View } from './board/view.ts';
 import { RefreshControl } from './components/header/RefreshControl.tsx';
@@ -22,7 +22,7 @@ import { REST_URL } from './github/rest.ts';
 import { useColumnWidths } from './hooks/useColumnWidths.ts';
 import { useReportData } from './hooks/useReportData.ts';
 import { derive } from './model/derive.ts';
-import { parseQuery, toggleLabelFilter } from './model/search.ts';
+import { activeLabelFilters, parseQuery, toggleLabelFilter } from './model/search.ts';
 import { repositoryName } from './repository.ts';
 import { loadSettings, saveSettings } from './settings.ts';
 import type { Settings } from './settings.ts';
@@ -40,6 +40,7 @@ const DEV = window.PR_BOARD_DEV || null;
 
 export function App() {
   const [data, setData] = useReportData();
+  const report = data.report;
   const [view, setView] = useState(readView);
   const [token, setTokenState] = useState(readToken);
   const [refreshing, setRefreshing] = useState(false);
@@ -61,9 +62,12 @@ export function App() {
 
   const setSettings = (next: Settings) => { saveSettings(next); setSettingsState(next); };
   const rules = settings.rules;
-  const columns = useMemo(() => COLUMNS.filter((c) => c.required || !settings.hiddenColumns.includes(c.id)), [settings.hiddenColumns]);
+  const columns = useMemo(() => COLUMNS.filter((c) => isColumnShown(c, settings.hiddenColumns)), [settings.hiddenColumns]);
   const { tableWrapRef, widths, tableWidth, resize, canResetWidths, resetWidths } = useColumnWidths(columns);
   const patch = useCallback((changes: Partial<View>) => setView((prev) => ({ ...prev, ...changes })), []);
+  const onToggleLabel = useCallback((name: string) => {
+    setView((prev) => ({ ...prev, q: toggleLabelFilter(prev.q, name) }));
+  }, []);
   const setToken = (value: string) => { storeToken(value); setTokenState(value); };
 
   const refresh = (withToken: string) => {
@@ -82,25 +86,19 @@ export function App() {
   };
 
   const prs = useMemo(() => {
-    return (data.report ? data.report.prs : []).map((pr) => derive(pr, now, rules));
-  }, [data.report, now, rules]);
+    return (report ? report.prs : []).map((pr) => derive(pr, now, rules));
+  }, [report, now, rules]);
 
   const authors = useMemo(() => collectAuthors(prs), [prs]);
   const selected = useMemo(() => selectedAuthors(view.authors, authors), [view.authors, authors]);
 
   const parsedQuery = useMemo(() => parseQuery(view.q), [view.q]);
-  const activeLabels = useMemo(() => new Set(parsedQuery.filters
-    .filter((f) => f.key === 'label' && !f.negate).map((f) => f.value)), [parsedQuery]);
+  const activeLabels = useMemo(() => activeLabelFilters(parsedQuery), [parsedQuery]);
 
   const base = useMemo(
     () => filterPullRequests(prs, { draft: view.draft, area: view.area }, selected, parsedQuery),
     [prs, selected, view.draft, view.area, parsedQuery],
   );
-
-  const onToggleLabel = useCallback((name: string) => {
-    setView((prev) => ({ ...prev, q: toggleLabelFilter(prev.q, name) }));
-  }, []);
-
 
   const rows = useMemo(
     () => visibleRows(base, { quick: view.quick, sort: view.sort, dir: view.dir }),
@@ -109,11 +107,10 @@ export function App() {
 
   const onSort = (key: SortKey) => {
     if (view.sort === key) patch({ dir: view.dir === 'asc' ? 'desc' : 'asc' });
-    else patch({ sort: key, dir: key === 'title' || key === 'author' ? 'asc' : 'desc' });
+    else patch({ sort: key, dir: firstDirection(key) });
   };
   const resetView = () => setView({ ...DEFAULT_VIEW });
   const isDefault = JSON.stringify(view) === JSON.stringify(DEFAULT_VIEW);
-  const report = data.report;
 
   const api = useMemo(() => ({ token, restUrl: DEV ? DEV.restUrl : REST_URL }), [token]);
 

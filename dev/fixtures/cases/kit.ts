@@ -2,7 +2,7 @@
 
 import type { RawPullRequest } from '../../../src/github/raw.ts';
 import { agoFrom, conn, ISSUES_URL, PULLS_URL, rollup, user } from '../builders.ts';
-import type { FixtureEntry } from '../corner-cases.ts';
+import type { FixtureEntry } from '../builders.ts';
 
 type CornerFields = Partial<RawPullRequest> & Pick<RawPullRequest, 'title' | 'createdAt' | 'updatedAt'>;
 

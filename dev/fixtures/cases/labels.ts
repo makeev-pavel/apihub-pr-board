@@ -1,7 +1,7 @@
 // Corner cases. Labels and areas: colors, long lists, tags, and Dependabot paths.
 
 import { bot, conn, ISSUES_URL, label, user } from '../builders.ts';
-import type { FixtureEntry } from '../corner-cases.ts';
+import type { FixtureEntry } from '../builders.ts';
 import { caseKit } from './kit.ts';
 
 const FIRST_NUMBER = 9600;

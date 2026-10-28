@@ -3,7 +3,7 @@
 import { normalizePullRequest } from '../../src/github/normalize.ts';
 import type { Report } from '../../src/types.ts';
 import { cornerCaseNodes } from '../fixtures/corner-cases.ts';
-import type { FixtureEntry } from '../fixtures/corner-cases.ts';
+import type { FixtureEntry } from '../fixtures/builders.ts';
 import { DEV_REPOSITORY } from '../fixtures/people.ts';
 import { typicalNodes } from '../fixtures/typical.ts';
 import { MANY_PRS, manyEntries, mixedEntries } from './entries.ts';

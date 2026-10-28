@@ -1,7 +1,7 @@
 // Corner cases. GitHub quirks: null entries inside connections.
 
-import { conn, requested, user } from '../builders.ts';
-import type { FixtureEntry } from '../corner-cases.ts';
+import { conn, user } from '../builders.ts';
+import type { FixtureEntry } from '../builders.ts';
 import { caseKit } from './kit.ts';
 
 const FIRST_NUMBER = 9800;

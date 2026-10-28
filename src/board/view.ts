@@ -1,4 +1,4 @@
-// The view: search, filters, and sort, kept in the URL query.
+// The view (search, filters, quick filters, and sort), its URL query, and the rows it lets through.
 
 import { AREAS } from '../model/areas.ts';
 import { matchesQuery } from '../model/search.ts';
@@ -23,7 +23,7 @@ export const QUICK: QuickFilter[] = [
 export type SortKey = 'number' | 'title' | 'author' | 'ci' | 'review' | 'merge' | 'age' | 'attention';
 type SortDir = 'asc' | 'desc';
 
-export const SORTS: Record<SortKey, (pr: DerivedPullRequest) => number | string> = {
+const SORTS: Record<SortKey, (pr: DerivedPullRequest) => number | string> = {
   number: (pr) => pr.number,
   title: (pr) => pr.title.toLowerCase(),
   author: (pr) => pr.authorKey.toLowerCase(),
@@ -34,6 +34,11 @@ export const SORTS: Record<SortKey, (pr: DerivedPullRequest) => number | string>
   attention: (pr) => pr.attention.length,
 };
 const isSortKey = (value: string | null): value is SortKey => value !== null && value in SORTS;
+
+// Text columns sort A to Z first; the others start with the highest value.
+export function firstDirection(key: SortKey): SortDir {
+  return key === 'title' || key === 'author' ? 'asc' : 'desc';
+}
 
 type AreaFilter = 'all' | 'other' | AreaId;
 type DraftFilter = 'all' | 'ready' | 'draft';

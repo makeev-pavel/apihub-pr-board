@@ -1,12 +1,19 @@
 // Small builders for raw GraphQL nodes, shared by the corner cases and the generated board.
 
 import type {
-  RawActor, RawCheckRun, RawLabel, RawReview, RawReviewRequest, RawRollup, RawStatusContext,
+  RawActor, RawCheckRun, RawLabel, RawPullRequest, RawReview, RawReviewRequest, RawRollup, RawStatusContext,
 } from '../../src/github/raw.ts';
 import { avatarUrl } from '../avatars.ts';
 import { REPO_URL } from './people.ts';
 
 const HOUR_MS = 60 * 60 * 1000;
+// A mock PR and the note the board shows under its title.
+export interface FixtureEntry {
+  node: RawPullRequest;
+  // Shown under the title on the board; null for ordinary PRs.
+  note: string | null;
+}
+
 export const PULLS_URL = REPO_URL + '/pulls';
 export const ISSUES_URL = REPO_URL + '/issues';
 export const ACTIONS_URL = REPO_URL + '/actions';

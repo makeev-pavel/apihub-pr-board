@@ -5,6 +5,8 @@ import type { Actor } from '../types.ts';
 // Relative luminance above which a label background needs dark text.
 const LIGHT_LABEL_LUMINANCE = 0.45;
 
+const MINUTE_MS = 60 * 1000;
+
 export function plural(n: number, word: string): string {
   return n + ' ' + word + (n === 1 ? '' : 's');
 }
@@ -12,7 +14,7 @@ export function formatAge(days: number): string {
   return days === 0 ? 'today' : plural(days, 'day');
 }
 export function formatAgo(iso: string, now: number): string {
-  const minutes = Math.floor((now - Date.parse(iso)) / 60000);
+  const minutes = Math.floor((now - Date.parse(iso)) / MINUTE_MS);
   if (minutes < 60) return minutes <= 1 ? 'just now' : minutes + ' min ago';
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return plural(hours, 'hour') + ' ago';

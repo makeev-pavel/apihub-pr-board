@@ -1,8 +1,8 @@
 // Corner cases. Comments: review summaries, long bot reports, Markdown, and long discussions.
 
 import { REPO_URL } from '../people.ts';
-import { bot, checks, conn, PULLS_URL, requested, review, rollup, run, team, user } from '../builders.ts';
-import type { FixtureEntry } from '../corner-cases.ts';
+import { checks, conn, PULLS_URL, requested, rollup, run, team, user } from '../builders.ts';
+import type { FixtureEntry } from '../builders.ts';
 import { caseKit } from './kit.ts';
 
 const FIRST_NUMBER = 9500;

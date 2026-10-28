@@ -1,7 +1,7 @@
 // Corner cases. CI: running checks, every kind of failure, and missing or partial check details.
 
 import { checks, conn, rollup, run, user } from '../builders.ts';
-import type { FixtureEntry } from '../corner-cases.ts';
+import type { FixtureEntry } from '../builders.ts';
 import { caseKit } from './kit.ts';
 
 const FIRST_NUMBER = 9300;

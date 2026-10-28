@@ -16,6 +16,14 @@ export interface Rules {
   areaModules: Record<AreaId, string[]>;
 }
 
+export const DEFAULT_RULES: Rules = {
+  staleDays: STALE_DAYS,
+  checkTitle: true,
+  requireIssue: true,
+  extraBots: [],
+  areaModules: DEFAULT_AREA_MODULES,
+};
+
 // GitHub logins are case-insensitive.
 export function isBot(actor: Actor | null, extraBots: string[] = DEFAULT_RULES.extraBots): boolean {
   if (!actor) return false;
@@ -54,11 +62,3 @@ export function attentionReasons(pr: Pick<PullRequest, 'title' | 'issues' | 'pro
   }
   return reasons;
 }
-
-export const DEFAULT_RULES: Rules = {
-  staleDays: STALE_DAYS,
-  checkTitle: true,
-  requireIssue: true,
-  extraBots: [],
-  areaModules: DEFAULT_AREA_MODULES,
-};

@@ -4,6 +4,7 @@ import type { FailedCheck } from '../types.ts';
 
 // Aggregate jobs that fail whenever anything else fails; listed last so the real cause comes first.
 const SUMMARY_CHECKS = new Set(['ci-ok']);
+
 export const CONCLUSION_LABELS: Record<string, string> = {
   failure: 'Failed', timed_out: 'Timed out', startup_failure: 'Did not start', action_required: 'Action required', error: 'Error',
 };

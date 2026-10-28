@@ -1,7 +1,7 @@
 // Corner cases. Review: approvals, requested changes, dismissed reviews, and pending reviewers.
 
-import { checks, conn, label, requested, review, team, user } from '../builders.ts';
-import type { FixtureEntry } from '../corner-cases.ts';
+import { conn, label, requested, review, team, user } from '../builders.ts';
+import type { FixtureEntry } from '../builders.ts';
 import { caseKit } from './kit.ts';
 
 const FIRST_NUMBER = 9400;

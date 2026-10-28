@@ -1,16 +1,19 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { COLUMNS } from '../../board/columns.ts';
-import type { View } from '../../board/view.ts';
+import { COLUMNS, isColumnShown } from '../../board/columns.ts';
 import { AREAS } from '../../model/areas.ts';
 import type { Rules } from '../../model/rules.ts';
 import {
   DEFAULT_SETTINGS, DENSITIES, isValidStaleDays, MAX_STALE_DAYS, MIN_STALE_DAYS, parseList, THEMES,
 } from '../../settings.ts';
 import type { Settings } from '../../settings.ts';
-import type { AreaId, Label } from '../../types.ts';
+import type { AreaId } from '../../types.ts';
 
 const TOKEN_HELP_URL = 'https://github.com/settings/personal-access-tokens/new';
+
+function joinAreas(modules: Rules['areaModules']) {
+  return { be: modules.be.join(', '), fe: modules.fe.join(', ') };
+}
 
 export function SettingsPanel({ settings, onChange, token, setToken, refreshing, askForToken, onRefresh, canResetWidths, onResetWidths }: {
   settings: Settings;
@@ -27,7 +30,6 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
   const [staleDraft, setStaleDraft] = useState(String(rules.staleDays));
   const [botsDraft, setBotsDraft] = useState(rules.extraBots.join(', '));
   const [tokenDraft, setTokenDraft] = useState('');
-  const joinAreas = (modules: Rules['areaModules']) => ({ be: modules.be.join(', '), fe: modules.fe.join(', ') });
   const [areaDrafts, setAreaDrafts] = useState(() => joinAreas(rules.areaModules));
   useEffect(() => setStaleDraft(String(rules.staleDays)), [rules.staleDays]);
   useEffect(() => setBotsDraft(rules.extraBots.join(', ')), [rules.extraBots]);
@@ -112,7 +114,7 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
         <div className="column-options">
           {COLUMNS.map((col) => (
             <label key={col.id} title={col.required ? 'This column is always shown' : undefined}>
-              <input type="checkbox" checked={col.required || !settings.hiddenColumns.includes(col.id)} disabled={col.required}
+              <input type="checkbox" checked={isColumnShown(col, settings.hiddenColumns)} disabled={col.required}
                 onChange={() => toggleColumn(col.id)} />
               {col.label}
             </label>

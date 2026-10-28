@@ -1,3 +1,5 @@
+// Reads prs.json as the page receives it from the network.
+
 import type { Report } from '../types.ts';
 
 // prs.json comes from the network: check the parts the page cannot render without.

@@ -15,10 +15,10 @@ export function CommentCell({ pr, now }: { pr: DerivedPullRequest; now: number }
   const all = useAllComments(pr, open);
   const latest = pr.latestComment;
   if (!pr.commentText || !latest) return <span className="dash">No comments</span>;
-  const preview = pr.comments.length > 1 ? 'Last ' + pr.comments.length + ' comments' : 'Last comment';
   // The latest comments from prs.json show at once; the full list replaces them when it arrives.
-  const shown = all.status === 'ready' && all.comments.length ? all.comments : pr.comments;
-  const title = all.status === 'ready' && all.comments.length ? plural(all.comments.length, 'comment') : preview;
+  const full = all.status === 'ready' && all.comments.length ? all.comments : null;
+  const shown = full || pr.comments;
+  const title = full ? plural(full.length, 'comment') : pr.comments.length > 1 ? 'Last ' + pr.comments.length + ' comments' : 'Last comment';
   return (
     <div className="comment-wrap" ref={ref}>
       <button type="button" className="comment-preview" aria-expanded={open} aria-label={'Comments on PR #' + pr.number} onClick={toggle}>

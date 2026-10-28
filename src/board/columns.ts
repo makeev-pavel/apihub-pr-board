@@ -35,9 +35,13 @@ export const DEFAULT_WIDTHS: Widths = Object.fromEntries(COLUMNS.map((c) => [c.i
 // Columns that absorb spare width so the table always fills the window.
 export const FLEX_COLUMNS = ['title', 'comment'];
 
-// Widen flexible columns until the table fills the available width. The column being resized is
-// left alone so it follows the pointer, and saved widths stay as the user set them. When the flexible columns are
-// hidden or being resized, the last visible column takes the spare width.
+export function isColumnShown(column: Column, hiddenColumns: string[]): boolean {
+  return !!column.required || !hiddenColumns.includes(column.id);
+}
+
+// Widen flexible columns until the table fills the available width. The column being resized is left alone so it
+// follows the pointer, and saved widths stay as the user set them. When the flexible columns are hidden or being
+// resized, the last visible column takes the spare width.
 export function fitToWidth(base: Widths, available: number, resizingId: string | null, columns: Column[]): Widths {
   const total = columns.reduce((sum, c) => sum + base[c.id], 0);
   if (!available || total >= available) return base;

@@ -67,15 +67,11 @@
   display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; line-height: 20px;
   padding: 0 8px; border-radius: 10px; white-space: nowrap; max-width: 100%; overflow: hidden;
 }
-.pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex: none; }
 .pill.bad { background: var(--bad-soft); color: var(--bad); }
 .pill.warn { background: var(--warn-soft); color: var(--warn); }
 .pill.good { background: var(--good-soft); color: var(--good); }
 .pill.idle { background: var(--idle-soft); color: var(--idle); }
-.pill.running::before { animation: pulse 1.4s ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: 0.25; } }
-@media (prefers-reduced-motion: reduce) { .pill.running::before { animation: none; } }
-.state-stack { display: grid; gap: 4px; justify-items: start; }
 .dash { color: var(--muted); }
 
 /* When the login does not fit beside the avatar, it moves to the next line, and breaks only if it is still too long. */
@@ -120,7 +116,6 @@
 .empty strong { color: var(--fg); font-size: 15px; }
 
 .pill.short { justify-content: center; min-width: 30px; padding: 0 7px; gap: 0; font-weight: 600; }
-.pill.short::before { display: none; }
 .pill.short.running { animation: pulse 1.4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .pill.short.running { animation: none; } }
 .c-state { text-align: center; }

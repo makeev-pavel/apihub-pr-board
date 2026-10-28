@@ -2,7 +2,7 @@
 
 import { missingAvatarUrl } from '../../avatars.ts';
 import { bot, conn, rollup, user } from '../builders.ts';
-import type { FixtureEntry } from '../corner-cases.ts';
+import type { FixtureEntry } from '../builders.ts';
 import { caseKit } from './kit.ts';
 
 const FIRST_NUMBER = 9200;

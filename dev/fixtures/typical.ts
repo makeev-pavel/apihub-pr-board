@@ -5,7 +5,7 @@ import type { RawPullRequest } from '../../src/github/raw.ts';
 import {
   agoFrom, bot, checks, conn, ISSUES_URL, label, PULLS_URL, requested, review, rollup, run, user,
 } from './builders.ts';
-import type { FixtureEntry } from './corner-cases.ts';
+import type { FixtureEntry } from './builders.ts';
 import { PEOPLE } from './people.ts';
 
 export const TYPICAL_SIZE = 36;

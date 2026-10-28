@@ -1,4 +1,4 @@
-/* Layout: one working surface. Summary tiles, then the toolbar, then a dense scrollable table. */
+/* Element defaults and the one-screen page layout. */
 
 * { box-sizing: border-box; }
 body {
@@ -26,5 +26,4 @@ html, body { height: 100%; }
 @media (max-width: 700px), (max-height: 520px) {
   html, body { height: auto; }
   #app { height: auto; }
-  .table-wrap { max-height: none; }
 }

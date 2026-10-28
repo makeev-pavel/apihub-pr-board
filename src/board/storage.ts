@@ -4,7 +4,6 @@ import { DEFAULT_WIDTHS, MIN_COLUMN_PX } from './columns.ts';
 import type { Widths } from './columns.ts';
 
 const TOKEN_KEY = 'apihub-pr-board.token';
-
 const COLUMNS_KEY = 'apihub-pr-board.columns';
 
 export function readToken(): string {

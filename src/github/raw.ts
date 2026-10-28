@@ -97,7 +97,7 @@ export interface RawResponse {
   errors?: { type?: string; message: string; path?: (string | number)[] }[];
 }
 
-// REST shapes for the full comment list, which the panel loads when it opens. prs.json keeps only the latest two.
+// REST shapes for the full comment list, which the panel loads when it opens; prs.json keeps only the latest ones.
 export interface RestUser {
   login: string;
   avatar_url?: string | null;

@@ -1,7 +1,7 @@
 // Corner cases. PR titles: escaping, long and non-Latin text, and the Conventional Commits rule.
 
-import { bot, conn, ISSUES_URL, label, review, user } from '../builders.ts';
-import type { FixtureEntry } from '../corner-cases.ts';
+import { conn, ISSUES_URL, label, review, user } from '../builders.ts';
+import type { FixtureEntry } from '../builders.ts';
 import { caseKit } from './kit.ts';
 
 const FIRST_NUMBER = 9100;

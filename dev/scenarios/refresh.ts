@@ -1,7 +1,7 @@
 // How the GraphQL mock behind Refresh behaves.
 
 import type { RawResponse } from '../../src/github/raw.ts';
-import type { FixtureEntry } from '../fixtures/corner-cases.ts';
+import type { FixtureEntry } from '../fixtures/builders.ts';
 import { DEV_REPOSITORY } from '../fixtures/people.ts';
 import { typicalNodes } from '../fixtures/typical.ts';
 import { mixedEntries } from './entries.ts';

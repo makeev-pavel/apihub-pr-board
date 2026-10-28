@@ -1,5 +1,4 @@
-import { CI, LEGEND, REVIEW } from '../../board/states.ts';
-import { Row } from '../table/Row.tsx';
+import { LEGEND, REVIEW } from '../../board/states.ts';
 import { RulesButton } from './RulesButton.tsx';
 
 export function LegendBar() {

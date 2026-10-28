@@ -115,3 +115,8 @@ export function toggleLabelFilter(query: string, name: string): string {
   const token = /[\s"]/.test(name) ? 'label:"' + name.replace(/"/g, '') + '"' : 'label:' + name;
   return (query.trim() + ' ' + token).trim();
 }
+
+// Labels the query asks for (label:<name> without a minus), lowercased, so chips of those labels show as active.
+export function activeLabelFilters(query: ParsedQuery): Set<string> {
+  return new Set(query.filters.filter((f) => f.key === 'label' && !f.negate).map((f) => f.value));
+}
