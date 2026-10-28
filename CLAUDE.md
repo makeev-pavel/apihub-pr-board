@@ -20,16 +20,18 @@ A board of the open pull requests of one GitHub repository, published on GitHub 
 - `src/board/`: board logic without React: state codes (`states.ts`), columns and widths, the view and its URL,
   filtering and sorting rows (`view.ts`), authors, failed-check grouping, text formatting, and `localStorage`.
 - `src/hooks/`: `usePopover` (and `useDismiss`), `useReportData` (loads `prs.json`), `useAllComments` (the comments
-  panel's REST load, cached per PR version), `useColumnWidths` (saved, dragged, and fitted widths). `src/context.ts`: the viewer's rules and the comments API.
+  panel's REST load, cached per PR version), `useColumnWidths` (saved, dragged, and fitted widths).
+  `src/context.ts`: the viewer's rules and the comments API.
 - `src/settings.ts`: personal settings in `localStorage`, validated on load.
 - `src/markdown.ts`: comment Markdown through `marked` and DOMPurify; browser only.
 - `src/components/`: React components, one per file: `common/`, `cells/` (table cells and their popovers), `header/`,
   `toolbar/`, `table/`, `legend/`, and `settings/`.
 - `src/App.tsx`: composes the page; `src/main.tsx`: the entry point and the stylesheets in cascade order.
 - `src/styles/`: `tokens.css` (all colors and fonts, both themes) and one file per area of the page.
-- `dev/mock-plugin.ts`, `dev/scenarios.ts`, `dev/panel.ts`: the Vite plugin with the mocks, the scenarios, and the
-  DEV panel. `dev/fixtures/`: the fictional cast, the generated typical board, and the corner cases by topic
-  (`cases/`; add a case to the matching topic file).
+- `dev/mock-plugin.ts`: the Vite plugin that serves the mocks (helpers in `dev/http.ts`) and injects
+  `dev/panel.ts`, the DEV panel. `dev/scenarios/`: what `/prs.json`, the GraphQL mock, and the REST mock answer.
+  `dev/fixtures/`: the fictional cast, the generated typical board, and the corner cases by topic (`cases/`; add a
+  case to the matching topic file).
 - `scripts/build-site.ts` and `.github/workflows/pages.yml`: the hourly build and the Pages deploy.
 
 ## Working rules

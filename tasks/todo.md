@@ -307,7 +307,7 @@ imported in order from `main.tsx`.
 **Description:** Separate report scenarios, Refresh scenarios, the REST mock, avatars, and the plugin wiring.
 
 **Acceptance criteria:**
-- [ ] Each file is under about 150 lines; the DEV panel lists the same scenarios.
+- [x] Each file is under about 150 lines; the DEV panel lists the same scenarios.
 
 **Verification:** all suites and the build. **Dependencies:** Task 4.
 **Files:** `dev/mock-plugin.ts`, `dev/scenarios/*.ts`. **Scope:** S.

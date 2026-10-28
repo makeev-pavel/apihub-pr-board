@@ -26,8 +26,6 @@ and `npm run test:screenshots:update` (task 22).
 
 ## Project structure
 
-Now:
-
 ```text
 src/            the page: App.tsx and main.tsx, settings.ts, markdown.ts, repository.ts, config.ts, context.ts
 src/model/      rules without UI: attention, bots, areas, search, derived fields, prs.json shape
@@ -36,7 +34,7 @@ src/components/ React components, one per file: common/, cells/, header/, toolba
 src/styles/     tokens.css (colors and fonts for both themes) and one stylesheet per area of the page
 src/board/      board logic without React: states, columns, the view and its URL, rows, authors, formatting, storage
 src/github/     the GraphQL query, raw types, normalization, and the GraphQL and REST clients
-dev/            Vite plugin with the mocks, scenarios, the DEV panel, and fixtures
+dev/            the Vite plugin with the mocks, the DEV panel, scenarios/ (mock answers), and fixtures/ (mock PRs)
 scripts/        build-site.ts writes prs.json after vite build
 test/           unit tests, one file per module
 e2e/            browser tests (Playwright) and their helpers
@@ -44,8 +42,7 @@ docs/           requirements and decisions
 tasks/          the current plan and task list
 ```
 
-*Planned (task 18):* `dev/scenarios/`. No source file over about 300 lines; the largest is
-`App.tsx` at under 200.
+No source file is over about 300 lines; the largest is `App.tsx` at under 200.
 
 ## Code style
 

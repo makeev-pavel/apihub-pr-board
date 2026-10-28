@@ -124,7 +124,7 @@ Full tasks with acceptance criteria and verification are in `tasks/todo.md`.
 - [x] Task 15: Split table cell components
 - [x] Task 16: Split header, toolbar, settings, and table components
 - [x] Task 17: Split `src/styles.css`
-- [ ] Task 18: Split the dev mock plugin and scenarios
+- [x] Task 18: Split the dev mock plugin and scenarios
 
 ### Checkpoint: structure
 

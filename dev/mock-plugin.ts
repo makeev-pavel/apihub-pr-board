@@ -8,41 +8,19 @@ import type { Repository } from '../src/repository.ts';
 import type { DevConfig } from '../src/types.ts';
 import { AVATAR_PATH, avatarSvg } from './avatars.ts';
 import { mockClock } from './clock.ts';
-import { REFRESH_SCENARIOS, REPORT_SCENARIOS, restComments } from './scenarios.ts';
-import type { GraphqlVariables, MockResponse } from './scenarios.ts';
+import { JSON_TYPE, readBody, respondMock, send } from './http.ts';
+import { REFRESH_SCENARIOS } from './scenarios/refresh.ts';
+import { REPORT_SCENARIOS } from './scenarios/report.ts';
+import { restComments } from './scenarios/rest.ts';
+import type { GraphqlVariables } from './scenarios/types.ts';
 
 export const LIVE_MODE = 'live';
 const LIVE_CACHE_MS = 5 * 60 * 1000;
-const JSON_TYPE = 'application/json; charset=utf-8';
-const TEXT_TYPE = 'text/plain; charset=utf-8';
+
 const REST_PREFIX = '/__dev/rest';
+
 // /repos/<owner>/<repo>/issues/<n>/comments or /repos/<owner>/<repo>/pulls/<n>/reviews
 const REST_ROUTE = /^\/repos\/[^/]+\/[^/]+\/(issues|pulls)\/(\d+)\/(comments|reviews)$/;
-
-function send(res: ServerResponse, status: number, body: string, type = TEXT_TYPE) {
-  res.writeHead(status, { 'Content-Type': type, 'Cache-Control': 'no-store' });
-  res.end(body);
-}
-
-function readBody(req: IncomingMessage): Promise<string> {
-  return new Promise((resolve, reject) => {
-    let data = '';
-    req.on('data', (chunk) => { data += chunk; });
-    req.on('end', () => resolve(data));
-    req.on('error', reject);
-  });
-}
-
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-async function respondMock(res: ServerResponse, result: MockResponse) {
-  if (result.delayMs) await delay(result.delayMs);
-  if (result.destroy) {
-    res.socket?.destroy();
-    return;
-  }
-  send(res, result.status, result.body, result.status === 200 ? JSON_TYPE : TEXT_TYPE);
-}
 
 export function devMocks({ repository }: { repository: Repository }): Plugin {
   const state = { report: REPORT_SCENARIOS[0].id, refresh: REFRESH_SCENARIOS[0].id };

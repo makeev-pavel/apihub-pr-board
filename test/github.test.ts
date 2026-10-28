@@ -6,7 +6,7 @@ import {
 } from '../src/github/normalize.ts';
 import { fetchAllComments } from '../src/github/rest.ts';
 import type { RawPullRequest } from '../src/github/raw.ts';
-import { REFRESH_SCENARIOS } from '../dev/scenarios.ts';
+import { REFRESH_SCENARIOS } from '../dev/scenarios/refresh.ts';
 
 const repository = { owner: 'acme', name: 'widgets' };
 

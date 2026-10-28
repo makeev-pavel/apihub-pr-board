@@ -1,7 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mockClock } from '../dev/clock.ts';
-import { REFRESH_SCENARIOS, REPORT_SCENARIOS, restComments } from '../dev/scenarios.ts';
+import { REFRESH_SCENARIOS } from '../dev/scenarios/refresh.ts';
+import { REPORT_SCENARIOS } from '../dev/scenarios/report.ts';
+import { restComments } from '../dev/scenarios/rest.ts';
 
 const FIXED = '2026-10-28T12:00:00Z';
 
