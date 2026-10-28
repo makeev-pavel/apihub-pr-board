@@ -15,7 +15,7 @@
 ## Look
 
 - **QUAL-6** Light and dark themes share one set of color tokens. Colors in the stylesheet come only from these
-  tokens. *Planned: task 17 moves the last raw color, the label chip border, into a token.*
+  tokens (`src/styles/tokens.css`).
 - **QUAL-7** Text and code use IBM Plex Sans and IBM Plex Mono, with system fonts as the fallback.
 
 ## Size and browsers

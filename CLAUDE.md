@@ -25,7 +25,8 @@ A board of the open pull requests of one GitHub repository, published on GitHub 
 - `src/markdown.ts`: comment Markdown through `marked` and DOMPurify; browser only.
 - `src/components/`: React components, one per file: `common/`, `cells/` (table cells and their popovers), `header/`,
   `toolbar/`, `table/`, `legend/`, and `settings/`.
-- `src/App.tsx`: composes the page; `src/main.tsx`: the entry point; `src/styles.css`: theme tokens and styles.
+- `src/App.tsx`: composes the page; `src/main.tsx`: the entry point and the stylesheets in cascade order.
+- `src/styles/`: `tokens.css` (all colors and fonts, both themes) and one file per area of the page.
 - `dev/mock-plugin.ts`, `dev/scenarios.ts`, `dev/panel.ts`: the Vite plugin with the mocks, the scenarios, and the
   DEV panel. `dev/fixtures/`: the fictional cast, the generated typical board, and the corner cases by topic
   (`cases/`; add a case to the matching topic file).

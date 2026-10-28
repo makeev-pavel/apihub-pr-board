@@ -33,6 +33,7 @@ src/            the page: App.tsx and main.tsx, settings.ts, markdown.ts, reposi
 src/model/      rules without UI: attention, bots, areas, search, derived fields, prs.json shape
 src/hooks/      popovers, loading prs.json, loading all comments of a PR, and column widths
 src/components/ React components, one per file: common/, cells/, header/, toolbar/, table/, legend/, settings/
+src/styles/     tokens.css (colors and fonts for both themes) and one stylesheet per area of the page
 src/board/      board logic without React: states, columns, the view and its URL, rows, authors, formatting, storage
 src/github/     the GraphQL query, raw types, normalization, and the GraphQL and REST clients
 dev/            Vite plugin with the mocks, scenarios, the DEV panel, and fixtures
@@ -43,7 +44,7 @@ docs/           requirements and decisions
 tasks/          the current plan and task list
 ```
 
-*Planned (tasks 17–18):* `src/styles/` and `dev/scenarios/`. No source file over about 300 lines; the largest is
+*Planned (task 18):* `dev/scenarios/`. No source file over about 300 lines; the largest is
 `App.tsx` at under 200.
 
 ## Code style

@@ -3,7 +3,7 @@ import type { Column, ResizeHandlers } from '../../board/columns.ts';
 import type { SortKey, View } from '../../board/view.ts';
 import { ColumnResizer } from './ColumnResizer.tsx';
 
-// Header cells stack above the rows from this layer up; see .col-resizer in styles.css.
+// Header cells stack above the rows from this layer up; see .col-resizer in styles/table.css.
 const HEADER_LAYER = 2;
 
 export function HeaderCell({ col, index, view, onSort, width, resize }: {

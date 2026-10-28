@@ -296,7 +296,8 @@ copy link, table, header cell, resizer, row, legend, and rules into `src/compone
 imported in order from `main.tsx`.
 
 **Acceptance criteria:**
-- [ ] Theme tokens stay in one file with both dark blocks; no rule changes.
+- [x] Theme tokens stay in one file with both dark blocks; no rule changes. Verified by comparing about 60 computed
+  properties of every element in 14 board states before and after: identical.
 
 **Verification:** all suites, the build, and a visual comparison before and after. **Dependencies:** Task 16.
 **Files:** `src/styles/*.css`, `src/main.tsx`. **Scope:** S.
