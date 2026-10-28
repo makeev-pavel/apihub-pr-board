@@ -23,7 +23,8 @@ A board of the open pull requests of one GitHub repository, published on GitHub 
   panel's REST load, cached per PR version). `src/context.ts`: the viewer's rules and the comments API.
 - `src/settings.ts`: personal settings in `localStorage`, validated on load.
 - `src/markdown.ts`: comment Markdown through `marked` and DOMPurify; browser only.
-- `src/app.tsx`: the React UI; `src/main.tsx`: the entry point; `src/styles.css`: theme tokens and styles.
+- `src/components/`: React components, one per file: `common/` and `cells/` (the table cells and their popovers).
+- `src/app.tsx`: the rest of the React UI; `src/main.tsx`: the entry point; `src/styles.css`: theme tokens and styles.
 - `dev/mock-plugin.ts`, `dev/scenarios.ts`, `dev/panel.ts`: the Vite plugin with the mocks, the scenarios, and the
   DEV panel. `dev/fixtures/`: the fictional cast, the generated typical board, and the corner cases by topic
   (`cases/`; add a case to the matching topic file).

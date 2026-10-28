@@ -1,30 +1,35 @@
 import { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import type { CSSProperties, FormEvent, KeyboardEvent, PointerEvent, ReactNode } from 'react';
+import type { FormEvent, KeyboardEvent, PointerEvent, ReactNode } from 'react';
 import { authorsSummary, collectAuthors, selectedAuthors, toggleAuthor } from './board/authors.ts';
 import type { AuthorEntry } from './board/authors.ts';
-import { CONCLUSION_LABELS, groupChecks } from './board/checks.ts';
 import { COLUMNS, DEFAULT_WIDTHS, fitToWidth, FLEX_COLUMNS, MIN_COLUMN_PX, RESIZE_STEP_PX } from './board/columns.ts';
 import type { Column, Widths } from './board/columns.ts';
-import { displayLogin, formatAge, formatAgo, initials, labelTextColor, plural } from './board/format.ts';
-import { CI, DECISION_BY_REVIEW, LEGEND, MERGE, REVIEW, REVIEW_SECTIONS } from './board/states.ts';
-import type { StateInfo } from './board/states.ts';
+import { displayLogin, formatAge, formatAgo } from './board/format.ts';
+import { CI, LEGEND, MERGE, REVIEW } from './board/states.ts';
 import { readColumnWidths, readToken, storeToken, writeColumnWidths } from './board/storage.ts';
 import {
   AREA_OPTIONS, DEFAULT_VIEW, DRAFT_OPTIONS, filterPullRequests, QUICK, readView, visibleRows, writeView,
 } from './board/view.ts';
 import type { AuthorsFilter, SortKey, View } from './board/view.ts';
+import { AttentionBadge } from './components/cells/AttentionBadge.tsx';
+import { CiCell } from './components/cells/CiCell.tsx';
+import { CommentCell } from './components/cells/CommentCell.tsx';
+import { ReviewCell } from './components/cells/ReviewCell.tsx';
+import { Avatar } from './components/common/Avatar.tsx';
+import { IssueLine } from './components/common/IssueLine.tsx';
+import { LabelList } from './components/common/LabelList.tsx';
+import { Person } from './components/common/Person.tsx';
+import { Pill } from './components/common/Pill.tsx';
 import { REPOSITORY } from './config.ts';
 import { ApiContext, RulesContext } from './context.ts';
 import { fetchOpenPullRequests } from './github/graphql.ts';
 import { REST_URL } from './github/rest.ts';
-import { useAllComments } from './hooks/useAllComments.ts';
 import { useDismiss } from './hooks/useDismiss.ts';
-import { POPOVER_EDGE_PX, usePopover } from './hooks/usePopover.ts';
+import { usePopover } from './hooks/usePopover.ts';
 import { useReportData } from './hooks/useReportData.ts';
-import { markdownText, renderMarkdown } from './markdown.ts';
 import { AREAS } from './model/areas.ts';
 import { derive } from './model/derive.ts';
-import { DEFAULT_RULES, isBot, TITLE_TYPES } from './model/rules.ts';
+import { DEFAULT_RULES, TITLE_TYPES } from './model/rules.ts';
 import type { Rules } from './model/rules.ts';
 import { parseQuery, SEARCH_QUALIFIERS, toggleLabelFilter } from './model/search.ts';
 import { repositoryName } from './repository.ts';
@@ -33,9 +38,7 @@ import {
   rulesAreDefault, saveSettings, THEMES,
 } from './settings.ts';
 import type { Settings } from './settings.ts';
-import type {
-  Actor, AreaId, DerivedPullRequest, DevConfig, Label, PullRequest, Report, RequestedReviewer, Reviewer,
-} from './types.ts';
+import type { AreaId, DerivedPullRequest, DevConfig, Label, Report } from './types.ts';
 
 declare global {
   interface Window {
@@ -47,262 +50,13 @@ const TOKEN_HELP_URL = 'https://github.com/settings/personal-access-tokens/new';
 const COPIED_FEEDBACK_MS = 1800;
 const CLOCK_TICK_MS = 60 * 1000;
 
-const ATTENTION_POPOVER_PX = 300;
-
-// Comments open in a panel along the right edge of the window, so long reports have the full height.
-const COMMENTS_PANEL_PX = 560;
-const COMMENTS_PANEL_STYLE: CSSProperties = { top: POPOVER_EDGE_PX, right: POPOVER_EDGE_PX, bottom: POPOVER_EDGE_PX, width: COMMENTS_PANEL_PX };
-const CHECKS_POPOVER_PX = 400;
-const REVIEW_POPOVER_PX = 320;
 const RULES_POPOVER_PX = 440;
 const UPDATE_POPOVER_PX = 280;
-
-const VISIBLE_LABELS = 4;
 
 // Header cells stack above the rows from this layer up; see .col-resizer in styles.css.
 const HEADER_LAYER = 2;
 
 const DEV = window.PR_BOARD_DEV || null;
-
-function Avatar({ actor, small = false }: { actor: Actor | null; small?: boolean }) {
-  const [failed, setFailed] = useState(false);
-  const cls = 'avatar' + (small ? ' sm' : '');
-  if (!actor || !actor.avatarUrl || failed) {
-    return <span className={cls} aria-hidden="true">{actor ? initials(actor.login) : '?'}</span>;
-  }
-  return <img className={cls} src={actor.avatarUrl} alt="" loading="lazy" onError={() => setFailed(true)} />;
-}
-
-function Person({ actor }: { actor: Actor | null }) {
-  const { extraBots } = useContext(RulesContext);
-  if (!actor) {
-    return (
-      <div className="person ghost" title="The author's GitHub account was deleted">
-        <Avatar actor={null} /><span className="login">ghost</span>
-      </div>
-    );
-  }
-  return (
-    <div className="person">
-      <Avatar actor={actor} />
-      <span className="login">{displayLogin(actor)}</span>
-      {isBot(actor, extraBots) ? <span className="chip bot">bot</span> : null}
-    </div>
-  );
-}
-
-function LabelChip({ label, active, onToggle }: { label: Label; active: boolean; onToggle: (name: string) => void }) {
-  const style = label.color ? { background: '#' + label.color, color: labelTextColor(label.color) } : undefined;
-  const hint = (label.description ? label.description + '. ' : '') + (active ? 'Click to remove this filter' : 'Click to filter by this label');
-  return (
-    <button type="button" className={'label-chip' + (active ? ' active' : '')} style={style} title={hint}
-      aria-pressed={active} onClick={() => onToggle(label.name)}>{label.name}</button>
-  );
-}
-
-function LabelList({ labels, activeLabels, onToggle }: { labels: Label[]; activeLabels: Set<string>; onToggle: (name: string) => void }) {
-  const [expanded, setExpanded] = useState(false);
-  const shown = expanded ? labels : labels.slice(0, VISIBLE_LABELS);
-  const hidden = labels.length - shown.length;
-  return (
-    <>
-      {shown.map((l) => <LabelChip key={l.name} label={l} active={activeLabels.has(l.name.toLowerCase())} onToggle={onToggle} />)}
-      {hidden > 0 ? (
-        <button type="button" className="label-more" title={labels.slice(VISIBLE_LABELS).map((l) => l.name).join(', ')}
-          onClick={() => setExpanded(true)}>+{hidden}</button>
-      ) : null}
-      {expanded && labels.length > VISIBLE_LABELS ? <button type="button" className="label-more" onClick={() => setExpanded(false)}>less</button> : null}
-    </>
-  );
-}
-
-// The issue the PR closes (the Development field). Without one, the project it was added to instead.
-function IssueLine({ pr }: { pr: PullRequest }) {
-  if (pr.issues.length) {
-    return (
-      <div className="issue-line">{pr.issues.map((issue, i) => {
-        const text = (
-          <>
-            <span className="issue-title">{issue.title}</span>
-            {issue.number ? <span className="issue-number">(#{issue.number})</span> : null}
-          </>
-        );
-        return (
-          <span key={i} className="issue-ref" title={'Closes ' + issue.title + (issue.number ? ' (#' + issue.number + ')' : '')}>
-            <span className="issue-icon" aria-hidden="true">↳</span>
-            <a className="issue-text" href={issue.url} target="_blank" rel="noopener">{text}</a>
-          </span>
-        );
-      })}</div>
-    );
-  }
-  if (pr.projects && pr.projects.length) {
-    return <div className="issue-line muted-line"><span className="issue-icon" aria-hidden="true">↳</span>No issue · in {pr.projects.join(', ')}</div>;
-  }
-  return null;
-}
-
-function Pill({ state, hint }: { state: StateInfo; hint?: string }) {
-  const tooltip = state.label + (hint || state.hint ? ': ' + (hint || state.hint) : '');
-  return <span className={'pill short ' + state.tone} title={tooltip} aria-label={state.label}>{state.short}</span>;
-}
-
-function AttentionBadge({ reasons, number }: { reasons: string[]; number: number }) {
-  const { open, position, ref, toggle } = usePopover(ATTENTION_POPOVER_PX);
-  const label = plural(reasons.length, 'problem');
-  return (
-    <div className="attn" ref={ref}>
-      <button type="button" className="attn-icon" aria-expanded={open} aria-label={'PR #' + number + ': ' + label}
-        title={reasons.join('\n')} onClick={toggle}>
-        <span aria-hidden="true">!</span>{reasons.length > 1 ? <span className="attn-count">{reasons.length}</span> : null}
-      </button>
-      {open ? (
-        <div className="popover attn-popover" role="dialog" aria-label={'Why PR #' + number + ' needs attention'} style={position}>
-          <strong className="popover-title">{label}</strong>
-          <ul>{reasons.map((r) => <li key={r}>{r}</li>)}</ul>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function ReviewCell({ pr, now }: { pr: DerivedPullRequest; now: number }) {
-  const { open, position, ref, toggle } = usePopover(REVIEW_POPOVER_PX);
-  const state = REVIEW[pr.review];
-  const waiting = pr.requestedReviewers;
-  const approvers = pr.reviewers.filter((r) => r.state === 'APPROVED').map((r) => r.login);
-  const decided = pr.reviewers.filter((r) => r.state === DECISION_BY_REVIEW[pr.review]).length;
-  const accessibleName = state.label + (decided > 1 ? ' by ' + decided + ' reviewers' : '')
-    + (waiting.length ? ', ' + plural(waiting.length, 'pending reviewer') : '') + ' on PR #' + pr.number + '. Show reviewers';
-  const tooltip = [
-    approvers.length ? 'Approved by ' + approvers.join(', ') : state.label,
-    waiting.length ? 'Waiting for ' + waiting.map((r) => r.login).join(', ') : '',
-  ].filter(Boolean).join('. ');
-  const reviewer = (r: Reviewer | RequestedReviewer) => {
-    const team = 'team' in r && r.team;
-    const at = 'at' in r ? r.at : null;
-    return (
-      <li key={r.login}>
-        <Avatar actor={r} small />
-        <span className="who">{team ? '@' + r.login : displayLogin(r)}</span>
-        {team ? <span className="chip">team</span> : null}
-        {at ? <span className="when" title={new Date(at).toUTCString()}>{formatAgo(at, now)}</span> : null}
-      </li>
-    );
-  };
-  return (
-    <div className="review-wrap" ref={ref}>
-      <button type="button" className={'pill short ' + state.tone + ' as-button'} aria-expanded={open}
-        aria-label={accessibleName} title={tooltip} onClick={toggle}>
-        {state.short}{decided > 1 ? <sup>{decided}</sup> : null}
-      </button>
-      {waiting.length ? <span className="pending" aria-hidden="true" title={'Waiting for ' + plural(waiting.length, 'reviewer')}>◷{waiting.length}</span> : null}
-      {open ? (
-        <div className="popover review-popover" role="dialog" aria-label={'Reviewers of PR #' + pr.number} style={position}>
-          {REVIEW_SECTIONS.map(({ state: s, title }) => {
-            const list = pr.reviewers.filter((r) => r.state === s);
-            return list.length ? <section key={s}><strong className="popover-title">{title}</strong><ul className="people">{list.map(reviewer)}</ul></section> : null;
-          })}
-          {waiting.length ? <section><strong className="popover-title">Waiting for review from</strong><ul className="people">{waiting.map(reviewer)}</ul></section> : null}
-          {!pr.reviewers.length && !waiting.length ? <p className="muted">No reviews yet, and nobody is requested as a reviewer.</p> : null}
-          <a className="popover-footer" href={pr.url} target="_blank" rel="noopener">Open the PR on GitHub</a>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function CiCell({ pr }: { pr: DerivedPullRequest }) {
-  const { open, position, ref, toggle } = usePopover(CHECKS_POPOVER_PX);
-  const state = CI[pr.ci];
-  if (pr.ci !== 'failing') return <Pill state={state} />;
-  const checks = pr.checks;
-  const failed = checks ? groupChecks(checks.failed) : [];
-  const summary = failed.length ? plural(failed.length, 'failed check') : 'Failed checks';
-  const tooltip = failed.length ? summary + ': ' + failed.map((c) => c.name).join(', ') : state.hint;
-  return (
-    <div className="ci-wrap" ref={ref}>
-      <button type="button" className={'pill short ' + state.tone + ' as-button'} aria-expanded={open}
-        aria-label={summary + ' on PR #' + pr.number} title={tooltip} onClick={toggle}>
-        {state.short}{failed.length > 1 ? <sup>{failed.length}</sup> : null}
-      </button>
-      {open ? (
-        <div className="popover checks-popover" role="dialog" aria-label={summary + ' on PR #' + pr.number} style={position}>
-          <strong className="popover-title">{summary}{checks ? ' of ' + checks.total : ''}</strong>
-          {!checks ? <p className="muted">Check details were not collected for this PR.</p> : null}
-          {checks && !failed.length ? <p className="muted">GitHub reports CI as failing, but no failed check is among the {checks.total > 100 ? 'first 100' : checks.total} checks read.</p> : null}
-          {failed.length ? (
-            <ul className="check-list">
-              {failed.map((c, i) => (
-                <li key={i}>
-                  <div className="check-name">
-                    {c.url ? <a href={c.url} target="_blank" rel="noopener">{c.name}</a> : c.name}
-                    {c.count > 1 ? <> <span className="check-count" title={'Reported ' + c.count + ' times'}>×{c.count}</span></> : null}
-                  </div>
-                  <div className="check-meta">
-                    {c.workflow ? <span>{c.workflow}</span> : null}
-                    {c.summary ? <span className="chip" title="Fails when any other required check fails">summary job</span> : null}
-                    {c.conclusion !== 'failure' ? <span className="chip">{CONCLUSION_LABELS[c.conclusion] || c.conclusion}</span> : null}
-                    {c.description ? <span>{c.description}</span> : null}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-          {checks && !checks.complete ? <p className="muted">Only the first 100 of {checks.total} checks were read; others may have failed too.</p> : null}
-          <a className="popover-footer" href={pr.url + '/checks'} target="_blank" rel="noopener">All checks on GitHub</a>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function CommentCell({ pr, now }: { pr: DerivedPullRequest; now: number }) {
-  const { open, ref, toggle } = usePopover(COMMENTS_PANEL_PX);
-  const all = useAllComments(pr, open);
-  const latest = pr.latestComment;
-  if (!pr.commentText || !latest) return <span className="dash">No comments</span>;
-  const preview = pr.comments.length > 1 ? 'Last ' + pr.comments.length + ' comments' : 'Last comment';
-  // The latest comments from prs.json show at once; the full list replaces them when it arrives.
-  const shown = all.status === 'ready' && all.comments.length ? all.comments : pr.comments;
-  const title = all.status === 'ready' && all.comments.length ? plural(all.comments.length, 'comment') : preview;
-  return (
-    <div className="comment-wrap" ref={ref}>
-      <button type="button" className="comment-preview" aria-expanded={open} aria-label={'Comments on PR #' + pr.number} onClick={toggle}>
-        <span className="comment-head">
-          {latest.author ? <><Avatar actor={latest.author} small /><span>{displayLogin(latest.author)}</span></> : null}
-          <span>· {formatAgo(latest.at, now)}</span>
-          {pr.comments.length > 1 ? <span className="comment-more">+{pr.comments.length - 1}</span> : null}
-        </span>
-        <span className="comment-body">{markdownText(latest.body)}</span>
-      </button>
-      {open ? (
-        <div className="popover comments-popover" role="dialog" aria-label={'Comments on PR #' + pr.number} style={COMMENTS_PANEL_STYLE}>
-          <div className="panel-head">
-            <strong className="popover-title">{title} · PR #{pr.number}</strong>
-            <button type="button" className="btn icon-only" aria-label="Close" onClick={toggle}>×</button>
-          </div>
-          {all.status === 'loading' ? <p className="muted" role="status">Loading all comments…</p> : null}
-          {all.status === 'error' ? <p className="muted" role="status">Showing the latest only. Cannot load the rest: {all.error}</p> : null}
-          {shown.map((c, i) => (
-            <article key={i} className="comment-full">
-              <header>
-                {c.author ? <><Avatar actor={c.author} small /><span className="who">{displayLogin(c.author)}</span></> : <span className="who">Unknown author</span>}
-                <span className="when" title={new Date(c.at).toUTCString()}>{formatAgo(c.at, now)}</span>
-                {c.url ? <a href={c.url} target="_blank" rel="noopener">Open on GitHub</a> : null}
-              </header>
-              {/* Sanitized by DOMPurify in renderMarkdown. */}
-              <div className="comment-text markdown" dangerouslySetInnerHTML={{ __html: renderMarkdown(c.body) }} />
-              {c.truncated ? <div className="comment-cut">The comment is longer; open it on GitHub to read the rest.</div> : null}
-            </article>
-          ))}
-          {all.status === 'ready' && !all.complete ? <p className="muted">The list is longer than the board loads. Open the PR on GitHub for the rest.</p> : null}
-          <a className="popover-footer" href={pr.url} target="_blank" rel="noopener">Open the conversation on GitHub</a>
-        </div>
-      ) : null}
-    </div>
-  );
-}
 
 function Tiles({ base, active, setQuick }: { base: DerivedPullRequest[]; active: string[]; setQuick: (quick: string[]) => void }) {
   return (

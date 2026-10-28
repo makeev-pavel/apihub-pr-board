@@ -273,7 +273,7 @@ into `src/hooks/`.
 and attention cells into `src/components/`.
 
 **Acceptance criteria:**
-- [ ] One component (or one tight pair) per file; shared contexts live in one module.
+- [x] One component (or one tight pair) per file; shared contexts live in one module.
 
 **Verification:** all suites and the build. **Dependencies:** Task 14.
 **Files:** `src/components/{common,cells}/*.tsx`, `src/context.ts`. **Scope:** M.

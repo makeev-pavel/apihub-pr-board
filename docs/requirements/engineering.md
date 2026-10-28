@@ -32,18 +32,20 @@ Now:
 src/            the page: app.tsx (UI), settings.ts, markdown.ts, repository.ts, config.ts
 src/model/      rules without UI: attention, bots, areas, search, derived fields, prs.json shape
 src/hooks/      popovers, loading prs.json, and loading all comments of a PR
+src/components/ React components: common/ (avatar, person, pill, labels, issue line) and cells/ (CI, review,
+                comments, attention)
 src/board/      board logic without React: states, columns, the view and its URL, rows, authors, formatting, storage
 src/github/     the GraphQL query, raw types, normalization, and the GraphQL and REST clients
 dev/            Vite plugin with the mocks, scenarios, the DEV panel, and fixtures
 scripts/        build-site.ts writes prs.json after vite build
 test/           unit tests, one file per module
+e2e/            browser tests (Playwright) and their helpers
 docs/           requirements and decisions
 tasks/          the current plan and task list
 ```
 
-*Planned (tasks 15–18):*
-`src/components/`, `src/styles/`, `dev/scenarios/`, and `e2e/` for browser and screenshot
-tests. No source file over about 300 lines.
+*Planned (tasks 16–18):* the rest of the components in `src/components/`, `src/styles/`, and `dev/scenarios/`. No
+source file over about 300 lines.
 
 ## Code style
 
