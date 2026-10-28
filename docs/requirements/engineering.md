@@ -18,10 +18,11 @@ npm run dev:live          # live GitHub data; needs GITHUB_TOKEN and PR_BOARD_RE
 npm test                  # unit tests (node --test)
 npm run typecheck         # tsc for the browser code and the Node code
 npm run test:e2e          # browser tests (Playwright) on the mock server, port 5174, pinned clock
+npm run test:requirements # every requirement in docs/requirements/ has a test
 npm run build             # vite build into _site/, then prs.json; needs GITHUB_TOKEN and PR_BOARD_REPO
 ```
 
-*Planned:* `npm run test:coverage` (task 20), `npm run test:requirements` (task S2), `npm run test:screenshots`
+*Planned:* `npm run test:coverage` (task 20), `npm run test:screenshots`
 and `npm run test:screenshots:update` (task 22).
 
 ## Project structure
@@ -69,8 +70,8 @@ export const COMMENT_BODY_LIMIT = 4000;
   densities. *Planned: tasks 21–22.*
 - All test data is mock data: a seeded typical board and topic-sorted corner cases on fictional people, with a fixed
   clock. No real repository, person, or PR appears in tests or fixtures.
-- Every test names the requirement ids it covers, and a check fails when a requirement has no test. *Planned:
-  task S2.*
+- Every test names the requirement ids it covers, and `npm run test:requirements` fails when a requirement has no
+  test.
 - Every new display rule gets a corner case in the matching topic file of `dev/fixtures/cases/`, with a `note` that
   the board shows under the title.
 

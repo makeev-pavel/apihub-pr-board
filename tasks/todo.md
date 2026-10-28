@@ -344,7 +344,8 @@ and the settings and Markdown modules.
 tests, and fails when a requirement has no test or a test names an unknown id.
 
 **Acceptance criteria:**
-- [ ] `npm run test:requirements` passes only when every requirement id is covered.
+- [x] `npm run test:requirements` passes only when every requirement id is covered (36 gaps at first; task 19
+  closes them).
 
 **Verification:** `npm run test:requirements`; remove one test's id and see it fail.
 **Dependencies:** Tasks S1, 10, and 19. **Files:** `scripts/check-requirements.ts`, `package.json`. **Scope:** S.

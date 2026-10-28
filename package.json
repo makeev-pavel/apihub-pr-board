@@ -13,7 +13,8 @@
     "test": "node --test",
     "build": "vite build && node scripts/build-site.ts _site",
     "preview": "vite preview",
-    "test:e2e": "playwright test --project=e2e"
+    "test:e2e": "playwright test --project=e2e",
+    "test:requirements": "node scripts/check-requirements.ts"
   },
   "dependencies": {
     "dompurify": "3.4.17",

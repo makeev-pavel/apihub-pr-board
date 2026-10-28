@@ -39,8 +39,9 @@ These files are the spec. A change in behavior updates the matching requirement 
   requirement keeps its id with the word *Removed*.
 - *Planned* marks a requirement that is agreed but not built yet, with the task from `tasks/todo.md` that builds
   it. Everything else describes the board as it works now.
-- Tests name the ids they cover. A requirement without a test is a gap (see the testing strategy in
-  [engineering.md](engineering.md)).
+- Tests name the ids they cover at the start of their title, such as `test('PANEL-11 SEC-1: ...')`.
+  `npm run test:requirements` fails when a requirement has no test or a test names an unknown id.
+- *Manual check* marks a requirement that no automated test can check, with what to check by hand.
 - Examples use the fictional repository `acme/widgets` and fictional people such as `anna-dev` and `boris-k`.
 
 ## Known limitations
