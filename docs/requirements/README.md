@@ -1,8 +1,8 @@
 # PR board requirements
 
-The board lists the open pull requests of one GitHub repository and shows what blocks each one: CI, review, merge
-conflicts, and the team's own rules. It is a static page on GitHub Pages with an hourly data snapshot, and any
-viewer can load live data with their own token.
+The board lists the open pull requests of one or more GitHub repositories and shows what blocks each one: CI,
+review, merge conflicts, and the team's own rules. It is a static page on GitHub Pages with an hourly data
+snapshot, and any viewer can load live data with their own token.
 
 These files are the spec. A change in behavior updates the matching requirement in the same change.
 
@@ -14,10 +14,10 @@ These files are the spec. A change in behavior updates the matching requirement 
 
 ## Scope
 
-- One repository, chosen by configuration. Open pull requests only, drafts included.
+- One repository, chosen by configuration. Several at once are planned (**DATA-17** to **DATA-22**). Open pull
+  requests only, drafts included.
 - Read-only: the board never changes anything on GitHub.
-- Out of scope: other repositories at once, closed or merged PRs, history and charts, GitHub OAuth login (it would
-  need a server).
+- Out of scope: closed or merged PRs, history and charts, GitHub OAuth login (it would need a server).
 
 ## Files
 
@@ -42,7 +42,8 @@ These files are the spec. A change in behavior updates the matching requirement 
 - Tests name the ids they cover at the start of their title, such as `test('PANEL-11 SEC-1: ...')`.
   `npm run test:requirements` fails when a requirement has no test or a test names an unknown id.
 - *Manual check* marks a requirement that no automated test can check, with what to check by hand.
-- Examples use the fictional repository `acme/widgets` and fictional people such as `anna-dev` and `boris-k`.
+- Examples use the fictional repositories `acme/widgets` and `acme/gadgets` and fictional people such as
+  `anna-dev` and `boris-k`.
 
 ## Known limitations
 

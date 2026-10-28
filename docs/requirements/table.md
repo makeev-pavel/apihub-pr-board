@@ -93,3 +93,12 @@
 - **TABLE-25** A thin bar at the bottom explains the CI, Review, and Conflicts codes, the pending reviewer counter,
   and the row stripe. It ends with **Custom rules** when the viewer's rules differ from the defaults (**SET-10**) and
   a **Rules** link (**PANEL-7**).
+
+## Several repositories
+
+- **TABLE-26** When the data covers more than one repository, a Repository column comes first. It shows the
+  repository name, linked to the repository, without the owner when all repositories share one. It sorts A to Z
+  first, with ties by PR number, newest first. It can be hidden in Settings (**SET-8**). With one repository the
+  column and its Settings entry are absent. *Planned: task R4.*
+- **TABLE-27** With several repositories the header names them in place of one repository name. More than two
+  show as the first one and "+N more", with the full list in the tooltip. *Planned: task R4.*

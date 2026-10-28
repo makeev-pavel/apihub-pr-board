@@ -440,7 +440,10 @@ Waits for the decisions in `tasks/plan.md` ("Backlog"). Estimates are agent work
 column, the `repo:` qualifier, repositories and bots in the URL, and repositories outside the snapshot.
 
 **Acceptance criteria:**
-- [ ] Every new behavior has a requirement id; DATA-1 and DATA-2 describe a list of repositories.
+- [x] Every new behavior has a requirement id, marked *Planned* with its task: DATA-17 to DATA-22, TABLE-26,
+  TABLE-27, FILTER-14, FILTER-15, SET-16, and SET-17. DATA-1, DATA-2, and DATA-5 keep describing the board as it
+  works now; the new ids extend them.
+- [ ] The user approves the spec.
 
 **Verification:** `npm run test:requirements` lists the new ids as missing until their tests land; the user approves.
 **Dependencies:** your decisions. **Files:** `docs/requirements/*.md`. **Scope:** S.

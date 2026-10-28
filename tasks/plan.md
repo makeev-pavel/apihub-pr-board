@@ -188,6 +188,10 @@ settings panel gets a field to edit the repository list.
    a search at 1,000 results, far above the board's size.
 5. A PR is identified by repository and number everywhere: row keys, the comments cache, and the URL.
 6. The area lists, attention rules, and title rule stay shared by all repositories.
+7. The default mock board stays one repository, so the existing tests keep their layout; a DEV scenario adds the
+   second one (DATA-21).
+8. The Repository column comes first, before #.
+9. Refresh never starts by itself for repositories missing from the snapshot: the banner offers it (DATA-22).
 
 **Risks**
 | Risk | Impact | Mitigation |
@@ -195,6 +199,8 @@ settings panel gets a field to edit the repository list.
 | PR numbers repeat across repositories | High | Repository and number as the key; a corner case with equal numbers. |
 | A shared link with many repositories gets long | Low | Short parameter names; a test with ten repositories. |
 | Search results differ from the repository query | Medium | Client tests against the mocks for both shapes; a live check with `dev:live`. |
+| GitHub limits a search query to 256 characters | Medium | Ten long names may not fit: R3 splits the repositories into several searches when needed. |
+| A missing repository fails the whole search | Medium | R3 checks the repositories first and leaves the missing ones out with a warning (DATA-18). |
 
 **Estimate.** About 4 to 5 hours of agent work in six tasks, plus your review at two checkpoints. Screenshot
 baselines (task 22) should come after this work, or they need a second capture.

@@ -28,3 +28,14 @@
   field loses focus. Lists apply when their field loses focus or on Enter.
 - **SET-15** Compact density makes rows tighter and avatars smaller. Theme Light or Dark overrides the system
   setting; System follows it.
+
+## Settings in the address
+
+- **SET-16** A Repositories section at the top of the panel takes up to 10 entries as `owner/name`, separated by
+  commas, spaces, or new lines, and applies like a list (**SET-14**). Applying writes `repos` to the address
+  (**FILTER-14**); an empty field removes it. A malformed entry is not applied, and the field names the entry and
+  what is wrong with it. *Planned: task R5.*
+- **SET-17** The repositories and the extra bot logins (**SET-5**) live in the address, not in this browser, so a
+  link or a bookmark carries them. The panel footer says so. **Reset to defaults** removes both from the address.
+  Extra bots that an earlier version saved in this browser move into the address on the first visit.
+  *Planned: task R5.*

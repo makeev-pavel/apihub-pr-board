@@ -53,3 +53,12 @@
 - **FILTER-13** Search, authors, draft status, area, quick filters, and sort live in the URL query (`q`, `authors`,
   `draft`, `area`, `quick`, `sort`, `dir`). Defaults are left out, so the default view has a clean address. Opening
   a link restores the view; unknown values fall back to the defaults.
+- **FILTER-14** The address also carries two settings: `repos`, the repositories to show
+  (`repos=acme/widgets,acme/gadgets`), and `bots`, the extra bot logins (**SET-5**). Copy link keeps them, and
+  **Reset view** leaves them alone. Without `repos` the board shows every repository of the data; without `bots`
+  there are no extra bots. Invalid entries are dropped. *Planned: task R5.*
+
+## Several repositories
+
+- **FILTER-15** The `repo:` qualifier matches the repository name or `owner/name`, such as `repo:gadgets` or
+  `-repo:acme/widgets`. Plain words match the repository name too. *Planned: task R2.*
