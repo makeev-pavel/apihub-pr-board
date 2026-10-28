@@ -22,7 +22,7 @@ const baseNode: RawPullRequest = {
   author: { __typename: 'User', login: 'a', avatarUrl: 'x' },
 };
 
-test('requested changes win over approvals', () => {
+test('RULE-2: requested changes win over approvals', () => {
   const result = reviewState([
     { state: 'APPROVED', author: { login: 'a' } },
     { state: 'CHANGES_REQUESTED', author: { login: 'b' } },
@@ -30,11 +30,11 @@ test('requested changes win over approvals', () => {
   assert.equal(result, 'changes_requested');
 });
 
-test('a dismissed review is not an approval', () => {
+test('RULE-2: a dismissed review is not an approval', () => {
   assert.equal(reviewState([{ state: 'DISMISSED', author: { login: 'a' } }]), 'none');
 });
 
-test('recent comments mix issue comments and reviews, newest first, skipping empty bodies', () => {
+test('DATA-10: recent comments mix issue comments and reviews, newest first, skipping empty bodies', () => {
   const list = recentComments(
     [{ createdAt: '2026-10-02T00:00:00Z', body: 'old', author: null }, { createdAt: '2026-10-04T00:00:00Z', body: '  ', author: null }],
     [{ submittedAt: '2026-10-03T00:00:00Z', body: 'review', url: 'r-url', author: { __typename: 'User', login: 'r', avatarUrl: null } }],
@@ -44,7 +44,7 @@ test('recent comments mix issue comments and reviews, newest first, skipping emp
   assert.equal(list[0].url, 'r-url');
 });
 
-test('comments that hold only HTML comment markers are skipped', () => {
+test('DATA-10: comments that hold only HTML comment markers are skipped', () => {
   const list = recentComments(
     [{ createdAt: '2026-10-02T00:00:00Z', body: 'real', author: null }, { createdAt: '2026-10-04T00:00:00Z', body: '<!-- sonar:marker -->\n', author: null }],
     [],
@@ -52,19 +52,19 @@ test('comments that hold only HTML comment markers are skipped', () => {
   assert.deepEqual(list.map((c) => c.body), ['real']);
 });
 
-test('long comment bodies are cut and marked', () => {
+test('DATA-10: long comment bodies are cut and marked', () => {
   const [comment] = recentComments([{ createdAt: '2026-10-02T00:00:00Z', body: 'x'.repeat(COMMENT_BODY_LIMIT + 10), author: null }], []);
   assert.equal(comment.truncated, true);
   assert.equal(comment.body.length, COMMENT_BODY_LIMIT + 1);
 });
 
-test('label colors are validated and lowercased', () => {
+test('DATA-11: label colors are validated and lowercased', () => {
   assert.equal(normalizeLabel({ name: 'a', color: 'D4C5F9' }).color, 'd4c5f9');
   assert.equal(normalizeLabel({ name: 'a', color: 'red' }).color, null);
   assert.equal(normalizeLabel({ name: 'a', color: null }).description, '');
 });
 
-test('missing connections and null entries normalize to safe defaults', () => {
+test('DATA-12: missing connections and null entries normalize to safe defaults', () => {
   const pr = normalizePullRequest({ ...baseNode, author: null, mergeable: null, assignees: { nodes: [null] }, commits: { nodes: [null] } });
   assert.equal(pr.author, null);
   assert.equal(pr.ci, 'none');
@@ -77,14 +77,14 @@ test('missing connections and null entries normalize to safe defaults', () => {
   assert.deepEqual(pr.requestedReviewers, []);
 });
 
-test('check rollup states map to CI states', () => {
+test('RULE-1: check rollup states map to CI states', () => {
   const ci = (state: string) => normalizePullRequest({ ...baseNode, commits: { nodes: [{ commit: { statusCheckRollup: { state } } }] } }).ci;
   assert.equal(ci('SUCCESS'), 'passing');
   assert.equal(ci('ERROR'), 'failing');
   assert.equal(ci('EXPECTED'), 'running');
 });
 
-test('bots are flagged from the GraphQL type name', () => {
+test('RULE-10: bots are flagged from the GraphQL type name', () => {
   const pr = normalizePullRequest({ ...baseNode, author: { __typename: 'Bot', login: 'dependabot', avatarUrl: null } });
   assert.equal(pr.author?.bot, true);
 });
@@ -102,7 +102,7 @@ function mockFetch(scenarioId: string) {
   return { fetchImpl, calls: () => calls };
 }
 
-test('pagination collects every page', async () => {
+test('DATA-9: pagination collects every page', async () => {
   const single = await fetchOpenPullRequests({ token: 't', repository, fetchImpl: mockFetch('ok').fetchImpl });
   const paged = mockFetch('paginated');
   const report = await fetchOpenPullRequests({ token: 't', repository, fetchImpl: paged.fetchImpl });
@@ -111,18 +111,18 @@ test('pagination collects every page', async () => {
   assert.deepEqual(report.warnings, []);
 });
 
-test('a forbidden projects field becomes a warning and unknown projects', async () => {
+test('DATA-14: a forbidden projects field becomes a warning and unknown projects', async () => {
   const report = await fetchOpenPullRequests({ token: 't', repository, fetchImpl: mockFetch('projects-error').fetchImpl });
   assert.equal(report.warnings.length, 1);
   assert.ok(report.prs.every((pr) => pr.projects === null));
 });
 
-test('a short page against totalCount is reported', async () => {
+test('DATA-15: a short page against totalCount is reported', async () => {
   const report = await fetchOpenPullRequests({ token: 't', repository, fetchImpl: mockFetch('count-mismatch').fetchImpl });
   assert.match(report.warnings[0], /reported \d+ open pull requests but returned \d+/);
 });
 
-test('HTTP and GraphQL failures throw readable errors', async () => {
+test('DATA-13: HTTP and GraphQL failures throw readable errors', async () => {
   await assert.rejects(fetchOpenPullRequests({ token: 't', repository, fetchImpl: mockFetch('unauthorized').fetchImpl }), { status: 401 });
   await assert.rejects(fetchOpenPullRequests({ token: 't', repository, fetchImpl: mockFetch('server-error').fetchImpl }), /HTTP 502/);
   await assert.rejects(fetchOpenPullRequests({ token: 't', repository, fetchImpl: mockFetch('repo-not-found').fetchImpl }), /at repository/);
@@ -130,7 +130,7 @@ test('HTTP and GraphQL failures throw readable errors', async () => {
   await assert.rejects(fetchOpenPullRequests({ token: '', repository }), /token is required/);
 });
 
-test('failed checks keep real failures and skip cancelled and passing runs', () => {
+test('RULE-4: failed checks keep real failures and skip cancelled and passing runs', () => {
   const result = failedChecks({
     state: 'FAILURE',
     contexts: {
@@ -151,14 +151,14 @@ test('failed checks keep real failures and skip cancelled and passing runs', () 
   assert.equal(failedChecks({ state: 'FAILURE' }), null);
 });
 
-test('checks are attached only to failing PRs', () => {
+test('DATA-9: checks are attached only to failing PRs', () => {
   const contexts = { totalCount: 0, pageInfo: { hasNextPage: false }, nodes: [] };
   const withRollup = (state: string) => normalizePullRequest({ ...baseNode, commits: { nodes: [{ commit: { statusCheckRollup: { state, contexts } } }] } });
   assert.deepEqual(withRollup('FAILURE').checks, { failed: [], total: 0, complete: true });
   assert.equal(withRollup('SUCCESS').checks, null);
 });
 
-test('hidden columns drop their parts of the query', async () => {
+test('DATA-8: hidden columns drop their parts of the query', async () => {
   const sent: Record<string, unknown>[] = [];
   const fetchImpl = async (_url: string, init: RequestInit) => {
     sent.push(JSON.parse(String(init.body)).variables);
@@ -181,7 +181,7 @@ function restFetch(pages: Record<string, { body: unknown; status?: number; heade
   return { fetchImpl, requested };
 }
 
-test('all comments: issue comments and reviews merge newest first, across pages, without cutting', async () => {
+test('PANEL-10: all comments: issue comments and reviews merge newest first, across pages, without cutting', async () => {
   const comments = restUrl + '/repos/acme/widgets/issues/7/comments';
   const reviews = restUrl + '/repos/acme/widgets/pulls/7/reviews';
   const long = 'x'.repeat(COMMENT_BODY_LIMIT + 10);
@@ -203,7 +203,7 @@ test('all comments: issue comments and reviews merge newest first, across pages,
   assert.ok(requested.every((r) => r.auth === undefined));
 });
 
-test('all comments: the token is sent when there is one, and a used-up anonymous limit says to add a token', async () => {
+test('PANEL-11: all comments: the token is sent when there is one, and a used-up anonymous limit says to add a token', async () => {
   const limited = { body: { message: 'API rate limit exceeded' }, status: 403, headers: { 'x-ratelimit-remaining': '0' } };
   const comments = restUrl + '/repos/acme/widgets/issues/7/comments?per_page=100';
   const reviews = restUrl + '/repos/acme/widgets/pulls/7/reviews?per_page=100';
@@ -212,4 +212,12 @@ test('all comments: the token is sent when there is one, and a used-up anonymous
   const withToken = restFetch({ [comments]: { body: [] }, [reviews]: { body: [] } });
   await fetchAllComments({ number: 7, repository, token: 't', fetchImpl: withToken.fetchImpl, restUrl });
   assert.ok(withToken.requested.every((r) => r.auth === 'Bearer t'));
+});
+
+test('RULE-3: mergeability maps to No conflicts, Conflicts, or Checking', () => {
+  const merge = (mergeable: string | null) => normalizePullRequest({ ...baseNode, mergeable }).mergeable;
+  assert.equal(merge('MERGEABLE'), 'clean');
+  assert.equal(merge('CONFLICTING'), 'conflicts');
+  assert.equal(merge('UNKNOWN'), 'unknown');
+  assert.equal(merge(null), 'unknown');
 });

@@ -20,7 +20,7 @@ function search(query: string, fields: Record<string, unknown>) {
   return matchesQuery(derive(pr(fields), NOW), parseQuery(query));
 }
 
-test('search combines words and qualifiers, with negation and quotes', () => {
+test('FILTER-8 FILTER-9: search combines words and qualifiers, with negation and quotes', () => {
   const fields = {
     title: 'fix(ui): keep filters', labels: [{ name: 'module:ui' }, { name: 'good first issue' }],
     assignees: [{ login: 'Boris-K' }], reviewers: [{ login: 'chen-li', state: 'APPROVED' }], requestedReviewers: [{ login: 'anna-dev' }],
@@ -35,16 +35,16 @@ test('search combines words and qualifiers, with negation and quotes', () => {
   assert.ok(search('no:issue', { issues: [] }));
 });
 
-test('a qualifier still being typed does not hide everything', () => {
+test('FILTER-10: a qualifier still being typed does not hide everything', () => {
   assert.deepEqual(parseQuery('label:'), { filters: [], words: [] });
   assert.ok(search('label:', {}));
 });
 
-test('unknown qualifiers are plain words', () => {
+test('FILTER-10: unknown qualifiers are plain words', () => {
   assert.deepEqual(parseQuery('foo:bar').words, [{ value: 'foo:bar', negate: false }]);
 });
 
-test('toggling a label removes it whatever its case or quoting, and leaves other labels alone', () => {
+test('FILTER-11: toggling a label removes it whatever its case or quoting, and leaves other labels alone', () => {
   assert.equal(toggleLabelFilter('label:Bug', 'bug'), '');
   assert.equal(toggleLabelFilter('label:bugfix label:bug', 'bug'), 'label:bugfix');
   assert.equal(toggleLabelFilter('label:"bug" ci:failing', 'bug'), 'ci:failing');
@@ -52,7 +52,7 @@ test('toggling a label removes it whatever its case or quoting, and leaves other
   assert.equal(toggleLabelFilter('ci:failing', 'good first issue'), 'ci:failing label:"good first issue"');
 });
 
-test('search finds a PR by the number of its linked issue', () => {
+test('FILTER-8: search finds a PR by the number of its linked issue', () => {
   const fields = { issues: [{ number: 885, title: '[FE] Show version publication errors in UI', url: 'u' }] };
   assert.ok(search('885', fields));
   assert.ok(search('#885', fields));

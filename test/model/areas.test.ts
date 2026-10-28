@@ -15,7 +15,7 @@ function pr(fields: Record<string, unknown> = {}): PullRequest {
   } as unknown as PullRequest;
 }
 
-test('areas come from module labels, the title scope, [FE]/[BE] tags, and frontend/backend paths', () => {
+test('RULE-11: areas come from module labels, the title scope, [FE]/[BE] tags, and frontend/backend paths', () => {
   assert.deepEqual(areasOf(pr({ labels: [{ name: 'module:portal-backend' }] })), ['be']);
   assert.deepEqual(areasOf(pr({ title: 'fix(api-doc-viewer): x' })), ['fe']);
   assert.deepEqual(areasOf(pr({ title: 'fix: [BE] x', issues: [{ title: '[FE] y' }] })), ['be', 'fe']);
