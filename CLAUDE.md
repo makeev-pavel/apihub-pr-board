@@ -52,7 +52,7 @@ A board of the open pull requests of one or more GitHub repositories, published 
   the fixtures, a corner case, and the tests.
 - UI text, code comments, and docs are in English. Talk to the user in Russian.
 - Never name the target organization or real people in the repository (see the boundaries in the spec).
-- Commits go to the working branch as tasks land; push only when the user confirms.
+- Commit straight to `main` as tasks land: no feature branches or pull requests. Push only when the user confirms.
 
 ## Gotchas
 
@@ -71,6 +71,6 @@ A board of the open pull requests of one or more GitHub repositories, published 
 
 ## Status
 
-Pushed to GitHub (`refactor/final-structure` and `main`); Pages deploys from `main`. The published page has no
-data: viewers open it with `?repos=owner/name` and their own token. History was squashed on October 28, 2026, so no
-commit holds real data; keep it that way.
+Work happens on `main`, and Pages deploys from it. The published page has no data: viewers open it with
+`?repos=owner/name` and their own token. History was squashed on October 28, 2026, so no commit holds real data;
+keep it that way.
