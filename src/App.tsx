@@ -18,6 +18,7 @@ import { Row } from './components/table/Row.tsx';
 import { TableMessage } from './components/table/TableMessage.tsx';
 import { AuthorMenu } from './components/toolbar/AuthorMenu.tsx';
 import { PriorityMenu } from './components/toolbar/PriorityMenu.tsx';
+import { RepositoriesMenu } from './components/toolbar/RepositoriesMenu.tsx';
 import { CopyLink } from './components/toolbar/CopyLink.tsx';
 import { SearchHelp } from './components/toolbar/SearchHelp.tsx';
 import { REPOSITORIES } from './config.ts';
@@ -202,6 +203,7 @@ export function App() {
             value={view.q} onChange={(e) => patch({ q: e.target.value })} />
           <SearchHelp onExample={(q) => patch({ q })} />
         </div>
+        {settings.repoGroups.length ? <RepositoriesMenu groups={settings.repoGroups} repos={link.repos} setRepos={setRepos} /> : null}
         <AuthorMenu authors={authors} selected={selected} mode={view.authors} setAuthors={(value) => patch({ authors: value })} />
         <div className="segmented" role="group" aria-label="Draft status">
           {DRAFT_OPTIONS.map(([value, label]) =>

@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { isColumnShown } from '../../board/columns.ts';
 import type { Column } from '../../board/columns.ts';
 import { AREAS } from '../../model/areas.ts';
+import { groupsToText, parseGroupLines } from '../../board/groups.ts';
 import { checkRepositoryList } from '../../repository.ts';
 import type { Rules } from '../../model/rules.ts';
 import {
@@ -42,10 +43,13 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
   const [tokenDraft, setTokenDraft] = useState('');
   const [reposDraft, setReposDraft] = useState(repositories.requested.join(', '));
   const [reposError, setReposError] = useState<string | null>(null);
+  const [groupsDraft, setGroupsDraft] = useState(groupsToText(settings.repoGroups));
+  const [groupsError, setGroupsError] = useState<string | null>(null);
   const [areaDrafts, setAreaDrafts] = useState(() => joinAreas(rules.areaModules));
   useEffect(() => setStaleDraft(String(rules.staleDays)), [rules.staleDays]);
   useEffect(() => setBotsDraft(rules.extraBots.join(', ')), [rules.extraBots]);
   useEffect(() => setReposDraft(repositories.requested.join(', ')), [repositories.requested]);
+  useEffect(() => setGroupsDraft(groupsToText(settings.repoGroups)), [settings.repoGroups]);
   useEffect(() => setAreaDrafts(joinAreas(rules.areaModules)), [rules.areaModules]);
 
   const setRules = (changes: Partial<Rules>) => onChange({ ...settings, rules: { ...rules, ...changes } });
@@ -65,6 +69,16 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
     setReposDraft(result.repos.join(', '));
     // Applying the same list again would rebuild the whole board for nothing.
     if (result.repos.join(',').toLowerCase() !== repositories.requested.join(',').toLowerCase()) repositories.onChange(result.repos);
+  };
+  // Groups span lines, so Enter adds a line; they apply on blur or Ctrl+Enter, and a wrong line changes nothing.
+  const commitGroups = () => {
+    const result = parseGroupLines(groupsDraft);
+    if ('error' in result) {
+      setGroupsError(result.error);
+      return;
+    }
+    setGroupsError(null);
+    if (groupsToText(result.groups) !== groupsToText(settings.repoGroups)) onChange({ ...settings, repoGroups: result.groups });
   };
   const resetAll = () => {
     onChange({ ...DEFAULT_SETTINGS });
@@ -98,6 +112,14 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
           onChange={(e) => setReposDraft(e.target.value)} onBlur={commitRepos}
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); commitRepos(); } }} />
         {reposError ? <p id="repos-error" className="field-error" role="alert">{reposError}</p> : null}
+        <label className="stacked-field" htmlFor="groups-input">Repository groups</label>
+        <p className="hint">One per line: <code>Name: owner/name, owner/name</code>. They fill the Repositories menu on the board and stay in this browser.</p>
+        <textarea id="groups-input" className="text-field" rows={3} value={groupsDraft} autoComplete="off"
+          placeholder="Backend: acme/widgets, acme/gadgets" aria-invalid={!!groupsError}
+          aria-describedby={groupsError ? 'groups-error' : undefined}
+          onChange={(e) => setGroupsDraft(e.target.value)} onBlur={commitGroups}
+          onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) commitGroups(); }} />
+        {groupsError ? <p id="groups-error" className="field-error" role="alert">{groupsError}</p> : null}
       </section>
       <section>
         <h2>Attention rules</h2>

@@ -142,4 +142,35 @@ test.describe('several repositories', () => {
     await field.press('Enter');
     await expect(banner).toHaveText('acme/widgets is not in the live data. Refresh loads it.');
   });
+
+  test('SET-19 FILTER-17: groups from Settings fill a Repositories menu that edits repos in the address', async ({ page }) => {
+    await openBoard(page, { report: 'two-repos', query: ALL });
+    await expect(page.getByRole('button', { name: /^Repositories:/ })).toHaveCount(0);
+    await page.getByRole('button', { name: /^Settings/ }).click();
+    const field = page.getByRole('dialog', { name: 'Settings' }).getByRole('textbox', { name: 'Repository groups' });
+    await field.fill('Widgets: acme/widgets\nacme/gadgets');
+    await field.blur();
+    await expect(page.getByRole('alert')).toHaveText('Line 2: start with the group name and a colon, such as "Backend: acme/widgets".');
+    await field.fill('Widgets: acme/widgets\nGadgets: acme/gadgets');
+    await field.press('Control+Enter');
+    await expect(page.getByRole('alert')).toHaveCount(0);
+    await page.keyboard.press('Escape');
+
+    const button = page.getByRole('button', { name: /^Repositories:/ });
+    await expect(button).toHaveText(/Repositories:\s*All/);
+    await button.click();
+    const menu = page.getByRole('group', { name: 'Repositories' });
+    await menu.getByRole('checkbox', { name: 'Gadgets' }).check();
+    await expect(page).toHaveURL(/[?&]repos=acme\/gadgets(&|$)/);
+    await expect(rows(page)).toHaveCount(4);
+    await expect(button).toHaveText(/Repositories:\s*Gadgets/);
+    await menu.getByRole('checkbox', { name: 'Widgets' }).check();
+    await expect(page).toHaveURL(/[?&]repos=acme\/gadgets,acme\/widgets(&|$)/);
+    await expect(rows(page)).toHaveCount(40);
+    await menu.getByRole('button', { name: 'All repositories' }).click();
+    expect(page.url()).not.toContain('repos=');
+    // The groups stay in this browser.
+    const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('apihub-pr-board.settings')!).repoGroups);
+    expect(stored).toEqual([{ name: 'Widgets', repos: ['acme/widgets'] }, { name: 'Gadgets', repos: ['acme/gadgets'] }]);
+  });
 });

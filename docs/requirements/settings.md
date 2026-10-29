@@ -48,4 +48,5 @@
 - **SET-19** A Repository groups section, under Repositories, defines named groups in a text field, one per line:
   `<name>: owner/name, owner/name`. It applies like a list (**SET-14**); a line without a name, or with an entry that
   is not `owner/name`, is not applied, and the field says which line and why. Up to 20 groups. The groups are kept
-  in this browser, not in the address; the board has none until the viewer adds them. *Planned: task G1.*
+  in this browser, not in the address; the board has none until the viewer adds them. Enter adds a line; the field
+  applies on blur or Ctrl+Enter. **Reset to defaults** clears the groups.

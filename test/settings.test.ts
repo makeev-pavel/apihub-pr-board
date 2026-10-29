@@ -96,3 +96,14 @@ test('SET-10: only the attention rules count as custom; the area lists do not ch
     assert.equal(rulesAreDefault({ ...DEFAULT_SETTINGS.rules, ...changed }), false, JSON.stringify(changed));
   }
 });
+
+test('SET-19: stored groups are checked; a broken group is dropped and the rest load', () => {
+  const settings = parseSettings({ repoGroups: [
+    { name: ' Core ', repos: ['acme/widgets', '../x', 'ACME/widgets'] },
+    { name: '', repos: ['acme/gadgets'] },
+    { name: 'Empty', repos: ['nope'] },
+    'x',
+  ] });
+  assert.deepEqual(settings.repoGroups, [{ name: 'Core', repos: ['acme/widgets'] }]);
+  assert.deepEqual(parseSettings({}).repoGroups, []);
+});

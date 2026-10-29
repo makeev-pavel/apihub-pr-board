@@ -32,6 +32,8 @@ The requirements are in [docs/requirements/](docs/requirements/README.md).
 - **Settings** (the gear next to Refresh): repositories, attention rules, BE/FE lists, extra bots, theme, density,
   visible columns, and the GitHub token. The repositories and extra bots live in the page address, so a copied link
   or a bookmark carries them; everything else is saved in this browser.
+- **Repository groups:** define groups in Settings, one per line (`Backend: owner/a, owner/b`); a Repositories menu
+  then checks whole groups at once. They stay in this browser, while the link carries the chosen repositories.
 - **Several repositories:** with more than one, a Repository column comes first. A link such as
   `?repos=owner/a,owner/b` shows just those.
 - **Notes:** the ✎ icon after a PR title opens a Markdown note for that PR, with Preview and Edit, such as what was

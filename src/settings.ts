@@ -1,7 +1,10 @@
 // Personal settings, kept in this browser's localStorage. Stored values are untrusted: anything missing or invalid
 // falls back to the default, so an old or hand-edited entry never breaks the page.
 
+import { MAX_GROUPS } from './board/groups.ts';
+import type { RepoGroup } from './board/groups.ts';
 import { AREAS } from './model/areas.ts';
+import { isRepositoryName, uniqueNames } from './repository.ts';
 import { DEFAULT_RULES } from './model/rules.ts';
 import type { Rules } from './model/rules.ts';
 
@@ -14,9 +17,11 @@ export interface Settings {
   density: Density;
   // Ids of columns the viewer turned off.
   hiddenColumns: string[];
+  // Named lists of repositories for the Repositories menu (SET-19).
+  repoGroups: RepoGroup[];
 }
 
-export const DEFAULT_SETTINGS: Settings = { rules: DEFAULT_RULES, theme: 'system', density: 'comfortable', hiddenColumns: [] };
+export const DEFAULT_SETTINGS: Settings = { rules: DEFAULT_RULES, theme: 'system', density: 'comfortable', hiddenColumns: [], repoGroups: [] };
 export const MIN_STALE_DAYS = 1;
 export const MAX_STALE_DAYS = 365;
 export const THEMES: [Theme, string][] = [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']];
@@ -48,6 +53,17 @@ function parseAreaModules(value: unknown): Rules['areaModules'] {
   return modules;
 }
 
+// Stored groups are checked like the field checks them; a broken group is dropped and the rest load.
+function parseGroups(value: unknown): RepoGroup[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((entry): RepoGroup[] => {
+    const group = entry as Partial<RepoGroup> | null;
+    if (!group || typeof group !== 'object' || typeof group.name !== 'string' || !group.name.trim() || !Array.isArray(group.repos)) return [];
+    const repos = uniqueNames(group.repos.filter(isRepositoryName));
+    return repos.length ? [{ name: group.name.trim(), repos }] : [];
+  }).slice(0, MAX_GROUPS);
+}
+
 export function parseSettings(value: unknown): Settings {
   const stored = (value && typeof value === 'object' ? value : {}) as Record<string, unknown>;
   const rules = (stored.rules && typeof stored.rules === 'object' ? stored.rules : {}) as Record<string, unknown>;
@@ -62,6 +78,7 @@ export function parseSettings(value: unknown): Settings {
     theme: pick(stored.theme, THEMES, DEFAULT_SETTINGS.theme),
     density: pick(stored.density, DENSITIES, DEFAULT_SETTINGS.density),
     hiddenColumns: Array.isArray(stored.hiddenColumns) ? stored.hiddenColumns.filter((id) => typeof id === 'string') : [],
+    repoGroups: parseGroups(stored.repoGroups),
   };
 }
 

@@ -558,5 +558,5 @@ Requested on October 29, 2026, after the PR report of the CI repository: groups 
 filter menu. Spec: SET-19, FILTER-17, and up to 40 repositories read four at a time (DATA-17, DATA-18).
 
 - [x] **G0. 40 repositories, four at a time:** raise the limit and read repositories in parallel. About 30 min.
-- [ ] **G1. Groups in Settings:** parse and validate the group lines, keep them in this browser. About 45 min.
-- [ ] **G2. Repositories menu:** check groups to fill `repos`; unit and browser tests, screenshots. About 1 hour.
+- [x] **G1. Groups in Settings:** parse and validate the group lines, keep them in this browser. About 45 min.
+- [x] **G2. Repositories menu:** check groups to fill `repos`; unit and browser tests, screenshots. About 1 hour.
