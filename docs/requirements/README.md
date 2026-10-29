@@ -52,6 +52,11 @@ These files are the spec. A change in behavior updates the matching requirement 
 - Images in comments load from wherever their authors host them, so opening the comments panel lets those hosts
   see the viewer's address. GitHub itself proxies such images; the board does not.
 - Without a token the comments panel shares GitHub's limit of 60 REST requests an hour per address.
+- Project sites of one owner share the `<owner>.github.io` origin, so another Pages site of the same owner can read
+  the token this board keeps in `localStorage`. The token only has public read access; a custom domain removes the
+  shared origin.
+- GitHub turns off scheduled workflows in a public repository after 60 days without commits. The snapshot then
+  stops updating until someone enables the workflow again or pushes a commit.
 
 ## Maintenance notes
 

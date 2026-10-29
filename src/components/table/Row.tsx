@@ -60,7 +60,8 @@ export const Row = memo(function Row({ pr, now, columns, repos, activeLabels, on
     ),
     assignee: (
       <td key="assignee" className="c-person">
-        {pr.assignees.length ? pr.assignees.map((a) => <Person key={a.login} actor={a} />)
+        {/* The index keeps keys unique when one person is listed twice. */}
+        {pr.assignees.length ? pr.assignees.map((a, i) => <Person key={i + ':' + a.login} actor={a} />)
           : <span className="dash">Unassigned</span>}
       </td>
     ),

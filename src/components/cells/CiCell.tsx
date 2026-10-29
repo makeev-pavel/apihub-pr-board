@@ -4,6 +4,7 @@ import { CI } from '../../board/states.ts';
 import { usePopover } from '../../hooks/usePopover.ts';
 import type { DerivedPullRequest } from '../../types.ts';
 import { Pill } from '../common/Pill.tsx';
+import { CHECKS_PAGE_SIZE } from '../../github/query.ts';
 
 const CHECKS_POPOVER_PX = 400;
 
@@ -25,7 +26,7 @@ export function CiCell({ pr }: { pr: DerivedPullRequest }) {
         <div className="popover checks-popover" role="dialog" aria-label={summary + ' on PR #' + pr.number} style={position}>
           <strong className="popover-title">{summary}{checks ? ' of ' + checks.total : ''}</strong>
           {!checks ? <p className="muted">Check details were not collected for this PR.</p> : null}
-          {checks && !failed.length ? <p className="muted">GitHub reports CI as failing, but no failed check is among the {checks.total > 100 ? 'first 100' : checks.total} checks read.</p> : null}
+          {checks && !failed.length ? <p className="muted">GitHub reports CI as failing, but no failed check is among the {checks.total > CHECKS_PAGE_SIZE ? 'first ' + CHECKS_PAGE_SIZE : checks.total} checks read.</p> : null}
           {failed.length ? (
             <ul className="check-list">
               {failed.map((c, i) => (

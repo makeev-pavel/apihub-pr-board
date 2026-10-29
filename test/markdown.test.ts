@@ -34,6 +34,15 @@ test('SEC-4 PANEL-14: links open in a new tab without an opener', () => {
   assert.equal(link?.getAttribute('rel'), 'noopener noreferrer');
 });
 
+test('SEC-4: SVG, MathML, and image maps are removed, so every link that stays opens in a new tab', () => {
+  const html = renderMarkdown('<svg><a href="https://evil.test"><text y="20">Open the report</text></a></svg>'
+    + '<math><mi>x</mi></math><img src="x.png" usemap="#m"><map name="m"><area href="https://evil.test" shape="rect" coords="0,0,9,9"></map>');
+  assert.doesNotMatch(html, /<svg|<math|<map|<area|usemap/i);
+  for (const link of Array.from(JSDOM.fragment(html).querySelectorAll('[href]'))) {
+    assert.equal(link.getAttribute('target'), '_blank', link.outerHTML);
+  }
+});
+
 test('PANEL-14: GFM tables, task lists, details, and single line breaks render like on GitHub', () => {
   const fragment = render('| a | b |\n| - | - |\n| 1 | 2 |\n\n- [x] done\n\none\ntwo\n\n<details><summary>More</summary>\n\nhidden\n\n</details>');
   assert.equal(fragment.querySelectorAll('td').length, 2);

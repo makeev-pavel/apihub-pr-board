@@ -12,8 +12,12 @@ const textCache = new Map<string, string>();
 // Closing tags of blocks that need a space between them once the markup is gone.
 const BLOCK_END = /<\/(p|h[1-6]|li|tr|td|th|pre|blockquote|summary|div)>|<br\s*\/?>/gi;
 
+// GitHub renders no SVG, MathML, or image maps in comments. Their links (an SVG <a>, an <area>) would also escape the
+// new-tab rule below, so they are removed.
+const FORBID_TAGS = ['style', 'form', 'svg', 'math', 'map', 'area'];
+
 DOMPurify.addHook('afterSanitizeAttributes', (node) => {
-  if (node.tagName === 'A' && node.hasAttribute('href')) {
+  if (node.nodeName.toLowerCase() === 'a' && node.hasAttribute('href')) {
     node.setAttribute('target', '_blank');
     node.setAttribute('rel', 'noopener noreferrer');
   }
@@ -34,7 +38,7 @@ export function renderMarkdown(body: string): string {
   return cached(htmlCache, body, () => {
     const html = marked.parse(stripHtmlComments(body), { gfm: true, breaks: true, async: false });
     // Page classes and ids are dropped too, so a comment cannot borrow the board's own styles or anchors.
-    return DOMPurify.sanitize(html, { FORBID_TAGS: ['style', 'form'], FORBID_ATTR: ['style', 'class', 'id'] });
+    return DOMPurify.sanitize(html, { FORBID_TAGS, FORBID_ATTR: ['style', 'class', 'id', 'usemap'] });
   });
 }
 

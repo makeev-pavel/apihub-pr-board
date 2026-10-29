@@ -28,7 +28,13 @@ if (!existsSync(path.join(outDir, 'index.html'))) {
 const { GITHUB_SERVER_URL, GITHUB_REPOSITORY, GITHUB_RUN_ID } = process.env;
 const runUrl = GITHUB_RUN_ID ? GITHUB_SERVER_URL + '/' + GITHUB_REPOSITORY + '/actions/runs/' + GITHUB_RUN_ID : null;
 
-const report = await fetchOpenPullRequests({ token, repositories });
+let report;
+try {
+  report = await fetchOpenPullRequests({ token, repositories });
+} catch (error) {
+  console.error((error as Error).message);
+  process.exit(1);
+}
 
 writeFileSync(path.join(outDir, 'prs.json'), JSON.stringify({ ...report, runUrl }));
 

@@ -65,8 +65,10 @@ export function parseSettings(value: unknown): Settings {
   };
 }
 
+// The rules behind the Attention count (SET-10). The area lists only sort PRs into BE and FE, so they are left out.
 export function rulesAreDefault(rules: Rules): boolean {
-  return JSON.stringify(rules) === JSON.stringify(DEFAULT_RULES);
+  const attention = ({ staleDays, checkTitle, requireIssue, extraBots }: Rules) => JSON.stringify([staleDays, checkTitle, requireIssue, extraBots]);
+  return attention(rules) === attention(DEFAULT_RULES);
 }
 
 export function loadSettings(): Settings {

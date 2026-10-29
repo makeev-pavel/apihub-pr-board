@@ -18,7 +18,7 @@ test('FILTER-14: repos and bots come from the address, and invalid entries are d
 test('FILTER-14: bots in the address must be GitHub logins, and their number is capped', () => {
   const bots = parseLinkSettings('?bots=' + encodeURIComponent('ci-bot renovate[bot] -lead trail- a--b <x> ' + 'x'.repeat(40))).bots;
   assert.deepEqual(bots, ['ci-bot', 'renovate[bot]', 'a--b']);
-  assert.deepEqual(cleanBots(['ci-bot', 'bad login', 'ok']), ['ci-bot', 'ok']);
+  assert.deepEqual(cleanBots(['ci-bot', 'bad login', 'ok', 'CI-Bot']), ['ci-bot', 'ok']);
   const many = Array.from({ length: 60 }, (_, i) => 'bot-' + i).join(',');
   assert.equal(parseLinkSettings('?bots=' + many).bots.length, MAX_BOTS);
 });

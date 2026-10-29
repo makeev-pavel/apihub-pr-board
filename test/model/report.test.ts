@@ -55,3 +55,14 @@ test('DATA-5: entries that are not PRs with a positive whole number are skipped'
   const report = parseReport({ repo: 'acme/widgets', prs: [null, 'x', { number: '7' }, { number: 0 }, { number: 1.5 }, { number: '../7' }, { number: 7 }] });
   assert.deepEqual(report.prs.map((pr) => pr.number), [7]);
 });
+
+test('DATA-5: a PR whose lists are missing or broken gets empty lists, so it renders', () => {
+  const [pr] = parseReport({ repo: 'acme/widgets', prs: [{ number: 7, assignees: null, labels: 'bug', issues: undefined, projects: 'x' }] }).prs;
+  for (const field of ['assignees', 'labels', 'reviewers', 'requestedReviewers', 'issues', 'comments'] as const) {
+    assert.deepEqual(pr[field], [], field);
+  }
+  assert.equal(pr.projects, null, 'unreadable projects count as unknown');
+  const [kept] = parseReport({ repo: 'acme/widgets', prs: [{ number: 8, labels: [{ name: 'bug' }], projects: ['Sprint'] }] }).prs;
+  assert.deepEqual(kept.labels, [{ name: 'bug' }]);
+  assert.deepEqual(kept.projects, ['Sprint']);
+});

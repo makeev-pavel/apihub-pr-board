@@ -99,3 +99,17 @@ test('FILTER-14: the address carries the link settings after the view', () => {
   delete (globalThis as { window?: unknown }).window;
   delete (globalThis as { history?: unknown }).history;
 });
+
+test('FILTER-13: the address keeps its #fragment, and a browser that refuses to update it does not break the page', () => {
+  const calls: string[] = [];
+  Object.assign(globalThis, {
+    window: { location: { search: '', pathname: '/board/', hash: '#top' } },
+    history: { replaceState: (_state: unknown, _title: string, url: string) => { calls.push(url); } },
+  });
+  writeView({ ...DEFAULT_VIEW, q: 'fix' });
+  assert.deepEqual(calls, ['/board/?q=fix#top']);
+  Object.assign(globalThis, { history: { replaceState: () => { throw new Error('SecurityError: too many calls'); } } });
+  assert.doesNotThrow(() => writeView(DEFAULT_VIEW));
+  delete (globalThis as { window?: unknown }).window;
+  delete (globalThis as { history?: unknown }).history;
+});

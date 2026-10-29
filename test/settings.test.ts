@@ -87,3 +87,12 @@ test('SET-11: blocked storage gives the defaults and never throws', () => {
   assert.doesNotThrow(() => saveSettings(DEFAULT_SETTINGS));
   delete (globalThis as { localStorage?: unknown }).localStorage;
 });
+
+test('SET-10: only the attention rules count as custom; the area lists do not change the Attention count', () => {
+  assert.equal(rulesAreDefault(DEFAULT_SETTINGS.rules), true);
+  const areas = { ...DEFAULT_SETTINGS.rules, areaModules: { be: ['backend'], fe: ['ui'] } };
+  assert.equal(rulesAreDefault(areas), true);
+  for (const changed of [{ staleDays: 3 }, { checkTitle: false }, { requireIssue: false }, { extraBots: ['ci-bot'] }]) {
+    assert.equal(rulesAreDefault({ ...DEFAULT_SETTINGS.rules, ...changed }), false, JSON.stringify(changed));
+  }
+});

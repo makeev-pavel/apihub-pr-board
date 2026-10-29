@@ -10,8 +10,9 @@ export const MAX_BOTS = 50;
 // A GitHub login: letters, digits, and inner dashes, up to 39 characters; an app adds [bot].
 const LOGIN = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?(?:\[bot\])?$/;
 
+// Logins compare without case on GitHub, so a repeat in another case counts once.
 export function cleanBots(logins: string[]): string[] {
-  return logins.filter((login) => LOGIN.test(login)).slice(0, MAX_BOTS);
+  return uniqueNames(logins.filter((login) => LOGIN.test(login))).slice(0, MAX_BOTS);
 }
 
 export interface LinkSettings {

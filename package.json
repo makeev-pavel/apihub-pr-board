@@ -1,7 +1,7 @@
 {
   "name": "apihub-pr-board",
   "private": true,
-  "description": "Open pull request board for one GitHub repository, published on GitHub Pages",
+  "description": "Open pull request board for one or more GitHub repositories, published on GitHub Pages",
   "type": "module",
   "engines": {
     "node": ">=22.18"

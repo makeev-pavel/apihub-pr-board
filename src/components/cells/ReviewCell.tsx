@@ -18,11 +18,12 @@ export function ReviewCell({ pr, now }: { pr: DerivedPullRequest; now: number })
     approvers.length ? 'Approved by ' + approvers.join(', ') : state.label,
     waiting.length ? 'Waiting for ' + waiting.map((r) => r.login).join(', ') : '',
   ].filter(Boolean).join('. ');
-  const reviewer = (r: Reviewer | RequestedReviewer) => {
+  // The index keeps keys unique for two deleted accounts (ghost) or a team and a user with the same name.
+  const reviewer = (r: Reviewer | RequestedReviewer, index: number) => {
     const team = 'team' in r && r.team;
     const at = 'at' in r ? r.at : null;
     return (
-      <li key={r.login}>
+      <li key={index + ':' + r.login}>
         <Avatar actor={r} small />
         <span className="who">{team ? '@' + r.login : displayLogin(r)}</span>
         {team ? <span className="chip">team</span> : null}

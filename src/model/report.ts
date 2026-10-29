@@ -20,6 +20,16 @@ function isPullRequest(value: unknown): value is PullRequest {
   return Number.isInteger(number) && (number as number) > 0;
 }
 
+const LIST_FIELDS = ['assignees', 'labels', 'reviewers', 'requestedReviewers', 'issues', 'comments'] as const;
+
+// Every list a PR renders, so one broken entry cannot blank the page.
+function withLists(pr: PullRequest): PullRequest {
+  const fixed: Record<string, unknown> = { ...pr };
+  for (const field of LIST_FIELDS) if (!Array.isArray(pr[field])) fixed[field] = [];
+  if (pr.projects !== null && !Array.isArray(pr.projects)) fixed.projects = null;
+  return fixed as unknown as PullRequest;
+}
+
 // prs.json comes from the network: check the parts the page cannot render without.
 export function parseReport(value: unknown): Report {
   const report = value as (Partial<Report> & { repo?: unknown }) | null;
@@ -35,6 +45,6 @@ export function parseReport(value: unknown): Report {
     generatedAt: typeof report.generatedAt === 'string' ? report.generatedAt : new Date(0).toISOString(),
     runUrl: typeof report.runUrl === 'string' ? report.runUrl : null,
     warnings: Array.isArray(report.warnings) ? report.warnings.filter((w) => typeof w === 'string') : [],
-    prs: (report.prs as unknown[]).filter(isPullRequest).map((pr) => (known(pr.repo) ? pr : { ...pr, repo: fallback })),
+    prs: (report.prs as unknown[]).filter(isPullRequest).map((pr) => withLists(known(pr.repo) ? pr : { ...pr, repo: fallback })),
   };
 }

@@ -412,7 +412,9 @@ the screenshot project, with the HTML report as an artifact when it fails, and t
 **Description:** Five-axis review of the whole codebase by a separate agent, then fix the confirmed findings.
 
 **Acceptance criteria:**
-- [ ] No open Critical or Required findings.
+- [x] No open Required findings: the three (checkout credentials, SVG and image-map links, a late snapshot over
+  live data) are fixed with tests, with eleven optional ones and the nits. The one Critical, real module names and
+  the APIHub name, follows the user's decision to keep them.
 
 **Verification:** all suites and the build after the fixes. **Dependencies:** Task 24.
 **Files:** as the findings require. **Scope:** S to M.
@@ -430,7 +432,7 @@ rewrite the local branch into commits that contain neither, then push only after
 **Files:** git history only. **Scope:** XS.
 
 ### Checkpoint: complete
-- [ ] Definition of done: tests pass, no regressions, behavior checked in the browser, docs updated.
+- [x] Definition of done: tests pass, no regressions, behavior checked in the browser, docs updated.
 - [ ] Review with the user.
 
 ## Backlog: several repositories and shareable settings

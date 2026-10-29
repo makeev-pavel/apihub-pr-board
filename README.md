@@ -77,5 +77,9 @@ GITHUB_TOKEN=$(gh auth token) PR_BOARD_REPO=owner/name,owner/other npm run dev:l
    `owner/name`, separated by commas (up to 10). A repository the token cannot read becomes a warning on the board.
 3. Push to `main`, or run the **Publish board** workflow manually.
 
+Pushes run the unit and browser tests first, and a failing test stops the deploy; the hourly runs skip the tests.
+GitHub turns off scheduled workflows after 60 days without commits, so a quiet repository needs the workflow enabled
+again under **Actions**.
+
 The workflow uses the built-in `GITHUB_TOKEN`, which can read public repositories. If project membership is not
 readable with it, the board shows a warning and reports such PRs as unchecked instead of guessing.

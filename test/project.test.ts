@@ -26,6 +26,10 @@ test('SEC-5: the build reads contents only, and only the fetch step sees the tok
   const withToken = steps.filter((step) => step.includes('GITHUB_TOKEN'));
   assert.equal(withToken.length, 1);
   assert.match(withToken[0], /node scripts\/build-site\.ts/);
+  // A checkout that keeps its credentials would leave the token in the git config for every later step.
+  const checkouts = workflow.split('\n      - ').filter((step) => step.startsWith('uses: actions/checkout@'));
+  assert.equal(checkouts.length, 3);
+  for (const step of checkouts) assert.match(step, /persist-credentials: false/);
 });
 
 test('SEC-6: only the deploy job may write to Pages, and a running deploy is never cancelled', () => {
@@ -52,7 +56,7 @@ test('a failed unit or browser test blocks the deploy, scheduled runs skip the t
 
 test('SEC-7: packages that touch untrusted content and DOM test tooling are pinned to exact versions', () => {
   const versions = { ...pkg.dependencies, ...pkg.devDependencies };
-  for (const name of ['marked', 'dompurify', 'jsdom', '@playwright/test']) {
+  for (const name of ['marked', 'dompurify', 'jsdom', '@playwright/test', '@fontsource/ibm-plex-sans', '@fontsource/ibm-plex-mono']) {
     assert.match(versions[name], /^\d+\.\d+\.\d+$/, name + ' ' + versions[name]);
   }
 });

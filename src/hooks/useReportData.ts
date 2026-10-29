@@ -16,14 +16,21 @@ interface ReportData {
 export function useReportData() {
   const [state, setState] = useState<ReportData>({ status: 'loading', report: null, source: null, error: null });
   useEffect(() => {
-    fetch(DATA_URL, { cache: 'no-store' })
+    const controller = new AbortController();
+    // A Refresh that finished first holds newer data, so a late snapshot or its error must not replace it.
+    const unlessLive = (next: ReportData) => setState((prev) => (prev.source === 'live' ? prev : next));
+    fetch(DATA_URL, { cache: 'no-store', signal: controller.signal })
       .then((response) => {
         if (!response.ok) throw new Error('HTTP ' + response.status);
         return response.json();
       })
       .then(parseReport)
-      .then((report) => setState({ status: 'ready', report, source: 'scheduled', error: null }))
-      .catch((error: Error) => setState({ status: 'error', report: null, source: null, error: 'Cannot load ' + DATA_URL + ' (' + error.message + ').' }));
+      .then((report) => unlessLive({ status: 'ready', report, source: 'scheduled', error: null }))
+      .catch((error: Error) => {
+        if (controller.signal.aborted) return;
+        unlessLive({ status: 'error', report: null, source: null, error: 'Cannot load ' + DATA_URL + ' (' + error.message + ').' });
+      });
+    return () => controller.abort();
   }, []);
   return [state, setState] as const;
 }

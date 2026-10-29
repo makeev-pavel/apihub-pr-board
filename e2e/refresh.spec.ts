@@ -76,4 +76,16 @@ test.describe('Refresh', () => {
     expect(sent.length).toBeGreaterThan(0);
     expect(sent.every((v) => v.withChecks === false && v.withComments === false)).toBe(true);
   });
+
+  test('DATA-6 DATA-4: live data from Refresh is not replaced by a snapshot that arrives later', async ({ page }) => {
+    await withToken(page);
+    await page.request.post('/__dev/state', { data: { report: 'slow', refresh: 'ok' } });
+    await page.goto('/?' + ALL);
+    await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+    await expect(page.locator('.source-button')).toHaveText('live, just now');
+    // The slow snapshot answers after 3 seconds; the live data must still be on the page after that.
+    await page.waitForResponse((response) => response.url().endsWith('/prs.json'));
+    await page.waitForTimeout(300);
+    await expect(page.locator('.source-button')).toHaveText('live, just now');
+  });
 });

@@ -12,13 +12,14 @@
 - **SEC-3** Everything that comes from GitHub (titles, labels, logins, comments, check names) is untrusted. Plain
   text renders as text, never as HTML. Label colors are used only when they are six hex digits.
 - **SEC-4** Comment Markdown is rendered with `marked` and then sanitized with DOMPurify. The result has no scripts,
-  event handler attributes, `style` tags or attributes, forms, `class` or `id` attributes, or `javascript:` links,
-  and every link opens in a new tab with `rel="noopener noreferrer"`.
+  event handler attributes, `style` tags or attributes, forms, SVG, MathML, image maps, `class` or `id` attributes,
+  or `javascript:` links, and every link opens in a new tab with `rel="noopener noreferrer"`.
 
 ## Build and deployment
 
 - **SEC-5** The scheduled build uses the workflow's built-in `GITHUB_TOKEN` with read access to repository contents.
-  Only the step that fetches the PRs sees it; installing packages and bundling the page do not.
+  Only the step that fetches the PRs sees it; installing packages and bundling the page do not. Checkouts keep no
+  credentials in the git config, so a later step cannot read the token from there.
 - **SEC-6** Only the deploy job may write to Pages and request an OIDC token. A running deploy is never cancelled
   by a newer run; the newer run waits.
 

@@ -107,7 +107,13 @@ export function readView(): View {
 // extraQuery carries the link settings, which live beside the view in the address.
 export function writeView(view: View, extraQuery = '') {
   const query = [viewQuery(view), extraQuery].filter(Boolean).join('&');
-  history.replaceState(null, '', window.location.pathname + (query ? '?' + query : ''));
+  // Safari throws after about 100 calls in 30 seconds, as fast typing in the search can make. The address then lags;
+  // the page must not break.
+  try {
+    history.replaceState(null, '', window.location.pathname + (query ? '?' + query : '') + (window.location.hash || ''));
+  } catch {
+    // Kept in state; the next change writes the address again.
+  }
 }
 
 // The PRs the authors, draft status, area, and search let through. Quick filters count against this list.

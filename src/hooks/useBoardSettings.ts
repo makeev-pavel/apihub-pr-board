@@ -17,7 +17,9 @@ export function useBoardSettings() {
     const kept = { ...next, rules: { ...next.rules, extraBots: [] } };
     saveSettings(kept);
     setStored(kept);
-    setLink((prev) => ({ ...prev, bots: cleanBots(next.rules.extraBots) }));
+    // Keeping the same link when the bots did not change spares re-deriving every PR on a theme or column change.
+    const bots = cleanBots(next.rules.extraBots);
+    setLink((prev) => (bots.join(',') === prev.bots.join(',') ? prev : { ...prev, bots }));
   }, []);
   const setRepos = useCallback((repos: string[]) => setLink((prev) => ({ ...prev, repos })), []);
   return { settings, setSettings, link, setRepos };

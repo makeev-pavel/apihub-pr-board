@@ -277,3 +277,22 @@ test('DATA-15 DATA-18: with several repositories, a short page names its reposit
   const report = await fetchOpenPullRequests({ token: 't', repositories: [repository, gadgets], fetchImpl: mockFetch('count-mismatch').fetchImpl });
   assert.match(report.warnings[0], /^GitHub reported \d+ open pull requests in acme\/widgets but returned \d+\.$/);
 });
+
+test('SEC-1 PANEL-11: the token follows next pages only within the API, and a body that is not a list fails readably', async () => {
+  const comments = restUrl + '/repos/acme/widgets/issues/7/comments?per_page=100';
+  const reviews = restUrl + '/repos/acme/widgets/pulls/7/reviews?per_page=100';
+  const elsewhere = restFetch({
+    [comments]: { body: [], headers: { link: '<https://evil.test/collect?page=2>; rel="next"' } },
+    [reviews]: { body: [] },
+  });
+  const result = await fetchAllComments({ number: 7, repository, token: 't', fetchImpl: elsewhere.fetchImpl, restUrl });
+  assert.equal(result.complete, false);
+  // GitHub's next links may name the repository by id; they stay within the API, so they are followed.
+  const byId = restUrl + '/repositories/42/issues/7/comments?per_page=100&page=2';
+  const moved = restFetch({ [comments]: { body: [], headers: { link: '<' + byId + '>; rel="next"' } }, [byId]: { body: [] }, [reviews]: { body: [] } });
+  assert.equal((await fetchAllComments({ number: 7, repository, token: 't', fetchImpl: moved.fetchImpl, restUrl })).complete, true);
+  assert.ok(moved.requested.some((r) => r.url === byId));
+  assert.ok(elsewhere.requested.every((r) => r.url.startsWith(restUrl + '/')), 'nothing went to another host');
+  const notList = restFetch({ [comments]: { body: { message: 'odd' } }, [reviews]: { body: [] } });
+  await assert.rejects(fetchAllComments({ number: 7, repository, fetchImpl: notList.fetchImpl, restUrl }), /not a list/);
+});
