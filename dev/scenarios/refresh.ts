@@ -76,7 +76,8 @@ export const REFRESH_SCENARIOS: RefreshScenario[] = [
   { id: 'paginated', label: 'Success over several pages', respond: board(mixedEntries, { pageSize: SMALL_PAGE }) },
   { id: 'projects-error', label: 'Partial error: projects forbidden', respond: board(typicalNodes, { projectsError: true }) },
   { id: 'count-mismatch', label: 'Fewer PRs than totalCount', respond: board(typicalNodes, { totalExtra: MISSING_PRS }) },
-  { id: 'slow', label: 'Slow response (4 s)', respond: (v, now) => ({ ...ok(v, now), delayMs: SLOW_REFRESH_MS }) },
+  // Only the first page waits, so the delay stays 4 s however many pages the board takes.
+  { id: 'slow', label: 'Slow response (4 s)', respond: (v, now) => ({ ...ok(v, now), delayMs: v.after ? 0 : SLOW_REFRESH_MS }) },
   { id: 'unauthorized', label: '401 Bad credentials', respond: () => ({ status: 401, body: JSON.stringify({ message: 'Bad credentials' }) }) },
   { id: 'server-error', label: '502 from GitHub', respond: () => ({ status: 502, body: 'Server Error' }) },
   { id: 'repo-not-found', label: 'Repository not found', respond: notFound },
