@@ -5,7 +5,7 @@ import { repositoriesSummary } from './board/format.ts';
 import { boardRepos, linkSettingsQuery, missingReposMessage } from './board/link.ts';
 import { readToken, storeToken } from './board/storage.ts';
 import {
-  AREA_OPTIONS, DEFAULT_VIEW, DRAFT_OPTIONS, filterPullRequests, firstDirection, readView, visibleRows, writeView,
+  AREA_OPTIONS, collectPriorities, DEFAULT_VIEW, DRAFT_OPTIONS, filterPullRequests, firstDirection, readView, visibleRows, writeView,
 } from './board/view.ts';
 import type { SortKey, View } from './board/view.ts';
 import { RefreshControl } from './components/header/RefreshControl.tsx';
@@ -17,6 +17,7 @@ import { HeaderCell } from './components/table/HeaderCell.tsx';
 import { Row } from './components/table/Row.tsx';
 import { TableMessage } from './components/table/TableMessage.tsx';
 import { AuthorMenu } from './components/toolbar/AuthorMenu.tsx';
+import { PriorityMenu } from './components/toolbar/PriorityMenu.tsx';
 import { CopyLink } from './components/toolbar/CopyLink.tsx';
 import { SearchHelp } from './components/toolbar/SearchHelp.tsx';
 import { REPOSITORIES } from './config.ts';
@@ -137,14 +138,16 @@ export function App() {
   const prs = useNoteText(derived, notesApi.notes);
 
   const authors = useMemo(() => collectAuthors(prs), [prs]);
+  const priorities = useMemo(() => collectPriorities(prs), [prs]);
+  const noPriority = useMemo(() => prs.filter((pr) => !pr.issues.some((issue) => issue.priority)).length, [prs]);
   const selected = useMemo(() => selectedAuthors(view.authors, authors), [view.authors, authors]);
 
   const parsedQuery = useMemo(() => parseQuery(view.q), [view.q]);
   const activeLabels = useMemo(() => activeLabelFilters(parsedQuery), [parsedQuery]);
 
   const base = useMemo(
-    () => filterPullRequests(prs, { draft: view.draft, area: view.area }, selected, parsedQuery),
-    [prs, selected, view.draft, view.area, parsedQuery],
+    () => filterPullRequests(prs, { draft: view.draft, area: view.area, priority: view.priority }, selected, parsedQuery),
+    [prs, selected, view.draft, view.area, view.priority, parsedQuery],
   );
 
   const rows = useMemo(
@@ -208,6 +211,9 @@ export function App() {
           {AREA_OPTIONS.map(([value, label]) =>
             <button key={value} type="button" aria-pressed={view.area === value} onClick={() => patch({ area: value })}>{label}</button>)}
         </div>
+        {priorities.length || view.priority.length ? (
+          <PriorityMenu priorities={priorities} noneCount={noPriority} selected={view.priority} setPriority={(priority) => patch({ priority })} />
+        ) : null}
         {isDefault ? null : <button type="button" className="btn ghost" onClick={resetView}>Reset view</button>}
         <CopyLink />
         <span className="result-count">{rows.length === 1 ? '1 pull request' : rows.length + ' pull requests'}</span>

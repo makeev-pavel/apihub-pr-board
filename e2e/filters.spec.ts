@@ -134,4 +134,19 @@ test.describe('toolbar', () => {
     await page.getByRole('button', { name: 'Copy link to this view' }).click();
     await expect(page.getByRole('button', { name: 'Copy the address bar instead' })).toBeVisible();
   });
+
+  test('FILTER-16: the Priority menu lists the priorities of linked issues and keeps the choice in the address', async ({ page }) => {
+    await openBoard(page, { report: 'typical', query: ALL });
+    await page.getByRole('button', { name: /^Priority:/ }).click();
+    const menu = page.getByRole('group', { name: 'Priority' });
+    await expect(menu.locator('label > span:not(.n)')).toHaveText(['High', 'Medium', 'Low', 'No priority']);
+    const highCount = Number(await menu.locator('label', { hasText: 'High' }).locator('.n').textContent());
+    await menu.getByRole('checkbox', { name: 'High' }).check();
+    await expect(page.getByRole('button', { name: /^Priority:/ })).toHaveText(/Priority:\s*High/);
+    await expect(rows(page)).toHaveCount(highCount);
+    await expect(page).toHaveURL(/[?&]priority=High(&|$)/);
+    await page.reload();
+    await expect(rows(page)).toHaveCount(highCount);
+    await expect(page.locator('td.c-issue .field-chip').filter({ hasText: /^(Medium|Low)$/ })).toHaveCount(0);
+  });
 });

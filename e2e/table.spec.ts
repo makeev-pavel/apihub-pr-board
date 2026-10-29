@@ -63,11 +63,22 @@ test.describe('table', () => {
     const row = await onlyCase(page, 'show the issue type and labels');
     const cell = row.locator('td.c-issue');
     await expect(cell.locator('.issue-type')).toHaveText('Epic');
-    await expect(cell.locator('.issue-type-dot')).toHaveCSS('background-color', 'rgb(140, 149, 159)');
+    await expect(cell.locator('.issue-type .issue-type-dot')).toHaveCSS('background-color', 'rgb(140, 149, 159)');
     await expect(cell.locator('.issue-number')).toHaveText('#512');
     await expect(cell.locator('.issue-labels .label-chip')).toHaveText(['ux', 'customer', 'Q4']);
     await expect(cell.locator('.issue-labels .label-more')).toHaveText('+2');
     await expect(cell.locator('.issue-labels .label-more')).toHaveAttribute('title', 'needs design, frontend');
+  });
+
+  test('TABLE-28: the project fields show under the issue, from the first project that sets each, with the current sprint marked', async ({ page }) => {
+    const row = await onlyCase(page, 'show the issue type and labels');
+    const chips = row.locator('td.c-issue .issue-fields .field-chip');
+    await expect(chips).toHaveText(['Urgent', 'Est 13', 'Sprint 42 · current']);
+    await expect(chips.nth(0).locator('.issue-type-dot')).toHaveCSS('background-color', 'rgb(164, 117, 249)');
+    await expect(chips.nth(2)).toHaveClass(/current/);
+    await expect(chips.nth(2)).toHaveAttribute('title', /^Sprint 42: \w{3} \d{1,2} – \w{3} \d{1,2}$/);
+    await openBoard(page, { report: 'corner', query: ALL + '&q=' + encodeURIComponent('priority:urgent sprint:current') });
+    await expect(rows(page)).toHaveCount(1);
   });
 
   test('TABLE-9: people show avatars or initials, ghost for deleted accounts, and long logins move below', async ({ page }) => {

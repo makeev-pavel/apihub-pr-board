@@ -124,6 +124,8 @@ export interface DerivedPullRequest extends PullRequest {
   ageDays: number;
   // Open longer than the stale limit in the viewer's rules.
   stale: boolean;
+  // A linked issue is in the sprint that runs now (TABLE-28).
+  inCurrentSprint: boolean;
   attention: string[];
   commentText: string;
   searchText: string;

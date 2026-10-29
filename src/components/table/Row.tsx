@@ -48,7 +48,7 @@ export const Row = memo(function Row({ pr, now, columns, repos, activeLabels, on
         {pr.note ? <div className="note">{pr.note}</div> : null}
       </td>
     ),
-    issue: <td key="issue" className="c-issue"><IssueCell pr={pr} /></td>,
+    issue: <td key="issue" className="c-issue"><IssueCell pr={pr} now={now} /></td>,
     author: <td key="author" className="c-person"><Person actor={pr.author} /></td>,
     ci: <td key="ci" className="c-state"><CiCell pr={pr} /></td>,
     review: <td key="review" className="c-state"><ReviewCell pr={pr} now={now} /></td>,

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { derive } from '../../src/model/derive.ts';
+import { derive, isCurrentSprint } from '../../src/model/derive.ts';
 import { activeLabelFilters, matchesQuery, parseQuery, toggleLabelFilter } from '../../src/model/search.ts';
 import type { PullRequest } from '../../src/types.ts';
 
@@ -89,4 +89,27 @@ test('FILTER-8: plain words match the type and labels of a linked issue', () => 
   assert.ok(search('bug', fields));
   assert.ok(search('customer', fields));
   assert.ok(!search('feature', fields));
+});
+
+test('TABLE-28: priority: and sprint: match the project fields of linked issues', () => {
+  const issue = { number: 5, title: 'Planned', url: 'u', type: null, labels: [], priority: { name: 'High', color: 'red' }, estimate: 3,
+    sprint: { title: 'Sprint 42', startDate: '2026-10-25', duration: 14 } };
+  const fields = { issues: [issue] };
+  assert.ok(search('priority:high', fields));
+  assert.ok(!search('priority:low', fields));
+  assert.ok(search('priority:none', { issues: [{ ...issue, priority: null }] }));
+  assert.ok(search('sprint:42', fields));
+  assert.ok(search('sprint:current', fields), 'NOW is inside Sprint 42');
+  assert.ok(!search('sprint:current', { issues: [{ ...issue, sprint: { title: 'Sprint 41', startDate: '2026-10-11', duration: 14 } }] }));
+  assert.ok(search('sprint:none', { issues: [{ ...issue, sprint: null }] }));
+  assert.ok(search('high', fields), 'plain words match the priority too');
+});
+
+test('TABLE-28: a sprint is current from its start date to its last day', () => {
+  const sprint = { title: 'S', startDate: '2026-10-28', duration: 14 };
+  assert.equal(isCurrentSprint(sprint, Date.parse('2026-10-28T00:00:00Z')), true);
+  assert.equal(isCurrentSprint(sprint, Date.parse('2026-11-10T23:59:00Z')), true);
+  assert.equal(isCurrentSprint(sprint, Date.parse('2026-11-11T00:00:00Z')), false);
+  assert.equal(isCurrentSprint(sprint, Date.parse('2026-10-27T23:59:00Z')), false);
+  assert.equal(isCurrentSprint(null, NOW), false);
 });

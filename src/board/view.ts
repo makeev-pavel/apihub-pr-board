@@ -55,11 +55,16 @@ export interface View {
   draft: DraftFilter;
   area: AreaFilter;
   quick: string[];
+  // Priority names from GitHub Projects, and 'none' for PRs without one (FILTER-16); empty shows every PR.
+  priority: string[];
   sort: SortKey;
   dir: SortDir;
 }
 
-export const DEFAULT_VIEW: View = { q: '', authors: null, draft: 'ready', area: 'all', quick: [], sort: 'attention', dir: 'desc' };
+export const NO_PRIORITY = 'none';
+const MAX_PRIORITIES = 20;
+
+export const DEFAULT_VIEW: View = { q: '', authors: null, draft: 'ready', area: 'all', quick: [], priority: [], sort: 'attention', dir: 'desc' };
 
 // The view a URL query describes; unknown or missing values fall back to the defaults.
 export function parseView(search: string): View {
@@ -79,6 +84,16 @@ export function parseView(search: string): View {
   if (quick !== null) {
     view.quick = quick.split(',').filter((id) => QUICK.some((f) => f.id === id));
   }
+  const priority = params.get('priority');
+  if (priority !== null) {
+    const seen = new Set<string>();
+    view.priority = priority.split(',').map((name) => name.trim()).filter((name) => {
+      const key = name.toLowerCase();
+      if (!name || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).slice(0, MAX_PRIORITIES);
+  }
   const sort = params.get('sort');
   if (isSortKey(sort)) view.sort = sort;
   const dir = params.get('dir');
@@ -93,6 +108,7 @@ export function viewQuery(view: View): string {
   if (view.draft !== DEFAULT_VIEW.draft) params.set('draft', view.draft);
   if (view.area !== DEFAULT_VIEW.area) params.set('area', view.area);
   if (view.quick.length) params.set('quick', view.quick.join(','));
+  if (view.priority.length) params.set('priority', view.priority.join(','));
   if (view.sort !== DEFAULT_VIEW.sort || view.dir !== DEFAULT_VIEW.dir) {
     params.set('sort', view.sort);
     params.set('dir', view.dir);
@@ -117,9 +133,35 @@ export function writeView(view: View, extraQuery = '') {
 }
 
 // The PRs the authors, draft status, area, and search let through. Quick filters count against this list.
-export function filterPullRequests(prs: DerivedPullRequest[], view: Pick<View, 'draft' | 'area'>, authors: Set<string>,
-  query: ParsedQuery): DerivedPullRequest[] {
+// The priorities of a PR's linked issues, lowercased.
+function prioritiesOf(pr: DerivedPullRequest): string[] {
+  return pr.issues.filter((issue) => issue.priority).map((issue) => issue.priority!.name.toLowerCase());
+}
+
+export function matchesPriority(pr: DerivedPullRequest, selected: string[]): boolean {
+  if (!selected.length) return true;
+  const wanted = selected.map((name) => name.toLowerCase());
+  const own = prioritiesOf(pr);
+  return own.length ? own.some((name) => wanted.includes(name)) : wanted.includes(NO_PRIORITY);
+}
+
+// Every priority on the board with its number of PRs, in the order they first appear (FILTER-16).
+export function collectPriorities(prs: DerivedPullRequest[]): { name: string; count: number }[] {
+  const counts = new Map<string, { name: string; count: number }>();
+  for (const pr of prs) {
+    for (const name of new Set(pr.issues.filter((issue) => issue.priority).map((issue) => issue.priority!.name))) {
+      const entry = counts.get(name.toLowerCase()) || { name, count: 0 };
+      entry.count += 1;
+      counts.set(name.toLowerCase(), entry);
+    }
+  }
+  return [...counts.values()];
+}
+
+export function filterPullRequests(prs: DerivedPullRequest[], view: Pick<View, 'draft' | 'area'> & Partial<Pick<View, 'priority'>>,
+  authors: Set<string>, query: ParsedQuery): DerivedPullRequest[] {
   return prs.filter((pr) => {
+    if (!matchesPriority(pr, view.priority || [])) return false;
     if (!authors.has(pr.authorKey)) return false;
     if (view.draft === 'ready' && pr.draft) return false;
     if (view.draft === 'draft' && !pr.draft) return false;

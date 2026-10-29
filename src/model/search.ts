@@ -29,6 +29,15 @@ export const SEARCH_QUALIFIERS: Record<string, SearchQualifier> = {
   },
   base: { hint: 'base:develop', test: (pr, v) => includes(pr.base, v) },
   repo: { hint: 'repo:widgets, repo:acme/widgets', test: (pr, v) => includes(pr.repo, v) },
+  priority: {
+    hint: 'priority:high, priority:none (from GitHub Projects)',
+    test: (pr, v) => (v === 'none' ? !pr.issues.some((i) => i.priority) : pr.issues.some((i) => !!i.priority && includes(i.priority.name, v))),
+  },
+  sprint: {
+    hint: 'sprint:current, sprint:42, sprint:none',
+    test: (pr, v) => (v === 'current' ? pr.inCurrentSprint : v === 'none' ? !pr.issues.some((i) => i.sprint)
+      : pr.issues.some((i) => !!i.sprint && includes(i.sprint.title, v))),
+  },
   note: { hint: 'note:tests (your notes)', test: (pr, v) => !!pr.noteText && pr.noteText.includes(v) },
   area: { hint: 'area:be, area:fe, area:other', test: (pr, v) => (v === 'other' ? !pr.areas.length : pr.areas.includes(v as AreaId)) },
   ci: { hint: 'ci:failing, ci:running, ci:passing, ci:none', test: (pr, v) => pr.ci.startsWith(v) },

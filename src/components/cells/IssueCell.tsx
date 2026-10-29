@@ -1,17 +1,46 @@
 import { labelTextColor } from '../../board/format.ts';
-import type { Issue, PullRequest } from '../../types.ts';
+import { isCurrentSprint } from '../../model/derive.ts';
+import type { Issue, PullRequest, Sprint } from '../../types.ts';
 
 const VISIBLE_ISSUE_LABELS = 3;
 
 // The Issue column (TABLE-8): the issues the PR closes (the Development field), each with its type and labels. Without
 // one, the project it was added to instead, or "No issue".
-export function IssueCell({ pr }: { pr: PullRequest }) {
-  if (pr.issues.length) return <div className="issue-list">{pr.issues.map((issue, i) => <IssueItem key={i} issue={issue} />)}</div>;
+export function IssueCell({ pr, now }: { pr: PullRequest; now: number }) {
+  if (pr.issues.length) return <div className="issue-list">{pr.issues.map((issue, i) => <IssueItem key={i} issue={issue} now={now} />)}</div>;
   if (pr.projects && pr.projects.length) return <span className="dash">No issue · in {pr.projects.join(', ')}</span>;
   return <span className="dash">No issue</span>;
 }
 
-function IssueItem({ issue }: { issue: Issue }) {
+function sprintDates(sprint: Sprint): string {
+  const start = Date.parse(sprint.startDate + 'T00:00:00Z');
+  const day = (time: number) => new Date(time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+  return day(start) + ' – ' + day(start + (sprint.duration - 1) * 24 * 60 * 60 * 1000);
+}
+
+// Priority, Estimate, and Sprint from GitHub Projects (TABLE-28); a field that is not set does not show.
+function ProjectFields({ issue, now }: { issue: Issue; now: number }) {
+  if (!issue.priority && issue.estimate === null && !issue.sprint) return null;
+  const current = isCurrentSprint(issue.sprint, now);
+  return (
+    <div className="issue-fields">
+      {issue.priority ? (
+        <span className="field-chip" title={'Priority: ' + issue.priority.name}>
+          <span className="issue-type-dot" aria-hidden="true" style={{ background: 'var(--issue-type-' + (issue.priority.color || 'gray') + ')' }}></span>
+          {issue.priority.name}
+        </span>
+      ) : null}
+      {issue.estimate !== null ? <span className="field-chip" title="Estimate">Est {issue.estimate}</span> : null}
+      {issue.sprint ? (
+        <span className={'field-chip' + (current ? ' current' : '')} title={issue.sprint.title + ': ' + sprintDates(issue.sprint)}>
+          {issue.sprint.title}{current ? ' · current' : ''}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+function IssueItem({ issue, now }: { issue: Issue; now: number }) {
   const shown = issue.labels.slice(0, VISIBLE_ISSUE_LABELS);
   const hidden = issue.labels.slice(VISIBLE_ISSUE_LABELS);
   return (
@@ -28,6 +57,7 @@ function IssueItem({ issue }: { issue: Issue }) {
         {issue.number ? <span className="issue-number">#{issue.number}</span> : null}
         <span className="issue-title">{issue.title}</span>
       </a>
+      <ProjectFields issue={issue} now={now} />
       {shown.length ? (
         <div className="issue-labels">
           {shown.map((label) => (

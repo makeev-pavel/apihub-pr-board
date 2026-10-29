@@ -17,6 +17,10 @@
   person or every bot by hand switches to the matching preset.
 - **FILTER-5** Draft status: All, Ready for review (the default), Drafts.
 - **FILTER-6** Area: All, BE, FE, Other (**RULE-11**). A PR in both areas shows under BE and under FE.
+- **FILTER-16** Priority, shown when a linked issue has one: a menu of the priorities of the linked issues
+  (**DATA-25**), each with its number of PRs, and No priority. Checked values show the PRs with an issue of one of
+  them, or without any for No priority; nothing checked shows all. The choice lives in the address
+  (`priority=High,Medium`).
 - **FILTER-7** **Reset view** shows when the view differs from the default and restores it. **Copy link to this
   view** copies the page address, says "Link copied", and asks to copy the address bar when the clipboard is blocked.
 

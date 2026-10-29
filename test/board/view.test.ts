@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  DEFAULT_VIEW, filterPullRequests, firstDirection, parseView, readView, viewQuery, visibleRows, writeView,
+  collectPriorities, DEFAULT_VIEW, filterPullRequests, firstDirection, matchesPriority, parseView, readView, viewQuery, visibleRows,
+  writeView,
 } from '../../src/board/view.ts';
 import { parseQuery } from '../../src/model/search.ts';
 import type { DerivedPullRequest } from '../../src/types.ts';
@@ -16,7 +17,7 @@ function pr(number: number, fields: Partial<DerivedPullRequest> = {}): DerivedPu
 test('FILTER-13: a URL query restores the view, and unknown values fall back to the defaults', () => {
   assert.deepEqual(parseView(''), DEFAULT_VIEW);
   assert.deepEqual(parseView('?q=fix&authors=anna-dev,,boris-k&draft=draft&area=fe&quick=ci,nope&sort=title&dir=asc'), {
-    q: 'fix', authors: ['anna-dev', 'boris-k'], draft: 'draft', area: 'fe', quick: ['ci'], sort: 'title', dir: 'asc',
+    q: 'fix', authors: ['anna-dev', 'boris-k'], draft: 'draft', area: 'fe', quick: ['ci'], priority: [], sort: 'title', dir: 'asc',
   });
   assert.equal(parseView('?authors=bots').authors, 'bots');
   assert.equal(parseView('?q=%20label:bug%20').q, ' label:bug ', 'the search is kept as typed');
@@ -112,4 +113,19 @@ test('FILTER-13: the address keeps its #fragment, and a browser that refuses to 
   assert.doesNotThrow(() => writeView(DEFAULT_VIEW));
   delete (globalThis as { window?: unknown }).window;
   delete (globalThis as { history?: unknown }).history;
+});
+
+test('FILTER-16: the Priority filter keeps PRs whose issues have a chosen priority, or none, and lives in the address', () => {
+  const issue = (name: string | null) => ({ number: 1, title: 't', url: 'u', type: null, labels: [], priority: name ? { name, color: null } : null, estimate: null, sprint: null });
+  const high = pr(1, { issues: [issue('High')] });
+  const low = pr(2, { issues: [issue('Low'), issue('High')] });
+  const none = pr(3, { issues: [issue(null)] });
+  assert.equal(matchesPriority(high, []), true);
+  assert.equal(matchesPriority(high, ['high']), true);
+  assert.equal(matchesPriority(none, ['High']), false);
+  assert.equal(matchesPriority(none, ['none']), true);
+  assert.deepEqual(filterPullRequests([high, low, none], { draft: 'all', area: 'all', priority: ['Low'] }, new Set(['anna-dev']), parseQuery('')).map((p) => p.number), [2]);
+  assert.deepEqual(collectPriorities([high, low, none]), [{ name: 'High', count: 2 }, { name: 'Low', count: 1 }]);
+  assert.deepEqual(parseView('?priority=High,,high,none').priority, ['High', 'none']);
+  assert.equal(viewQuery({ ...DEFAULT_VIEW, priority: ['High', 'none'] }), 'priority=High%2Cnone');
 });
