@@ -57,6 +57,7 @@ interface RepositoryPullRequests {
 type ReadOptions = Required<Omit<FetchOptions, 'repositories'>>;
 
 const TIMEOUT_STATUSES = new Set([0, 502, 503, 504]);
+const PARALLEL_READS = 4;
 
 // GitHub answers a repository it cannot give with null and errors at "repository": NOT_FOUND when it does not exist or
 // the token cannot see it, FORBIDDEN when the organization blocks the token (SAML, for one). Returns the warning.
@@ -131,7 +132,7 @@ async function readRepository(repository: Repository, several: boolean, options:
   return { repo, prs: rawNodes.map((node) => normalizePullRequest(node, { repo, projectsAvailable })), warnings: [...warnings] };
 }
 
-// Repositories are read one after another, so a missing one only costs a warning and GitHub sees no burst.
+// A missing repository only costs a warning, and four reads at a time keep GitHub from seeing a burst.
 export async function fetchOpenPullRequests({
   token, repositories, parts = ALL_PARTS, fetchImpl = fetch, endpoint = GRAPHQL_URL,
 }: FetchOptions): Promise<Report> {
@@ -139,9 +140,17 @@ export async function fetchOpenPullRequests({
   const several = repositories.length > 1;
   const read: RepositoryPullRequests[] = [];
   const warnings = new Set<string>();
-  for (const repository of repositories) {
-    // With one repository there is nothing else to show, so a missing one fails as before.
-    const result = await readRepository(repository, several, { token, parts, fetchImpl, endpoint });
+  // Four at a time, so 40 repositories load in seconds; results keep the order of the list.
+  const results: Awaited<ReturnType<typeof readRepository>>[] = [];
+  let next = 0;
+  await Promise.all(Array.from({ length: Math.min(PARALLEL_READS, repositories.length) }, async () => {
+    while (next < repositories.length) {
+      const index = next++;
+      // With one repository there is nothing else to show, so a missing one fails as before.
+      results[index] = await readRepository(repositories[index], several, { token, parts, fetchImpl, endpoint });
+    }
+  }));
+  for (const result of results) {
     if ('unreadable' in result) warnings.add(result.unreadable);
     else read.push(result);
   }

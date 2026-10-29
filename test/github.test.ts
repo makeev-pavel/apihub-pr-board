@@ -379,3 +379,22 @@ test('DATA-25 DATA-14: project fields the token cannot read are a warning, the p
   assert.ok(asked.slice(1).every((value) => value === false), 'later pages skip the fields too');
   assert.deepEqual(report.warnings, ['Project fields (Priority, Estimate, Sprint) are unavailable for this token: Resource not accessible by integration']);
 });
+
+test('DATA-18: repositories are read four at a time, and the report keeps their order', async () => {
+  const scenario = REFRESH_SCENARIOS.find((s) => s.id === 'ok')!;
+  let inFlight = 0;
+  let most = 0;
+  const fetchImpl = async (_url: string, init: RequestInit) => {
+    inFlight += 1;
+    most = Math.max(most, inFlight);
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    inFlight -= 1;
+    const result = scenario.respond(JSON.parse(String(init.body)).variables, Date.parse('2026-10-28T12:00:00Z'));
+    return new Response((result as { body: string }).body, { status: 200 });
+  };
+  const missing = Array.from({ length: 6 }, (_, i) => ({ owner: 'acme', name: 'missing-' + i }));
+  const report = await fetchOpenPullRequests({ token: 't', repositories: [...missing, gadgets, repository], fetchImpl });
+  assert.equal(most, 4);
+  assert.deepEqual(report.repos, ['acme/gadgets', 'acme/widgets']);
+  assert.deepEqual(report.warnings.map((w) => w.match(/missing-\d/)?.[0]), missing.map((m) => m.name));
+});

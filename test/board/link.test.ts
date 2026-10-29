@@ -12,8 +12,8 @@ test('FILTER-14: repos and bots come from the address, and invalid entries are d
     bots: ['ci-bot', 'release-bot'],
     hidden: undefined,
   });
-  const eleven = Array.from({ length: 11 }, (_, i) => 'acme/r' + i).join(',');
-  assert.equal(parseLinkSettings('?repos=' + eleven).repos.length, 10);
+  const tooMany = Array.from({ length: 41 }, (_, i) => 'acme/r' + i).join(',');
+  assert.equal(parseLinkSettings('?repos=' + tooMany).repos.length, 40);
 });
 
 test('FILTER-14: bots in the address must be GitHub logins, and their number is capped', () => {
@@ -30,8 +30,8 @@ test('FILTER-14: the address keeps repos and bots readable, leaves them out when
   const link = { repos: ['acme/widgets', 'acme/gadgets'], bots: ['ci-bot', 'odd login&x'] };
   assert.equal(linkSettingsQuery(link), 'repos=acme/widgets,acme/gadgets&bots=ci-bot,odd%20login%26x');
   assert.deepEqual(parseLinkSettings('?' + linkSettingsQuery(link)), { repos: link.repos, bots: ['ci-bot', 'odd'], hidden: undefined });
-  const ten = Array.from({ length: 10 }, (_, i) => 'acme-labs/repository-number-' + i);
-  assert.ok(linkSettingsQuery({ repos: ten, bots: [] }).length < 400, 'ten repositories still make a usable link');
+  const forty = Array.from({ length: 40 }, (_, i) => 'acme-labs/repository-number-' + i);
+  assert.ok(linkSettingsQuery({ repos: forty, bots: [] }).length < 1600, 'forty repositories still make a usable link');
 });
 
 test('FILTER-14 DATA-22: requested repositories narrow the board, and the ones the data lacks are missing', () => {

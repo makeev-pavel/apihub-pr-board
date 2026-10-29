@@ -25,15 +25,15 @@ test('DATA-17: PR_BOARD_REPO lists repositories, ignoring spaces and repeats', (
   const names = (value: string) => parseRepositories(value).map(repositoryName);
   assert.deepEqual(names('acme/widgets'), ['acme/widgets']);
   assert.deepEqual(names(' acme/widgets, acme/gadgets ,ACME/Widgets,,'), ['acme/widgets', 'acme/gadgets']);
-  const ten = Array.from({ length: 10 }, (_, i) => 'acme/r' + i).join(',');
-  assert.equal(parseRepositories(ten).length, 10);
+  const forty = Array.from({ length: 40 }, (_, i) => 'acme/r' + i).join(',');
+  assert.equal(parseRepositories(forty).length, 40);
 });
 
-test('DATA-17: an empty list, a malformed entry, or more than 10 repositories stops with the variable named', () => {
+test('DATA-17: an empty list, a malformed entry, or more than 40 repositories stops with the variable named', () => {
   for (const value of [undefined, '', ' , ']) assert.throws(() => parseRepositories(value), /PR_BOARD_REPO is not set/);
   assert.throws(() => parseRepositories('acme/widgets, gadgets'), /PR_BOARD_REPO must be "owner\/name", such as acme\/widgets, not "gadgets"/);
-  const eleven = Array.from({ length: 11 }, (_, i) => 'acme/r' + i).join(',');
-  assert.throws(() => parseRepositories(eleven), /PR_BOARD_REPO lists 11 repositories; the board reads at most 10/);
+  const tooMany = Array.from({ length: 41 }, (_, i) => 'acme/r' + i).join(',');
+  assert.throws(() => parseRepositories(tooMany), /PR_BOARD_REPO lists 41 repositories; the board reads at most 40/);
 });
 
 test('SET-16: the Repositories field takes owner/name entries and names what is wrong', () => {
@@ -41,6 +41,6 @@ test('SET-16: the Repositories field takes owner/name entries and names what is 
   assert.deepEqual(checkRepositoryList('acme/widgets\n acme/gadgets, ACME/widgets'), { repos: ['acme/widgets', 'acme/gadgets'] });
   assert.deepEqual(checkRepositoryList('acme/widgets, gadgets'), { error: '"gadgets" is not owner/name, such as acme/widgets.' });
   assert.deepEqual(checkRepositoryList('acme/..'), { error: '"acme/.." is not owner/name, such as acme/widgets.' });
-  const eleven = Array.from({ length: 11 }, (_, i) => 'acme/r' + i).join(' ');
-  assert.deepEqual(checkRepositoryList(eleven), { error: 'The board reads at most 10 repositories; this list has 11.' });
+  const tooMany = Array.from({ length: 41 }, (_, i) => 'acme/r' + i).join(' ');
+  assert.deepEqual(checkRepositoryList(tooMany), { error: 'The board reads at most 40 repositories; this list has 41.' });
 });

@@ -2,7 +2,7 @@
 // in git names the organization that owns them.
 
 export const REPO_VARIABLE = 'PR_BOARD_REPO';
-export const MAX_REPOSITORIES = 10;
+export const MAX_REPOSITORIES = 40;
 
 export interface Repository {
   owner: string;
