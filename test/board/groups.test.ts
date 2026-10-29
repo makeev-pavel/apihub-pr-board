@@ -62,3 +62,28 @@ test('FILTER-17: unchecking a group also unchecks the groups inside it, so two e
   const tools = { name: 'Tools', repos: ['acme/gadgets', 'acme/tools'] };
   assert.deepEqual(toggleGroup(outer, [inner, outer, tools], [...repos, 'acme/tools']), ['acme/gadgets', 'acme/tools']);
 });
+
+test('FILTER-17: groups that overlap without nesting never lock each other, and unchecking one always unchecks it', () => {
+  const a = { name: 'A', repos: ['acme/x', 'acme/y'] };
+  const b = { name: 'B', repos: ['acme/y', 'acme/z'] };
+  const c = { name: 'C', repos: ['acme/x', 'acme/z'] };
+  const triangle = [a, b, c];
+  const all = ['acme/x', 'acme/y', 'acme/z'];
+  assert.deepEqual(triangle.map((g) => groupLock(g, triangle, all)), [null, null, null]);
+  // Every repository of A is in B or C, so A's own go, and the groups that shared them with it too.
+  assert.deepEqual(toggleGroup(a, triangle, all), ['acme/z']);
+});
+
+test('FILTER-17: a group inside two others names only the outermost one, which is the one that can be unchecked', () => {
+  const p = { name: 'P', repos: ['acme/x', 'acme/y'] };
+  const q = { name: 'Q', repos: ['acme/y', 'acme/z'] };
+  const w = { name: 'W', repos: ['acme/x', 'acme/y', 'acme/z'] };
+  const groups = [p, q, w];
+  const all = ['acme/x', 'acme/y', 'acme/z'];
+  assert.equal(groupLock(p, groups, all), 'Included in W. Uncheck W to remove it.');
+  assert.equal(groupLock(q, groups, all), 'Included in W. Uncheck W to remove it.');
+  assert.equal(groupLock(w, groups, all), null);
+  assert.deepEqual(toggleGroup(w, groups, all), []);
+  const outer = { name: 'Outer', repos: [...w.repos, 'acme/v'] };
+  assert.equal(groupLock(p, [p, w, outer], [...all, 'acme/v']), 'Included in Outer. Uncheck Outer to remove it.');
+});

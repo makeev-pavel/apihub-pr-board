@@ -43,34 +43,45 @@ export function isGroupChecked(group: RepoGroup, repos: string[]): boolean {
   return group.repos.every((repo) => present.includes(repo.toLowerCase()));
 }
 
-const within = (inner: RepoGroup, outer: RepoGroup) => inner.repos.every((repo) => lower(outer.repos).includes(repo.toLowerCase()));
+const within = (inner: RepoGroup, outer: RepoGroup) => {
+  const outerRepos = lower(outer.repos);
+  return inner.repos.every((repo) => outerRepos.includes(repo.toLowerCase()));
+};
+const checkedOthers = (group: RepoGroup, groups: RepoGroup[], repos: string[]) =>
+  groups.filter((other) => other !== group && isGroupChecked(other, repos));
 
-// The other checked groups that keep their own repositories when this one is unchecked: not the groups inside it,
-// which go with it.
-const keepers = (group: RepoGroup, groups: RepoGroup[], repos: string[]) =>
-  groups.filter((other) => other !== group && !within(other, group) && isGroupChecked(other, repos));
+// The checked groups that hold all of this one and more. Equal groups are not wider than each other.
+const widerGroups = (group: RepoGroup, groups: RepoGroup[], repos: string[]) =>
+  checkedOthers(group, groups, repos).filter((other) => within(group, other) && !within(other, group));
 
-// A checked group whose repositories wider checked groups all need cannot be unchecked alone: unchecking would change
-// nothing. Returns why and what to do, for the tooltip, or null.
+// A checked group inside a wider checked group cannot be unchecked alone: the wider one keeps all its repositories.
+// Returns why and what to do, for the tooltip, or null. Only the outermost groups are named, since the ones between
+// are locked too.
 export function groupLock(group: RepoGroup, groups: RepoGroup[], repos: string[]): string | null {
   if (!isGroupChecked(group, repos)) return null;
-  const others = keepers(group, groups, repos);
-  const kept = lower(others.flatMap((other) => other.repos));
-  if (!group.repos.every((repo) => kept.includes(repo.toLowerCase()))) return null;
-  const names = others.filter((other) => lower(other.repos).some((repo) => lower(group.repos).includes(repo))).map((other) => other.name).join(', ');
+  const wider = widerGroups(group, groups, repos);
+  if (!wider.length) return null;
+  const outermost = wider.filter((other) => !widerGroups(other, groups, repos).length);
+  const names = outermost.map((other) => other.name).join(', ');
   return 'Included in ' + names + '. Uncheck ' + names + ' to remove it.';
 }
 
 // Checking adds the group's repositories, unless that would pass the limit. Unchecking removes them, and the groups
-// inside it, except the repositories a wider checked group still needs.
+// inside it, but keeps the repositories other checked groups share. When every repository is shared, they all go,
+// so unchecking always unchecks; the groups that shared them lose theirs too.
 export function toggleGroup(group: RepoGroup, groups: RepoGroup[], repos: string[]): string[] | { error: string } {
   if (!isGroupChecked(group, repos)) {
     const next = uniqueNames([...repos, ...group.repos]);
     if (next.length > MAX_REPOSITORIES) {
-      return { error: 'Adding ' + group.name + ' would make ' + next.length + ' repositories; the board reads at most ' + MAX_REPOSITORIES + '. Uncheck a group first.' };
+      return {
+        error: 'Adding ' + group.name + ' would make ' + next.length + ' repositories; the board reads at most ' + MAX_REPOSITORIES
+          + '. Uncheck a group first.',
+      };
     }
     return next;
   }
-  const kept = lower(keepers(group, groups, repos).flatMap((other) => other.repos));
-  return repos.filter((repo) => !lower(group.repos).includes(repo.toLowerCase()) || kept.includes(repo.toLowerCase()));
+  const own = lower(group.repos);
+  const shared = lower(checkedOthers(group, groups, repos).filter((other) => !within(other, group)).flatMap((other) => other.repos));
+  const next = repos.filter((repo) => !own.includes(repo.toLowerCase()) || shared.includes(repo.toLowerCase()));
+  return next.length < repos.length ? next : repos.filter((repo) => !own.includes(repo.toLowerCase()));
 }

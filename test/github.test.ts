@@ -452,16 +452,24 @@ test('DATA-26: a load for a snapshot does not ask GitHub for the viewer', async 
 
 test('DATA-18 DATA-13: a repository being read stops at its next page once another one fails', async () => {
   const scenario = REFRESH_SCENARIOS.find((s) => s.id === 'paginated')!;
-  let widgetPages = 0;
+  let inFlight = 0;
   const fetchImpl = async (_url: string, init: RequestInit) => {
     const variables = JSON.parse(String(init.body)).variables;
+    inFlight += 1;
     await new Promise((resolve) => setTimeout(resolve, 5));
+    inFlight -= 1;
     if (variables.repo === 'broken') return new Response(JSON.stringify({ errors: [{ message: 'Something went wrong', path: ['repository', 'pullRequests'] }], data: { repository: null } }), { status: 200 });
-    widgetPages += 1;
     const result = scenario.respond(variables, Date.parse('2026-10-28T12:00:00Z'));
     return new Response((result as { body: string }).body, { status: 200 });
   };
-  await assert.rejects(fetchOpenPullRequests({ token: 't', repositories: [{ owner: 'acme', name: 'broken' }, repository], fetchImpl }), /Something went wrong/);
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  assert.ok(widgetPages <= 2, 'the other repository stops after the page under way; got ' + widgetPages);
+  const widgets: { read: number; total: number | null }[] = [];
+  await assert.rejects(fetchOpenPullRequests({
+    token: 't', repositories: [{ owner: 'acme', name: 'broken' }, repository], fetchImpl,
+    onProgress: (e) => { if (e.repo === 'acme/widgets') widgets.push({ read: e.read, total: e.total }); },
+  }), /Something went wrong/);
+  // Wait until no request is left, however slow the machine: the read either stopped or went to the end.
+  while (inFlight) await new Promise((resolve) => setTimeout(resolve, 5));
+  await new Promise((resolve) => setTimeout(resolve, 5));
+  const last = widgets.at(-1)!;
+  assert.ok(last.total !== null && last.read < last.total, 'the read stopped before its last page; got ' + JSON.stringify(last));
 });
