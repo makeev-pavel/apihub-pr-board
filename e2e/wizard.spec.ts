@@ -1,14 +1,4 @@
-import type { Page } from '@playwright/test';
-import { ALL, expect, openBoard, test } from './helpers.ts';
-
-// Takes back the "wizard done" the shared setup writes, for the first load only, as on a first visit.
-async function firstVisit(page: Page) {
-  await page.addInitScript(() => {
-    if (sessionStorage.getItem('first-visit')) return;
-    sessionStorage.setItem('first-visit', '1');
-    localStorage.removeItem('apihub-pr-board.wizard');
-  });
-}
+import { ALL, expect, firstVisit, openBoard, test } from './helpers.ts';
 
 test.describe('setup wizard', () => {
   test('SET-21: a first visit opens the wizard, each choice applies at once with a picture, and Done closes it for good', async ({ page }) => {
@@ -23,6 +13,13 @@ test.describe('setup wizard', () => {
       await expect(themes.getByRole('button', { name, exact: true })).toHaveAccessibleDescription(hint);
     }
     await expect(themes.getByRole('button', { name: 'System' })).toHaveAttribute('aria-pressed', 'true');
+    // Focus starts on the card picked, and Tab stays in the wizard.
+    await expect(themes.getByRole('button', { name: 'System' })).toBeFocused();
+    for (let i = 0; i < 6; i++) await page.keyboard.press('Tab');
+    expect(await wizard.evaluate((node) => node.contains(document.activeElement))).toBe(true);
+    // A click outside does not close it.
+    await page.mouse.click(5, 5);
+    await expect(wizard).toBeVisible();
     // System shows the light and the dark board together; Light and Dark show their own.
     await expect(themes.locator('.theme-light')).toHaveCount(2);
     await expect(themes.locator('.theme-dark')).toHaveCount(2);
@@ -56,8 +53,11 @@ test.describe('setup wizard', () => {
     await page.getByRole('button', { name: /^Settings/ }).click();
     await page.getByRole('button', { name: 'Setup wizard' }).click();
     await expect(wizard).toContainText('Step 1 of 3');
+    await expect(wizard.getByRole('button', { name: 'Dark' })).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(wizard).toHaveCount(0);
+    // The panel closed when the wizard opened, so focus returns to the Settings button.
+    await expect(page.getByRole('button', { name: /^Settings/ })).toBeFocused();
   });
 
   test('SET-21 SET-18: on a page without a snapshot, the token dialog waits until the wizard is skipped', async ({ page }) => {

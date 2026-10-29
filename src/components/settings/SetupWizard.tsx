@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
-import type { ReactNode } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
 import type { Settings } from '../../settings.ts';
+import { SETTINGS_BUTTON_ID } from '../header/RefreshControl.tsx';
 import { ReviewCellPreview, ViewPreview } from './ViewPreview.tsx';
 
 interface Choice {
@@ -15,11 +16,34 @@ interface Choice {
 // board behind the dialog changes with it.
 export function SetupWizard({ settings, onChange, onClose }: { settings: Settings; onChange: (settings: Settings) => void; onClose: () => void }) {
   const [step, setStep] = useState(0);
+  const dialog = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
+  // Focus goes back where it was, or to the Settings button when the wizard was opened from the panel, which closed.
+  useEffect(() => {
+    const before = document.activeElement as HTMLElement | null;
+    return () => {
+      const target = before && before.isConnected && before !== document.body ? before : document.getElementById(SETTINGS_BUTTON_ID);
+      if (target) target.focus();
+    };
+  }, []);
+  // Each step starts on the card picked now.
+  useEffect(() => {
+    const picked = dialog.current && dialog.current.querySelector<HTMLElement>('.wizard-card[aria-pressed="true"]');
+    if (picked) picked.focus();
+  }, [step]);
+  // Tab stays inside the dialog, as aria-modal promises.
+  const keepFocus = (event: ReactKeyboardEvent) => {
+    if (event.key !== 'Tab' || !dialog.current) return;
+    const items = [...dialog.current.querySelectorAll<HTMLElement>('button:not([disabled])')];
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (event.shiftKey && document.activeElement === first) { last.focus(); event.preventDefault(); }
+    else if (!event.shiftKey && document.activeElement === last) { first.focus(); event.preventDefault(); }
+  };
 
   const { theme, density, reviewColumn } = settings;
   // The other steps draw in the theme picked, or in light and dark when it follows the system.
@@ -63,8 +87,9 @@ export function SetupWizard({ settings, onChange, onClose }: { settings: Setting
   const last = step === steps.length - 1;
 
   return (
-    <div className="dialog-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <div className="setup-wizard" role="dialog" aria-modal="true" aria-labelledby="wizard-title">
+    // A click outside does not close it: a stray click would end the first-visit wizard for good.
+    <div className="dialog-backdrop">
+      <div className="setup-wizard" role="dialog" aria-modal="true" aria-labelledby="wizard-title" ref={dialog} onKeyDown={keepFocus}>
         <div className="wizard-top">
           <h2 id="wizard-title">Set up your board</h2>
           <span className="muted">Step {step + 1} of {steps.length}</span>

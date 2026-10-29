@@ -38,7 +38,7 @@ export const test = base.extend<{ pageErrors: string[] }>({
   page: async ({ page }, use) => {
     await page.clock.setFixedTime(MOCK_NOW);
     // The setup wizard opens on a first visit (SET-21); the tests of other areas start past it.
-    await page.addInitScript(() => { if (!sessionStorage.getItem('first-visit')) localStorage.setItem('apihub-pr-board.wizard', 'done'); });
+    await page.addInitScript((key) => { if (!sessionStorage.getItem('first-visit')) localStorage.setItem(key, 'done'); }, WIZARD_KEY);
     // The DEV panel is dev tooling, not part of the board, and it covers the bottom-right corner.
     await page.addInitScript(() => document.addEventListener('DOMContentLoaded', () => {
       const style = document.createElement('style');
@@ -51,6 +51,17 @@ export const test = base.extend<{ pageErrors: string[] }>({
 });
 
 export { expect };
+
+const WIZARD_KEY = 'apihub-pr-board.wizard';
+
+// Takes back the "wizard done" the shared setup writes, for the first load only, as on a first visit (SET-21).
+export async function firstVisit(page: Page) {
+  await page.addInitScript((key) => {
+    if (sessionStorage.getItem('first-visit')) return;
+    sessionStorage.setItem('first-visit', '1');
+    localStorage.removeItem(key);
+  }, WIZARD_KEY);
+}
 
 // Shows every PR in the data: all authors, drafts included.
 export const ALL = 'authors=all&draft=all';

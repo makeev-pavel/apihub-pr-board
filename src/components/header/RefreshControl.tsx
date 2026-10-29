@@ -6,6 +6,9 @@ import type { Settings } from '../../settings.ts';
 import { SettingsPanel } from '../settings/SettingsPanel.tsx';
 import type { RepositorySettings } from '../settings/SettingsPanel.tsx';
 
+// The gear button, where focus returns when a dialog opened from the panel closes.
+export const SETTINGS_BUTTON_ID = 'settings-button';
+
 export function RefreshControl({ token, setToken, refreshing, onRefresh, onAskToken, settings, onSettingsChange, columns, repositories, canResetWidths, onResetWidths, onOpenWizard }: {
   token: string;
   setToken: (value: string) => void;
@@ -33,7 +36,7 @@ export function RefreshControl({ token, setToken, refreshing, onRefresh, onAskTo
           onClick={() => { if (token) onRefresh(token); else onAskToken(); }}>
           {refreshing ? 'Refreshing…' : 'Refresh'}
         </button>
-        <button type="button" className="btn icon" aria-label={custom ? 'Settings (custom attention rules)' : 'Settings'}
+        <button type="button" id={SETTINGS_BUTTON_ID} className="btn icon" aria-label={custom ? 'Settings (custom attention rules)' : 'Settings'}
           title={custom ? 'Settings. Your attention rules differ from the team defaults.' : 'Settings'}
           aria-expanded={open} onClick={() => setOpen(!open)}>
           ⚙{custom ? <span className="dot" aria-hidden="true"></span> : null}

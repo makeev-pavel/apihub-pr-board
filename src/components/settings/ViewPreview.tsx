@@ -26,7 +26,7 @@ const ROWS: PreviewRow[] = [
 
 function Board({ theme, density, review }: { theme: 'light' | 'dark'; density: Density; review: ReviewColumn }) {
   return (
-    <div className={'view-preview theme-' + theme + ' ' + density}>
+    <div className={'view-preview theme-' + theme + ' vp-' + density}>
       <div className="vp-head"><span className="vp-tile" /><span className="vp-tile" /><span className="vp-tile accent" /></div>
       {ROWS.map((row, index) => (
         <div key={index} className={'vp-row ci-' + row.ci.tone}>
@@ -59,7 +59,7 @@ const REVIEW_CELLS: { code: string; tone: Tone; waiting: number; reviewers: { lo
 
 function ReviewCells({ theme, review }: { theme: 'light' | 'dark'; review: ReviewColumn }) {
   return (
-    <div className={'view-preview cells theme-' + theme}>
+    <div className={'view-preview vp-cells theme-' + theme}>
       <div className="vp-cell-head">Review</div>
       {REVIEW_CELLS.map((cell, index) => (
         <div key={index} className="vp-cell">
@@ -89,7 +89,7 @@ function ReviewCells({ theme, review }: { theme: 'light' | 'dark'; review: Revie
 export function ReviewCellPreview({ theme, review }: { theme: 'light' | 'dark' | 'split'; review: ReviewColumn }) {
   if (theme !== 'split') return <div className="preview-frame" aria-hidden="true"><ReviewCells theme={theme} review={review} /></div>;
   return (
-    <div className="preview-frame split" aria-hidden="true">
+    <div className="preview-frame vp-split" aria-hidden="true">
       <ReviewCells theme="light" review={review} />
       <ReviewCells theme="dark" review={review} />
     </div>
@@ -101,7 +101,7 @@ export function ReviewCellPreview({ theme, review }: { theme: 'light' | 'dark' |
 export function ViewPreview({ theme, density, review }: { theme: 'light' | 'dark' | 'split'; density: Density; review: ReviewColumn }) {
   if (theme !== 'split') return <div className="preview-frame" aria-hidden="true"><Board theme={theme} density={density} review={review} /></div>;
   return (
-    <div className="preview-frame split" aria-hidden="true">
+    <div className="preview-frame vp-split" aria-hidden="true">
       <Board theme="light" density={density} review={review} />
       <Board theme="dark" density={density} review={review} />
     </div>

@@ -14,7 +14,7 @@
 
 /* The picture: a made-up board drawn with the tokens of its own theme. */
 .preview-frame { display: grid; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
-.preview-frame.split { grid-template-columns: 1fr 1fr; }
+.preview-frame.vp-split { grid-template-columns: 1fr 1fr; }
 .view-preview { display: grid; gap: 0; padding: 6px; background: var(--bg); color: var(--fg); font-family: var(--font-sans); }
 .vp-head { display: flex; gap: 4px; justify-content: flex-end; padding-bottom: 6px; }
 .vp-tile { width: 18px; height: 8px; border: 1px solid var(--line-strong); border-radius: 3px; background: var(--surface); }
@@ -22,9 +22,9 @@
 .vp-row { display: flex; align-items: center; gap: 5px; min-height: 30px; padding: 0 5px; border-left: 2px solid var(--line); background: var(--surface); border-bottom: 1px solid var(--line); }
 .vp-row.ci-good { border-left-color: var(--good); }
 .vp-row.ci-bad { border-left-color: var(--bad); }
-.compact .vp-row { min-height: 20px; }
+.vp-compact .vp-row { min-height: 20px; }
 .vp-avatar { flex: none; width: 12px; height: 12px; border-radius: 50%; }
-.compact .vp-avatar { width: 9px; height: 9px; }
+.vp-compact .vp-avatar { width: 9px; height: 9px; }
 .vp-title { flex: 1; min-width: 20px; }
 .vp-title > span { display: block; height: 5px; border-radius: 3px; background: var(--fg); opacity: 0.55; }
 .vp-pill { flex: none; min-width: 14px; padding: 0 3px; border-radius: 6px; font-size: 7px; font-weight: 600; line-height: 10px; text-align: center; }
@@ -42,7 +42,7 @@
 .vp-icon.warn { color: var(--warn); }
 
 /* The Review cells alone, for the Review column step. */
-.view-preview.cells { padding: 0; background: var(--surface); }
+.view-preview.vp-cells { padding: 0; background: var(--surface); }
 .vp-cell-head { padding: 6px 10px; border-bottom: 1px solid var(--line); font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
 .vp-cell { display: flex; align-items: center; min-height: 52px; padding: 6px 10px; border-bottom: 1px solid var(--line); }
 .vp-cell:last-child { border-bottom: 0; }

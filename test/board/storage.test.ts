@@ -48,9 +48,16 @@ test('SET-11: blocked storage never breaks the page', () => {
 });
 
 test('SET-21: the wizard counts as done once closed, and blocked storage never makes it open on every visit', () => {
-  useStorage();
+  const data = useStorage();
   assert.equal(readWizardDone(), false);
   storeWizardDone();
+  assert.equal(readWizardDone(), true);
+  // Storage that reads but refuses the write: done until the page reloads.
+  data.clear();
+  Object.assign(globalThis.localStorage, { setItem: () => { throw new Error('quota exceeded'); } });
+  assert.equal(readWizardDone(), false);
+  storeWizardDone();
+  assert.equal(data.size, 0);
   assert.equal(readWizardDone(), true);
   useStorage(true);
   assert.equal(readWizardDone(), true);

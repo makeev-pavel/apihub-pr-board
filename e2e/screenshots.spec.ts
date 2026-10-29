@@ -3,7 +3,7 @@
 // the new images before committing them. The e2e project and CI skip this file.
 
 import type { Locator, Page } from '@playwright/test';
-import { ALL, expect, openBoard, rows, test } from './helpers.ts';
+import { ALL, expect, firstVisit, openBoard, rows, test } from './helpers.ts';
 
 const SETTINGS_KEY = 'apihub-pr-board.settings';
 
@@ -54,11 +54,7 @@ test.describe('screenshots', () => {
   });
 
   test('SET-21: the setup wizard with a picture for every theme', async ({ page }) => {
-    await page.addInitScript(() => {
-      if (sessionStorage.getItem('first-visit')) return;
-      sessionStorage.setItem('first-visit', '1');
-      localStorage.removeItem('apihub-pr-board.wizard');
-    });
+    await firstVisit(page);
     await openBoard(page, { report: 'typical', query: ALL });
     await expect(page.getByRole('dialog', { name: 'Set up your board' })).toBeVisible();
     await settle(page);

@@ -36,8 +36,9 @@
   look, so both variants show side by side; System shows the light and the dark picture together. The Review column
   step shows only Review cells, large enough to read, in both layouts. A choice applies at once. The wizard opens by
   itself on the first visit in a browser, before the token dialog (**SET-18**), and again from **Setup wizard** in
-  Settings. **Skip**, Escape, and **Done** close it; after that it does not open by
-  itself again in this browser.
+  Settings. **Skip**, Escape, and **Done** close it, and a click outside does not; after that it does not open by
+  itself again in this browser. Focus starts on the card picked, stays in the wizard, and returns where it was, or to
+  the Settings button, when it closes.
 
 ## Settings in the address
 

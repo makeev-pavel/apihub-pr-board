@@ -16,12 +16,15 @@ export function storeToken(token: string) {
 }
 
 // The setup wizard (SET-21) opens by itself until it has been closed once in this browser.
+// Blocked storage counts as done, so the wizard never opens on every visit; a refused write counts until a reload.
 const WIZARD_KEY = 'apihub-pr-board.wizard';
+let wizardDoneHere = false;
 export function readWizardDone(): boolean {
+  if (wizardDoneHere) return true;
   try { return localStorage.getItem(WIZARD_KEY) === 'done'; } catch { return true; }
 }
 export function storeWizardDone() {
-  try { localStorage.setItem(WIZARD_KEY, 'done'); } catch { /* storage is blocked; the wizard may open again next time */ }
+  try { localStorage.setItem(WIZARD_KEY, 'done'); } catch { wizardDoneHere = true; }
 }
 
 // Column widths are kept in this browser under their own key, apart from the other settings.

@@ -1,6 +1,7 @@
 /* Color and font tokens. Light theme in :root; dark theme for the system setting and for data-theme="dark".
    .theme-light and .theme-dark draw a part of the page, such as a wizard preview, in that theme. */
 :root, .theme-light {
+  color-scheme: light;
   --bg: #f3f5f7;
   --surface: #ffffff;
   --surface-2: #f7f9fa;
