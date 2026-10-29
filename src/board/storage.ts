@@ -15,6 +15,15 @@ export function storeToken(token: string) {
   } catch { /* storage is blocked; the token lives only for this page load */ }
 }
 
+// The setup wizard (SET-21) opens by itself until it has been closed once in this browser.
+const WIZARD_KEY = 'apihub-pr-board.wizard';
+export function readWizardDone(): boolean {
+  try { return localStorage.getItem(WIZARD_KEY) === 'done'; } catch { return true; }
+}
+export function storeWizardDone() {
+  try { localStorage.setItem(WIZARD_KEY, 'done'); } catch { /* storage is blocked; the wizard may open again next time */ }
+}
+
 // Column widths are kept in this browser under their own key, apart from the other settings.
 export function readColumnWidths(): Widths {
   try {

@@ -6,7 +6,7 @@ import type { Settings } from '../../settings.ts';
 import { SettingsPanel } from '../settings/SettingsPanel.tsx';
 import type { RepositorySettings } from '../settings/SettingsPanel.tsx';
 
-export function RefreshControl({ token, setToken, refreshing, onRefresh, onAskToken, settings, onSettingsChange, columns, repositories, canResetWidths, onResetWidths }: {
+export function RefreshControl({ token, setToken, refreshing, onRefresh, onAskToken, settings, onSettingsChange, columns, repositories, canResetWidths, onResetWidths, onOpenWizard }: {
   token: string;
   setToken: (value: string) => void;
   refreshing: boolean;
@@ -20,6 +20,7 @@ export function RefreshControl({ token, setToken, refreshing, onRefresh, onAskTo
   repositories: RepositorySettings;
   canResetWidths: boolean;
   onResetWidths: () => void;
+  onOpenWizard: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useDismiss(open, setOpen);
@@ -40,7 +41,8 @@ export function RefreshControl({ token, setToken, refreshing, onRefresh, onAskTo
       </div>
       {open ? (
         <SettingsPanel settings={settings} onChange={onSettingsChange} token={token} setToken={setToken} refreshing={refreshing}
-          onRefresh={(value) => { setOpen(false); onRefresh(value); }} columns={columns} repositories={repositories} canResetWidths={canResetWidths} onResetWidths={onResetWidths} />
+          onRefresh={(value) => { setOpen(false); onRefresh(value); }} columns={columns} repositories={repositories} canResetWidths={canResetWidths} onResetWidths={onResetWidths}
+          onOpenWizard={() => { setOpen(false); onOpenWizard(); }} />
       ) : null}
     </div>
   );

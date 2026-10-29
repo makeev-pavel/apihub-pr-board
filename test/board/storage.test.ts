@@ -1,6 +1,6 @@
 import { afterEach, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readColumnWidths, readToken, storeToken, writeColumnWidths } from '../../src/board/storage.ts';
+import { readColumnWidths, readToken, readWizardDone, storeToken, storeWizardDone, writeColumnWidths } from '../../src/board/storage.ts';
 
 // A Map-backed localStorage, or one that throws like a browser with storage blocked.
 function useStorage(blocked = false) {
@@ -45,4 +45,14 @@ test('SET-11: blocked storage never breaks the page', () => {
   assert.doesNotThrow(() => storeToken('mock-token'));
   assert.deepEqual(readColumnWidths(), {});
   assert.doesNotThrow(() => writeColumnWidths({ author: 230 }));
+});
+
+test('SET-21: the wizard counts as done once closed, and blocked storage never makes it open on every visit', () => {
+  useStorage();
+  assert.equal(readWizardDone(), false);
+  storeWizardDone();
+  assert.equal(readWizardDone(), true);
+  useStorage(true);
+  assert.equal(readWizardDone(), true);
+  assert.doesNotThrow(() => storeWizardDone());
 });

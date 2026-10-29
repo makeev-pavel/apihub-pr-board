@@ -37,6 +37,8 @@ export const test = base.extend<{ pageErrors: string[] }>({
   },
   page: async ({ page }, use) => {
     await page.clock.setFixedTime(MOCK_NOW);
+    // The setup wizard opens on a first visit (SET-21); the tests of other areas start past it.
+    await page.addInitScript(() => { if (!sessionStorage.getItem('first-visit')) localStorage.setItem('apihub-pr-board.wizard', 'done'); });
     // The DEV panel is dev tooling, not part of the board, and it covers the bottom-right corner.
     await page.addInitScript(() => document.addEventListener('DOMContentLoaded', () => {
       const style = document.createElement('style');

@@ -25,7 +25,7 @@ function joinAreas(modules: Rules['areaModules']) {
   return { be: modules.be.join(', '), fe: modules.fe.join(', ') };
 }
 
-export function SettingsPanel({ settings, onChange, token, setToken, refreshing, onRefresh, columns, repositories, canResetWidths, onResetWidths }: {
+export function SettingsPanel({ settings, onChange, token, setToken, refreshing, onRefresh, columns, repositories, canResetWidths, onResetWidths, onOpenWizard }: {
   settings: Settings;
   onChange: (settings: Settings) => void;
   token: string;
@@ -36,6 +36,8 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
   repositories: RepositorySettings;
   canResetWidths: boolean;
   onResetWidths: () => void;
+  // Opens the setup wizard, which shows these choices with pictures (SET-21).
+  onOpenWizard: () => void;
 }) {
   const { rules } = settings;
   const [staleDraft, setStaleDraft] = useState(String(rules.staleDays));
@@ -154,7 +156,10 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
         ))}
       </section>
       <section>
-        <h2>View</h2>
+        <div className="section-head">
+          <h2>View</h2>
+          <button type="button" className="btn ghost" onClick={onOpenWizard}>Setup wizard</button>
+        </div>
         <div className="setting-row">
           <span>Theme</span>
           <div className="segmented" role="group" aria-label="Theme">

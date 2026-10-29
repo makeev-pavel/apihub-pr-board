@@ -31,6 +31,9 @@ The requirements are in [docs/requirements/](docs/requirements/README.md).
   tags in the PR and issue titles, and `frontend/` or `backend/` paths in Dependabot titles.
 - **Column widths** change by dragging the header edge, or with the arrow keys on a focused edge. They are saved
   in this browser; double-click an edge to reset that column.
+- **Setup wizard:** on the first visit, a short wizard shows the theme, the row density, and the Review column as
+  cards with a picture of the board in each look; every choice applies at once. **Setup wizard** in Settings opens
+  it again.
 - **Settings** (the gear next to Refresh): repositories, attention rules, BE/FE lists, extra bots, theme, density,
   the Review column as a code or as GitHub's list of reviewers, visible columns, and the GitHub token. The
   repositories and extra bots live in the page address, so a copied link or a bookmark carries them; everything else

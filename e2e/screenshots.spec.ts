@@ -53,6 +53,18 @@ test.describe('screenshots', () => {
     await expect(page).toHaveScreenshot('board-reviewers-list.png');
   });
 
+  test('SET-21: the setup wizard with a picture for every theme', async ({ page }) => {
+    await page.addInitScript(() => {
+      if (sessionStorage.getItem('first-visit')) return;
+      sessionStorage.setItem('first-visit', '1');
+      localStorage.removeItem('apihub-pr-board.wizard');
+    });
+    await openBoard(page, { report: 'typical', query: ALL });
+    await expect(page.getByRole('dialog', { name: 'Set up your board' })).toBeVisible();
+    await settle(page);
+    await expect(page.getByRole('dialog', { name: 'Set up your board' })).toHaveScreenshot('wizard-theme.png');
+  });
+
   test('TABLE-26 TABLE-27: two repositories add the Repository column', async ({ page }) => {
     await openBoard(page, { report: 'two-repos', query: ALL + '&sort=repo&dir=asc' });
     await settle(page);

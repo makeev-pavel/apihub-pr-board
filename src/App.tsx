@@ -3,7 +3,7 @@ import { collectAuthors, selectedAuthors } from './board/authors.ts';
 import { boardColumns, DEFAULT_WIDTHS, isColumnShown, REVIEWERS_LIST_WIDTHS } from './board/columns.ts';
 import { repositoriesSummary } from './board/format.ts';
 import { boardRepos, linkSettingsQuery, missingReposMessage } from './board/link.ts';
-import { readToken, storeToken } from './board/storage.ts';
+import { readToken, readWizardDone, storeToken, storeWizardDone } from './board/storage.ts';
 import {
   AREA_OPTIONS, collectPriorities, DEFAULT_VIEW, DRAFT_OPTIONS, filterPullRequests, firstDirection, readView, visibleRows, writeView,
 } from './board/view.ts';
@@ -11,6 +11,7 @@ import type { SortKey, View } from './board/view.ts';
 import { RefreshControl } from './components/header/RefreshControl.tsx';
 import { LoadAnnouncer, LoadStatus } from './components/common/LoadStatus.tsx';
 import { ViewerBadge } from './components/header/ViewerBadge.tsx';
+import { SetupWizard } from './components/settings/SetupWizard.tsx';
 import { TokenDialog } from './components/settings/TokenDialog.tsx';
 import { Tiles } from './components/header/Tiles.tsx';
 import { UpdateInfo } from './components/header/UpdateInfo.tsx';
@@ -94,6 +95,9 @@ export function App() {
     if (next.reviewColumn !== settings.reviewColumn) resize.onReset('review');
     setSettings(next);
   };
+  // The setup wizard (SET-21) opens by itself until it is closed once in this browser.
+  const [wizardOpen, setWizardOpen] = useState(() => !readWizardDone());
+  const closeWizard = useCallback(() => { storeWizardDone(); setWizardOpen(false); }, []);
   // The token dialog (SET-18). After Not now it does not open by itself again until the page reloads.
   const [askingToken, setAskingToken] = useState(false);
   const tokenDismissed = useRef(false);
@@ -127,8 +131,9 @@ export function App() {
   // Live data loads again every 5 minutes while the tab is visible (DATA-24).
   useAutoRefresh(data.source === 'live' && !!token && !refreshing, lastAttempt, AUTO_REFRESH_MS, () => refresh(token));
   useEffect(() => {
-    if (data.noSnapshot && !token && wanted.length && !tokenDismissed.current) setAskingToken(true);
-  }, [data.noSnapshot, token, wanted.length]);
+    // It waits for the setup wizard, so the two dialogs never stack.
+    if (data.noSnapshot && !token && wanted.length && !tokenDismissed.current && !wizardOpen) setAskingToken(true);
+  }, [data.noSnapshot, token, wanted.length, wizardOpen]);
 
   const viewerActor = data.source === 'live' && report && report.viewer ? report.viewer : null;
   const viewer = viewerActor ? viewerActor.login : '';
@@ -183,7 +188,7 @@ export function App() {
           <RefreshControl token={token} setToken={setToken} refreshing={refreshing} onRefresh={refresh} onAskToken={() => setAskingToken(true)}
             settings={settings} onSettingsChange={changeSettings} columns={offeredColumns}
             repositories={{ requested: link.repos, available: dataRepos, onChange: setRepos }}
-            canResetWidths={canResetWidths} onResetWidths={resetWidths} />
+            canResetWidths={canResetWidths} onResetWidths={resetWidths} onOpenWizard={() => setWizardOpen(true)} />
           {viewerActor ? <ViewerBadge viewer={viewerActor} /> : null}
         </div>
       </header>
@@ -243,6 +248,7 @@ export function App() {
       {load && (rows.length || load.finished) ? <LoadStatus load={load} floating /> : null}
       <LoadAnnouncer load={load} />
       <LegendBar />
+      {wizardOpen ? <SetupWizard settings={settings} onChange={changeSettings} onClose={closeWizard} /> : null}
       {askingToken ? (
         <TokenDialog onClose={closeTokenDialog}
           onSave={(value) => { setToken(value); setAskingToken(false); refresh(value); }} />

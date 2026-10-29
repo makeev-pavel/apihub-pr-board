@@ -575,3 +575,5 @@ again. Decisions taken without an answer: the tile shows for anyone with a token
 - [x] **V3. Load status:** a live load reports each repository page by page (DATA-27); the status shows in the
   empty table or in a corner over the rows, with a spinner, a clock, and a summary at the end; a paced mock for
   the DEV panel. About 1.5 hours.
+- [x] **V4. Setup wizard:** theme, density, and Review column as cards with pictures (SET-21); opens on the first
+  visit before the token dialog and from Settings; browser tests and a screenshot. About 1.5 hours.

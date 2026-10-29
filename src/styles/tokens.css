@@ -1,5 +1,6 @@
-/* Color and font tokens. Light theme in :root; dark theme for the system setting and for data-theme="dark". */
-:root {
+/* Color and font tokens. Light theme in :root; dark theme for the system setting and for data-theme="dark".
+   .theme-light and .theme-dark draw a part of the page, such as a wizard preview, in that theme. */
+:root, .theme-light {
   --bg: #f3f5f7;
   --surface: #ffffff;
   --surface-2: #f7f9fa;
@@ -43,7 +44,7 @@
     color-scheme: dark;
   }
 }
-:root[data-theme="dark"] {
+:root[data-theme="dark"], .theme-dark {
   --bg: #0e1316; --surface: #151c20; --surface-2: #1a2227; --fg: #e3e9ec; --muted: #93a2ab;
   --line: #263238; --line-strong: #34434b; --accent: #5cc3cb; --accent-soft: #143338;
   --bad: #ff8a7a; --bad-soft: #3a1c19; --warn: #f2c063; --warn-soft: #36290f; --running: #ffd21f; --running-soft: #3d3205; --running-ink: #ffd21f;

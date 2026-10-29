@@ -18,6 +18,7 @@ import './styles/table.css';
 import './styles/popovers.css';
 import './styles/markdown.css';
 import './styles/settings.css';
+import './styles/wizard.css';
 import './styles/legend.css';
 
 createRoot(document.getElementById('app')!).render(

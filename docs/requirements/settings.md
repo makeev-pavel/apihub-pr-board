@@ -31,6 +31,13 @@
 - **SET-20** A Review column setting shows reviews as the Review code (**TABLE-8**), the default, or as a list of
   reviewers (**TABLE-30**). It is kept in this browser; anything else stored falls back to the code. Switching it
   drops a Review width dragged for the other layout, so each starts at its own default.
+- **SET-21** A setup wizard walks through the look of the board in three steps: theme (System, Light, Dark), row
+  density, and the Review column (**SET-20**). Each choice is a card with a small picture of the board drawn in that
+  look, so both variants show side by side; System shows the light and the dark picture together. The Review column
+  step shows only Review cells, large enough to read, in both layouts. A choice applies at once. The wizard opens by
+  itself on the first visit in a browser, before the token dialog (**SET-18**), and again from **Setup wizard** in
+  Settings. **Skip**, Escape, and **Done** close it; after that it does not open by
+  itself again in this browser.
 
 ## Settings in the address
 
