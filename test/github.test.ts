@@ -297,7 +297,7 @@ test('SEC-1 PANEL-11: the token follows next pages only within the API, and a bo
   await assert.rejects(fetchAllComments({ number: 7, repository, fetchImpl: notList.fetchImpl, restUrl }), /not a list/);
 });
 
-test('DATA-9 DATA-13: a page GitHub cannot answer in time is asked again with fewer PRs, down to five', async () => {
+test('DATA-9 DATA-13 DATA-27: a page GitHub cannot answer in time is asked again with fewer PRs, down to five', async () => {
   const sizes: number[] = [];
   const scenario = REFRESH_SCENARIOS.find((s) => s.id === 'ok')!;
   // GitHub times out on pages above 7 PRs: a 504 without CORS headers, which the browser reports as a failed fetch.
@@ -311,8 +311,11 @@ test('DATA-9 DATA-13: a page GitHub cannot answer in time is asked again with fe
     const result = scenario.respond(variables, Date.parse('2026-10-28T12:00:00Z'));
     return new Response((result as { body: string }).body, { status: 200 });
   };
-  const report = await fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl });
-  const full = await fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl: mockFetch('ok').fetchImpl });
+  const notes: string[] = [];
+  const report = await fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl, onProgress: (e) => { if (e.note) notes.push(e.note); } });
+  // DATA-27: the loading status says why the load slows down.
+  assert.deepEqual(notes, ['GitHub timed out; asking for 10 pull requests a page', 'GitHub timed out; asking for 5 pull requests a page']);
+  const full =await fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl: mockFetch('ok').fetchImpl });
   assert.equal(report.prs.length, full.prs.length);
   assert.deepEqual(sizes.slice(0, 3), [20, 10, 5]);
   assert.ok(sizes.slice(3).every((size) => size === 5), 'later pages keep the size that worked');
@@ -420,4 +423,20 @@ test('DATA-18 DATA-13: when one repository fails, the other reads stop instead o
 test('DATA-26: a live load names the viewer, the token owner, with their avatar', async () => {
   const report = await fetchOpenPullRequests({ token: 't', repositories: [repository, gadgets], fetchImpl: mockFetch('ok').fetchImpl });
   assert.deepEqual(report.viewer, { login: 'boris-k', avatarUrl: null, bot: false });
+});
+
+test('DATA-27: a live load reports each repository page by page, ending in done', async () => {
+  const events: { repo: string; status: string; read: number; total: number | null }[] = [];
+  const report = await fetchOpenPullRequests({
+    token: 't', repositories: [repository, gadgets], fetchImpl: mockFetch('ok').fetchImpl,
+    onProgress: ({ repo, status, read, total }) => events.push({ repo, status, read, total }),
+  });
+  for (const repo of report.repos) {
+    const mine = events.filter((e) => e.repo === repo);
+    assert.deepEqual(mine[0], { repo, status: 'reading', read: 0, total: null });
+    const last = mine.at(-1)!;
+    assert.equal(last.status, 'done');
+    assert.equal(last.read, report.prs.filter((pr) => pr.repo === repo).length);
+    assert.ok(mine.slice(1, -1).every((e) => e.status === 'reading' && e.read < last.read), repo + ' pages grow');
+  }
 });

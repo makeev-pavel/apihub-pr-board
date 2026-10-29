@@ -42,6 +42,8 @@ test.describe('screenshots', () => {
     await openBoard(page, { report: 'corner', refresh: 'ok', query: ALL });
     await page.getByRole('button', { name: 'Refresh', exact: true }).click();
     await expect(page.locator('.viewer-badge')).toBeVisible();
+    // The load summary leaves the corner after a few seconds (DATA-27).
+    await expect(page.locator('.load-status')).toHaveCount(0, { timeout: 8000 });
     // The PRs that wait for the viewer: one asked again, one with a crowd of reviewers, and a single request.
     await page.getByRole('searchbox').fill('review:requested');
     await page.getByRole('searchbox').blur();

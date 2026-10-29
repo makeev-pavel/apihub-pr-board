@@ -9,6 +9,7 @@ import { mixedEntries } from './entries.ts';
 import type { GraphqlVariables, MockResponse, RefreshScenario } from './types.ts';
 
 const SLOW_REFRESH_MS = 4000;
+const PACED_PAGE_MS = 500;
 const SMALL_PAGE = 7;
 const MISSING_PRS = 3;
 
@@ -84,6 +85,8 @@ export const REFRESH_SCENARIOS: RefreshScenario[] = [
   { id: 'count-mismatch', label: 'Fewer PRs than totalCount', respond: board(typicalNodes, { totalExtra: MISSING_PRS }) },
   // Only the first page waits, so the delay stays 4 s however many pages the board takes.
   { id: 'slow', label: 'Slow response (4 s)', respond: (v, now) => ({ ...ok(v, now), delayMs: v.after ? 0 : SLOW_REFRESH_MS }) },
+  // Every page waits, so the loading status walks through the pages of each repository (DATA-27).
+  { id: 'paced', label: 'Pages one by one (0.5 s each)', respond: (v, now) => ({ ...ok(v, now), delayMs: PACED_PAGE_MS }) },
   { id: 'unauthorized', label: '401 Bad credentials', respond: () => ({ status: 401, body: JSON.stringify({ message: 'Bad credentials' }) }) },
   { id: 'server-error', label: '502 from GitHub', respond: () => ({ status: 502, body: 'Server Error' }) },
   { id: 'repo-not-found', label: 'Repository not found', respond: notFound },

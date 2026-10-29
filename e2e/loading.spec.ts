@@ -148,7 +148,7 @@ test.describe('loading prs.json', () => {
     await page.request.post('/__dev/state', { data: { report: 'missing', refresh: 'slow' } });
     await page.goto('/?repos=acme/gadgets');
     const spinner = page.locator('.board .spinner');
-    await expect(page.getByRole('status')).toHaveText('Loading pull requests…');
+    await expect(page.getByRole('status')).toHaveText('Reading acme/gadgets: starting');
     await expect(spinner).toHaveCSS('animation-name', 'spin');
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await expect(spinner).toHaveCSS('animation-name', 'none');
@@ -193,5 +193,33 @@ test.describe('loading prs.json', () => {
     await page.clock.runFor(11 * MINUTE_MS);
     expect(loads).toBe(0);
     await expect(page.locator('.source-button')).not.toHaveClass(/\blive\b/);
+  });
+
+  test('DATA-27: a live load says what it reads and how long it takes, then sums up and goes', async ({ page }) => {
+    await page.addInitScript((key) => localStorage.setItem(key, 'mock-token'), TOKEN_KEY);
+    await page.request.post('/__dev/state', { data: { report: 'missing', refresh: 'paced' } });
+    await page.goto('/?' + ALL + '&repos=acme/widgets,acme/gadgets');
+    // In the empty table: the spinner, the step, each repository being read, and the clock.
+    const inTable = page.locator('.board .load-status');
+    await expect(inTable.locator('.spinner')).toBeVisible();
+    await expect(inTable.getByRole('status')).toHaveText(/^Reading repositories: \d of 2 done, \d+ pull requests so far$/);
+    await expect(inTable.locator('.load-lines li').first()).toHaveText(/^acme\/(widgets|gadgets): (starting|\d+ of \d+ pull requests)$/);
+    await page.clock.setFixedTime(Date.parse(MOCK_NOW) + 2500);
+    await expect(inTable.locator('.elapsed')).toHaveText('2.5 s');
+    // Then a summary in the corner over the rows, gone after a few seconds.
+    const summary = page.locator('.load-status.floating.finished');
+    await expect(summary).toHaveText(/^✓Loaded 84 pull requests from 2 repositories\s*in 2\.5 s$/, { timeout: 10_000 });
+    await expect(rows(page)).toHaveCount(84);
+    await expect(summary).toHaveCount(0, { timeout: 8000 });
+  });
+
+  test('DATA-27: Refresh over a full table shows its status in a corner and leaves the rows in place', async ({ page }) => {
+    await page.addInitScript((key) => localStorage.setItem(key, 'mock-token'), TOKEN_KEY);
+    await openBoard(page, { report: 'typical', refresh: 'paced', query: ALL });
+    await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+    const corner = page.locator('.load-status.floating');
+    await expect(corner.getByRole('status')).toHaveText(/^Reading acme\/widgets: (starting|\d+ of \d+ pull requests)$/);
+    await expect(rows(page)).toHaveCount(36);
+    await expect(corner).toHaveClass(/(^| )finished( |$)/, { timeout: 10_000 });
   });
 });

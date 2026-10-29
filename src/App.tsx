@@ -9,6 +9,9 @@ import {
 } from './board/view.ts';
 import type { SortKey, View } from './board/view.ts';
 import { RefreshControl } from './components/header/RefreshControl.tsx';
+import { LoadStatus } from './components/common/LoadStatus.tsx';
+import type { LoadState } from './components/common/LoadStatus.tsx';
+import { applyProgress, startProgress } from './board/progress.ts';
 import { ViewerBadge } from './components/header/ViewerBadge.tsx';
 import { TokenDialog } from './components/settings/TokenDialog.tsx';
 import { Tiles } from './components/header/Tiles.tsx';
@@ -25,9 +28,10 @@ import { SearchHelp } from './components/toolbar/SearchHelp.tsx';
 import { REPOSITORIES } from './config.ts';
 import { ApiContext, NotesContext, RulesContext, ReviewViewContext } from './context.ts';
 import { fetchOpenPullRequests } from './github/graphql.ts';
+import type { RepositoryProgress } from './github/graphql.ts';
 import { REST_URL } from './github/rest.ts';
 import { useBoardSettings } from './hooks/useBoardSettings.ts';
-import { AUTO_REFRESH_MS } from './board/format.ts';
+import { AUTO_REFRESH_MS, LOAD_SUMMARY_MS } from './board/format.ts';
 import { useAutoRefresh } from './hooks/useAutoRefresh.ts';
 import { useColumnWidths } from './hooks/useColumnWidths.ts';
 import { useNotes } from './hooks/useNotes.ts';
@@ -55,6 +59,8 @@ export function App() {
   const [view, setView] = useState(readView);
   const [token, setTokenState] = useState(readToken);
   const [refreshing, setRefreshing] = useState(false);
+  // The live load under way, or the one that just finished (DATA-27).
+  const [load, setLoad] = useState<LoadState | null>(null);
   const [refreshError, setRefreshError] = useState<string | null>(null);
   const [lastAttempt, setLastAttempt] = useState(0);
   const [now, setNow] = useState(Date.now);
@@ -105,18 +111,35 @@ export function App() {
     }
     setRefreshing(true);
     setRefreshError(null);
-    setLastAttempt(Date.now());
+    const startedAt = Date.now();
+    setLastAttempt(startedAt);
+    setLoad({ startedAt, repos: startProgress(names) });
+    const ours = (change: (prev: LoadState) => LoadState | null) => setLoad((prev) => (prev && prev.startedAt === startedAt ? change(prev) : prev));
     // Skip the heavy parts of the query that only hidden columns would show.
     const parts = { checks: columns.some((c) => c.id === 'ci'), comments: columns.some((c) => c.id === 'comment') };
-    const options = { token: withToken, repositories: names.map(parseRepository), parts };
+    const options = {
+      token: withToken, repositories: names.map(parseRepository), parts,
+      onProgress: (event: RepositoryProgress) => ours((prev) => ({ ...prev, repos: applyProgress(prev.repos, event) })),
+    };
     fetchOpenPullRequests(DEV ? { ...options, endpoint: DEV.graphqlUrl } : options)
       .then((report) => {
         setData((prev) => ({ ...prev, status: 'ready', report, source: 'live', error: null }));
         setNow(Date.now());
+        ours((prev) => ({ ...prev, finished: { at: Date.now(), prs: report.prs.length, repos: report.repos.length } }));
       })
-      .catch((error: Error) => setRefreshError(error.message))
+      .catch((error: Error) => {
+        setRefreshError(error.message);
+        ours(() => null);
+      })
       .finally(() => setRefreshing(false));
   };
+
+  // The summary of a finished load stays a few seconds, then goes.
+  useEffect(() => {
+    if (!load || !load.finished) return undefined;
+    const timer = window.setTimeout(() => setLoad((prev) => (prev === load ? null : prev)), LOAD_SUMMARY_MS);
+    return () => window.clearTimeout(timer);
+  }, [load]);
 
   // Without a snapshot the page loads live data itself, once for each set of repositories and token (DATA-23).
   const autoLoaded = useRef('');
@@ -235,13 +258,14 @@ export function App() {
           <thead><tr>{columns.map((col, index) => <HeaderCell key={col.id} col={col} index={index} view={view} onSort={onSort} width={widths[col.id]} resize={resize} />)}</tr></thead>
           <tbody>
             {rows.length ? rows.map((pr) => <Row key={pullRequestKey(pr)} pr={pr} now={now} columns={columns} repos={repos} activeLabels={activeLabels} onToggleLabel={onToggleLabel} />)
-              : <TableMessage colSpan={columns.length} onResetView={resetView}
+              : <TableMessage colSpan={columns.length} onResetView={resetView} progress={load && !load.finished ? <LoadStatus load={load} /> : null}
                 kind={data.status === 'loading' || refreshing ? 'loading'
                   : notLoaded ? (wanted.length ? 'not-loaded' : 'no-repos') : data.status === 'error' ? 'not-loaded' : 'no-match'} />}
           </tbody>
         </table>
       </div>
 
+      {load && (rows.length || load.finished) ? <LoadStatus load={load} floating /> : null}
       <LegendBar />
       {askingToken ? (
         <TokenDialog onClose={closeTokenDialog}

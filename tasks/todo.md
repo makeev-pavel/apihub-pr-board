@@ -572,3 +572,6 @@ again. Decisions taken without an answer: the tile shows for anyone with a token
 - [x] **V2. Reviewers list:** a Review column setting (SET-20) that shows GitHub's Reviewers list in the cell
   (TABLE-30), the viewer leading and highlighted when their review is due; the viewer's avatar at the top right
   (DATA-26); review corner cases with one reviewer and a crowd. About 2 hours.
+- [x] **V3. Load status:** a live load reports each repository page by page (DATA-27); the status shows in the
+  empty table or in a corner over the rows, with a spinner, a clock, and a summary at the end; a paced mock for
+  the DEV panel. About 1.5 hours.

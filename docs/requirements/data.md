@@ -76,6 +76,12 @@
 - **DATA-26** A live load also reads the login and avatar of the token's owner, the viewer (**RULE-12**), and shows
   them at the top right with a link to their GitHub profile. A `prs.json` snapshot leaves the viewer out, because the
   token that wrote it is not the viewer's.
+- **DATA-27** A live load says what it is doing: with one repository, how many of its pull requests are read out of
+  the total; with several, how many repositories are done, how many pull requests are read so far, and a line for
+  each repository being read. A slowdown says why, such as a timed-out page asked again with fewer pull requests. A
+  spinner and a clock in tenths of a second run beside it. In an empty table the status takes the table's place
+  (**TABLE-19**); over a table with rows it sits in a corner, so the rows stay where they are. When the load ends,
+  the corner shows how many pull requests came from how many repositories and how long it took, for 5 seconds.
 
 ## Several repositories
 

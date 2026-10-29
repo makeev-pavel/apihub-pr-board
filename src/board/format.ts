@@ -11,6 +11,8 @@ const HEADER_REPOSITORIES = 2;
 
 // Live data loads again this often while its tab is visible (DATA-24); the data source popover says so.
 export const AUTO_REFRESH_MS = 5 * 60 * 1000;
+// How long the summary of a finished live load stays on screen (DATA-27).
+export const LOAD_SUMMARY_MS = 5000;
 
 const nameOf = (repo: string) => repo.slice(repo.indexOf('/') + 1);
 

@@ -15,12 +15,22 @@ import type { RawPullRequest, RawResponse } from './raw.ts';
 
 export const GRAPHQL_URL = 'https://api.github.com/graphql';
 
+// What one repository's read is doing, for the loading status (DATA-27).
+export interface RepositoryProgress {
+  repo: string;
+  status: 'reading' | 'done' | 'unreadable';
+  read: number;
+  total: number | null;
+  note?: string;
+}
+
 export interface FetchOptions {
   token: string;
   repositories: Repository[];
   parts?: QueryParts;
   fetchImpl?: Fetch;
   endpoint?: string;
+  onProgress?: (event: RepositoryProgress) => void;
 }
 
 async function postQuery(fetchImpl: Fetch, endpoint: string, token: string, variables: Record<string, unknown>): Promise<RawResponse> {
@@ -78,7 +88,7 @@ function graphqlError(error: NonNullable<RawResponse['errors']>[number]): GitHub
 // Partial GraphQL errors on optional fields (projects need extra token scopes) become warnings, not a failed report.
 // With several repositories, one that cannot be read gives its warning instead of failing.
 async function readRepository(repository: Repository, several: boolean, options: ReadOptions): Promise<RepositoryPullRequests | { unreadable: string }> {
-  const { token, parts, fetchImpl, endpoint } = options;
+  const { token, parts, fetchImpl, endpoint, onProgress } = options;
   const repo = repositoryName(repository);
   const rawNodes: RawPullRequest[] = [];
   const warnings = new Set<string>();
@@ -89,6 +99,7 @@ async function readRepository(repository: Repository, several: boolean, options:
   // projectItems is non-null, so a refusal there nulls the whole issue; the page is then asked again without them.
   let withProjectFields = true;
   let viewer: Actor | null = null;
+  onProgress({ repo, status: 'reading', read: 0, total: null });
   for (;;) {
     let body: RawResponse;
     try {
@@ -102,10 +113,12 @@ async function readRepository(repository: Repository, several: boolean, options:
       // again with half the PRs, and later pages keep that size.
       if (!(error instanceof GitHubError) || !TIMEOUT_STATUSES.has(error.status) || first <= MIN_PAGE_SIZE) throw error;
       first = Math.max(MIN_PAGE_SIZE, Math.floor(first / 2));
+      onProgress({ repo, status: 'reading', read: rawNodes.length, total: after ? totalCount : null, note: 'GitHub timed out; asking for ' + first + ' pull requests a page' });
       continue;
     }
     const unreadable = after ? null : unreadableRepository(body, repo);
     if (unreadable) {
+      onProgress({ repo, status: 'unreadable', read: 0, total: null, note: unreadable });
       if (several) return { unreadable };
       throw graphqlError(body.errors![0]);
     }
@@ -115,6 +128,7 @@ async function readRepository(repository: Repository, several: boolean, options:
     const fieldsRefused = (body.errors || []).find((error) => (error.path || []).join('.').includes('projectItems'));
     if (connection && fieldsRefused && withProjectFields) {
       withProjectFields = false;
+      onProgress({ repo, status: 'reading', read: rawNodes.length, total: connection.totalCount, note: 'Reading again without project fields' });
       warnings.add('Project fields (Priority, Estimate, Sprint) are unavailable for this token: ' + fieldsRefused.message);
       continue;
     }
@@ -128,6 +142,7 @@ async function readRepository(repository: Repository, several: boolean, options:
     totalCount = connection.totalCount;
     rawNodes.push(...nodes(connection));
     after = connection.pageInfo.hasNextPage ? connection.pageInfo.endCursor : null;
+    onProgress({ repo, status: after ? 'reading' : 'done', read: rawNodes.length, total: totalCount, note: '' });
     if (!after) break;
   }
   if (rawNodes.length !== totalCount) {
@@ -138,7 +153,7 @@ async function readRepository(repository: Repository, several: boolean, options:
 
 // A missing repository only costs a warning, and four reads at a time keep GitHub from seeing a burst.
 export async function fetchOpenPullRequests({
-  token, repositories, parts = ALL_PARTS, fetchImpl = fetch, endpoint = GRAPHQL_URL,
+  token, repositories, parts = ALL_PARTS, fetchImpl = fetch, endpoint = GRAPHQL_URL, onProgress = () => {},
 }: FetchOptions): Promise<Report> {
   if (!token) throw new GitHubError('A GitHub token is required to query the GraphQL API.', 0);
   const several = repositories.length > 1;
@@ -154,7 +169,7 @@ export async function fetchOpenPullRequests({
       const index = next++;
       try {
         // With one repository there is nothing else to show, so a missing one fails as before.
-        results[index] = await readRepository(repositories[index], several, { token, parts, fetchImpl, endpoint });
+        results[index] = await readRepository(repositories[index], several, { token, parts, fetchImpl, endpoint, onProgress });
       } catch (error) {
         failed = true;
         throw error;

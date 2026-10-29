@@ -14,6 +14,8 @@ The requirements are in [docs/requirements/](docs/requirements/README.md).
   fine-grained token, which stays in that browser and never goes into the link.
 - With repositories in the link and a saved token, the board loads by itself when it opens. **Refresh** loads it
   again. Without a token, a dialog explains how to create one on GitHub and takes it.
+- A live load shows what it reads, repository by repository, with a spinner and a clock, then how many pull requests
+  it loaded and how long that took. Over a full table the status sits in a corner, so the rows stay in place.
 - `src/github/` holds the query, the normalization, and the GitHub clients. `scripts/build-site.ts` can still write a
   `prs.json` snapshot next to the page, so it opens without a token; the workflow does not run it.
 
