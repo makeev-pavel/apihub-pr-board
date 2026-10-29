@@ -68,7 +68,7 @@ test.describe('toolbar', () => {
     await page.getByRole('group', { name: 'Authors' }).getByRole('button', { name: 'Clear' }).click();
     await page.getByRole('group', { name: 'Authors' }).locator('label').filter({ hasText: 'anna-dev' }).click();
     await expect(authorsButton(page)).toContainText('anna-dev');
-    expect(new Set(await rows(page).locator('td:nth-child(3) .login').allTextContents())).toEqual(new Set(['anna-dev']));
+    expect(new Set(await rows(page).locator('td:nth-child(4) .login').allTextContents())).toEqual(new Set(['anna-dev']));
     // The typical board has one bot, dependabot; check every other author.
     for (const label of await page.getByRole('group', { name: 'Authors' }).locator('label').all()) {
       const bot = (await label.textContent())!.includes('dependabot');

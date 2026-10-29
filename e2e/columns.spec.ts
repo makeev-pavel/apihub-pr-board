@@ -83,7 +83,7 @@ test.describe('columns', () => {
     await expect(panel.getByLabel('Pull request', { exact: true })).toBeDisabled();
     for (const label of ['Assignee', 'Last comment', 'Attention', 'Standup']) await panel.getByLabel(label, { exact: true }).uncheck();
     await page.keyboard.press('Escape');
-    await expect(page.locator('.board > thead > tr > th')).toHaveCount(7);
+    await expect(page.locator('.board > thead > tr > th')).toHaveCount(8);
     await expect(th(page, 'Assignee')).toHaveCount(0);
     const [available, table] = await page.locator('.table-wrap').evaluate((el) => [el.clientWidth, Math.round(el.querySelector('table')!.getBoundingClientRect().width)]);
     expect(table).toBe(available);

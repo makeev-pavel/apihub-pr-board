@@ -57,7 +57,7 @@ test.describe('sorting', () => {
     const titles = (await columnTexts(page, '.pr-title')).map((t) => t.toLowerCase());
     expect(titles).toEqual([...titles].sort());
     await header(page, 'Author').click();
-    const authors = (await columnTexts(page, 'td.c-person:nth-child(3) .login')).map((t) => t.toLowerCase());
+    const authors = (await columnTexts(page, 'td.c-person:nth-child(4) .login')).map((t) => t.toLowerCase());
     expect(authors).toEqual([...authors].sort());
   });
 
@@ -78,7 +78,7 @@ test.describe('sorting', () => {
     expect(ascending(reviews)).toBe(true);
     await header(page, 'Conflicts').click();
     await header(page, 'Conflicts').click();
-    const merges = (await columnTexts(page, 'td:nth-child(6) .pill')).map((t) => MERGE_RANK[t]);
+    const merges = (await columnTexts(page, 'td:nth-child(7) .pill')).map((t) => MERGE_RANK[t]);
     expect(ascending(merges)).toBe(true);
   });
 

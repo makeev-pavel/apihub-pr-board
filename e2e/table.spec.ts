@@ -22,7 +22,7 @@ test.describe('table', () => {
     await openBoard(page, { report: 'typical' });
     const headers = await page.locator('.board > thead > tr > th').allTextContents();
     expect(headers.map((h) => h.replace(/[▲▼]/g, '').trim())).toEqual(
-      ['#', 'Pull request', 'Author', 'CI', 'Review', 'Conflicts', 'Age · activity', 'Assignee', 'Last comment', 'Attention', 'Standup']);
+      ['#', 'Pull request', 'Issue', 'Author', 'CI', 'Review', 'Conflicts', 'Age · activity', 'Assignee', 'Last comment', 'Attention', 'Standup']);
   });
 
   test('TABLE-6: the PR cell shows the draft and target branch chips and a corner case note', async ({ page }) => {
@@ -50,23 +50,24 @@ test.describe('table', () => {
     await expect(row.locator('.label-chip')).toHaveCount(4);
   });
 
-  test('TABLE-8: the issue line links to the issue, or names the project when there is none', async ({ page }) => {
+  test('TABLE-8: the Issue column links to the issue, or names the project, or says there is none', async ({ page }) => {
     let row = await onlyCase(page, 'return 404 for a missing package version');
-    await expect(row.locator('.issue-ref')).toContainText('↳');
-    await expect(row.locator('.issue-ref a')).toHaveAttribute('href', /acme\/widgets\/issues$/);
+    const issue = row.locator('td.c-issue .issue-ref');
+    await expect(issue).toHaveAttribute('href', /acme\/widgets\/issues$/);
+    await expect(row.locator('td.c-title .issue-ref')).toHaveCount(0);
     row = await onlyCase(page, 'tidy CODEOWNERS for the agent package');
-    await expect(row.locator('.issue-line')).toHaveText('↳No issue · in Widgets sprint');
+    await expect(row.locator('td.c-issue')).toHaveText('No issue · in Widgets sprint');
   });
 
   test('TABLE-9: people show avatars or initials, ghost for deleted accounts, and long logins move below', async ({ page }) => {
     let row = await onlyCase(page, 'author:new-contributor-42');
-    await expect(row.locator('td:nth-child(3) .avatar')).toHaveText('NC');
-    const assignee = row.locator('td:nth-child(8) .person');
+    await expect(row.locator('td:nth-child(4) .avatar')).toHaveText('NC');
+    const assignee = row.locator('td:nth-child(9) .person');
     const avatar = (await assignee.locator('.avatar').boundingBox())!;
     const login = (await assignee.locator('.login').boundingBox())!;
     expect(login.y).toBeGreaterThanOrEqual(avatar.y + avatar.height);
     row = await onlyCase(page, 'author:ghost');
-    await expect(row.locator('td:nth-child(3) .person.ghost .login')).toHaveText('ghost');
+    await expect(row.locator('td:nth-child(4) .person.ghost .login')).toHaveText('ghost');
   });
 
   test('TABLE-10: the age turns red only past the limit, with the last update under it', async ({ page }) => {
@@ -81,11 +82,11 @@ test.describe('table', () => {
 
   test('TABLE-12 QUAL-4: status codes carry their full name in the tooltip, the accessible name, and the legend', async ({ page }) => {
     const row = await onlyCase(page, 'add rule for missing operationId');
-    const ci = row.locator('td:nth-child(4) .pill');
+    const ci = row.locator('td:nth-child(5) .pill');
     await expect(ci).toHaveText('P');
     await expect(ci).toHaveAttribute('title', 'Passing: All checks passed');
     await expect(ci).toHaveAttribute('aria-label', 'Passing');
-    await expect(row.locator('td:nth-child(6) .pill')).toHaveText('OK');
+    await expect(row.locator('td:nth-child(7) .pill')).toHaveText('OK');
     await expect(row.locator('.review-wrap > button')).toHaveText('✓');
     const legend = page.locator('.legend-bar');
     for (const text of ['FFailing', 'PPassing', 'CRChanges requested', '✓Approved', 'OKNo conflicts', '?Checking']) {

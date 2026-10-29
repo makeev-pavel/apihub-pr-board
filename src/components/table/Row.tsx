@@ -7,9 +7,9 @@ import type { DerivedPullRequest } from '../../types.ts';
 import { AttentionBadge } from '../cells/AttentionBadge.tsx';
 import { CiCell } from '../cells/CiCell.tsx';
 import { CommentCell } from '../cells/CommentCell.tsx';
+import { IssueCell } from '../cells/IssueCell.tsx';
 import { NoteCell } from '../cells/NoteCell.tsx';
 import { ReviewCell } from '../cells/ReviewCell.tsx';
-import { IssueLine } from '../common/IssueLine.tsx';
 import { LabelList } from '../common/LabelList.tsx';
 import { Person } from '../common/Person.tsx';
 import { Pill } from '../common/Pill.tsx';
@@ -45,10 +45,10 @@ export const Row = memo(function Row({ pr, now, columns, repos, activeLabels, on
             <LabelList labels={pr.labels} activeLabels={activeLabels} onToggle={onToggleLabel} />
           </div>
         ) : null}
-        <IssueLine pr={pr} />
         {pr.note ? <div className="note">{pr.note}</div> : null}
       </td>
     ),
+    issue: <td key="issue" className="c-issue"><IssueCell pr={pr} /></td>,
     author: <td key="author" className="c-person"><Person actor={pr.author} /></td>,
     ci: <td key="ci" className="c-state"><CiCell pr={pr} /></td>,
     review: <td key="review" className="c-state"><ReviewCell pr={pr} now={now} /></td>,

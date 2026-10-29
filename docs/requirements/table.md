@@ -16,7 +16,8 @@
   | Column | Content |
   | --- | --- |
   | # | PR number, linked to the PR. |
-  | Pull request | Title linked to the PR; chips; labels; linked issue line. |
+  | Pull request | Title linked to the PR; chips; labels. |
+  | Issue | The linked issues, or the project (**TABLE-8**). |
   | Author | Avatar and login; a `bot` chip for bots (**RULE-10**). |
   | CI | Status code (**TABLE-12**). **F** opens the failed checks. |
   | Review | Status code, a reviewer count, and pending reviewers (**TABLE-13**). Opens the reviewers. |
@@ -36,8 +37,8 @@
 - **TABLE-7** Labels use their GitHub colors, with dark or light text picked by the brightness of the color. Chips
   are 11 px text and at most 150 px wide. The first four show; the rest fold into **+N**, which expands the list,
   and **less** folds it back. Clicking a label toggles the `label:<name>` filter in the search (**FILTER-11**).
-- **TABLE-8** The linked issue line reads `↳ <issue title> (#<number>)` and links to the issue. A long title is cut
-  and the number stays. Without an issue but in a project, the line reads `↳ No issue · in <project>`.
+- **TABLE-8** The Issue column shows each linked issue as `#<number>` and its title on up to two lines, linked to the
+  issue. Without an issue but in a project, it reads `No issue · in <project>`; with neither, `No issue`.
 - **TABLE-9** A person shows an avatar and a login. Without an avatar, or when the image fails, the cell shows the
   initials. A deleted account shows as "ghost". A login that does not fit beside the avatar moves below it.
 - **TABLE-10** The age reads "today" or "N days" and turns red past the stale limit (**RULE-7**). The activity line

@@ -23,7 +23,8 @@ export type Widths = Record<string, number>;
 export const COLUMNS: Column[] = [
   { id: 'repo', sort: 'repo', label: 'Repository', cls: 'c-repo', width: 130, severalRepos: true },
   { id: 'number', sort: 'number', label: '#', cls: 'c-num', width: 72, required: true },
-  { id: 'title', sort: 'title', label: 'Pull request', cls: 'c-title', width: 400, required: true },
+  { id: 'title', sort: 'title', label: 'Pull request', cls: 'c-title', width: 340, required: true },
+  { id: 'issue', sort: null, label: 'Issue', cls: 'c-issue', width: 190 },
   { id: 'author', sort: 'author', label: 'Author', cls: 'c-person', width: 170 },
   { id: 'ci', sort: 'ci', label: 'CI', cls: 'c-state', width: 60 },
   { id: 'review', sort: 'review', label: 'Review', cls: 'c-state', width: 80 },

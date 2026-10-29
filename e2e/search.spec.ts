@@ -25,7 +25,7 @@ test.describe('search', () => {
   test('FILTER-8: an issue number finds its PR, with or without #', async ({ page }) => {
     for (const text of ['#400', '400']) {
       await search(page, text);
-      await expectAll(page, (tr) => tr.querySelector('.issue-number')?.textContent === '(#400)');
+      await expectAll(page, (tr) => tr.querySelector('.issue-number')?.textContent === '#400');
     }
   });
 
@@ -36,8 +36,8 @@ test.describe('search', () => {
   });
 
   const QUALIFIERS: [string, (row: Element) => boolean][] = [
-    ['author:anna-dev', (tr) => tr.querySelector('td:nth-child(3) .login')?.textContent === 'anna-dev'],
-    ['assignee:none', (tr) => tr.querySelector('td:nth-child(8)')!.textContent === 'Unassigned'],
+    ['author:anna-dev', (tr) => tr.querySelector('td:nth-child(4) .login')?.textContent === 'anna-dev'],
+    ['assignee:none', (tr) => tr.querySelector('td:nth-child(9)')!.textContent === 'Unassigned'],
     ['label:bug', (tr) => [...tr.querySelectorAll('.label-chip')].some((c) => c.textContent === 'bug')],
     ['label:none', (tr) => tr.querySelectorAll('.label-chip').length === 0],
     ['base:develop', (tr) => tr.querySelector('.chip.branch')?.textContent === '→ develop'],
@@ -48,12 +48,12 @@ test.describe('search', () => {
     ['is:draft', (tr) => !!tr.querySelector('.chip.draft')],
     ['is:ready', (tr) => !tr.querySelector('.chip.draft')],
     ['is:bot', (tr) => !!tr.querySelector('.chip.bot')],
-    ['is:conflict', (tr) => tr.querySelector('td:nth-child(6)')!.textContent === 'C'],
+    ['is:conflict', (tr) => tr.querySelector('td:nth-child(7)')!.textContent === 'C'],
     ['is:stale', (tr) => !!tr.querySelector('.age.over')],
     ['is:attention', (tr) => !!tr.querySelector('.attn-icon')],
     ['no:issue', (tr) => !tr.querySelector('.issue-ref')],
     ['no:label', (tr) => tr.querySelectorAll('.label-chip').length === 0],
-    ['no:assignee', (tr) => tr.querySelector('td:nth-child(8)')!.textContent === 'Unassigned'],
+    ['no:assignee', (tr) => tr.querySelector('td:nth-child(9)')!.textContent === 'Unassigned'],
   ];
   for (const [text, check] of QUALIFIERS) {
     test(`FILTER-9: ${text} keeps only matching PRs`, async ({ page }) => {
