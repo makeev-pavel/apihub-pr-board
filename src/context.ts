@@ -22,3 +22,10 @@ interface NotesApi {
   saveFailed: boolean;
 }
 export const NotesContext = createContext<NotesApi>({ notes: {}, update: () => {}, saveFailed: false });
+
+// How the Review column shows reviews (SET-20), and who is looking, so their own review stands out (TABLE-30).
+interface ReviewView {
+  list: boolean;
+  viewer: string;
+}
+export const ReviewViewContext = createContext<ReviewView>({ list: false, viewer: '' });

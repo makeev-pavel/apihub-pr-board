@@ -24,13 +24,13 @@ test.describe('Refresh', () => {
     await page.getByRole('button', { name: 'Save and load' }).click();
     await expect(page.locator('.source-button')).toHaveText('live, just now');
     await expect(page.locator('.source-button')).toHaveClass(/\blive\b/);
-    await expect(page.locator('.board > tbody > tr')).toHaveCount(77);
+    await expect(page.locator('.board > tbody > tr')).toHaveCount(80);
   });
 
   test('DATA-6: a saved token refreshes at once and reads all pages', async ({ page }) => {
     await refresh(page, 'paginated');
     await expect(page.locator('.source-button')).toHaveText('live, just now');
-    await expect(page.locator('.board > tbody > tr')).toHaveCount(77);
+    await expect(page.locator('.board > tbody > tr')).toHaveCount(80);
   });
 
   test('DATA-7: Refresh is disabled while it runs', async ({ page }) => {
@@ -97,7 +97,7 @@ test.describe('Refresh', () => {
     await expect(page.locator('.board > tbody > tr')).toHaveCount(36);
     await expect(page.locator('.board .spinner')).toHaveCount(0);
     await expect(page.locator('.source-button')).toHaveText('live, just now', { timeout: 10_000 });
-    await expect(page.locator('.board > tbody > tr')).toHaveCount(77);
+    await expect(page.locator('.board > tbody > tr')).toHaveCount(80);
     expect(await wrap.evaluate((element) => element.scrollTop)).toBe(600);
   });
 
@@ -123,6 +123,9 @@ test.describe('Refresh', () => {
     await expect(page.locator('.board > tbody > tr')).toHaveCount(marked);
     await page.getByRole('searchbox').fill('review:again');
     await expect(page.locator('.board > tbody > tr')).toHaveCount(again);
+    // The token owner shows at the top right, as on GitHub.
+    await expect(page.locator('.viewer-badge')).toHaveText(/boris-k/);
+    await expect(page.locator('.viewer-badge')).toHaveAttribute('href', 'https://github.com/boris-k');
   });
 
   test('FILTER-18: a link with the Review requested filter shows every PR until the viewer is known, and keeps the filter', async ({ page }) => {
@@ -132,5 +135,40 @@ test.describe('Refresh', () => {
     // Another tile adds its filter and leaves the waiting one in the address.
     await page.getByRole('group', { name: 'Quick filters' }).getByRole('button', { name: /CI failing/ }).click();
     await expect(page).toHaveURL(/[?&]quick=(ci%2Cmine|mine%2Cci)(&|$)/);
+  });
+});
+
+test.describe('reviewers list', () => {
+  test('SET-20 TABLE-30: the Review column lists the reviewers, a long list folds, and the viewer whose review is due stands out', async ({ page }) => {
+    await withToken(page);
+    await openBoard(page, { report: 'mixed', refresh: 'ok', query: ALL + '&q=' + encodeURIComponent('publish packages in batches') });
+    await page.getByRole('button', { name: /^Settings/ }).click();
+    await page.getByRole('group', { name: 'Review column' }).getByRole('button', { name: 'Reviewers' }).click();
+    await page.keyboard.press('Escape');
+    const row = page.locator('.board > tbody > tr').first();
+    const list = row.getByRole('list', { name: 'Reviewers of PR #9408' });
+    // Ten lines: the first three show, the rest wait behind a button.
+    await expect(list.getByRole('listitem')).toHaveCount(3);
+    await expect(list.getByRole('img', { name: 'farah-ui: awaiting review' })).toBeVisible();
+    await expect(row.getByRole('button', { name: 'Show all 10 reviewers of PR #9408' })).toHaveText('+7 more');
+    await expect(row.locator('.reviewer.due')).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+    await expect(page.locator('.source-button')).toHaveText('live, just now');
+    // The viewer's own request leads the list and stands out.
+    await expect(list.getByRole('listitem').first()).toHaveClass(/\bdue\b/);
+    await expect(list.getByRole('img', { name: 'boris-k (you): awaiting review' })).toBeVisible();
+    await row.getByRole('button', { name: 'Show all 10 reviewers of PR #9408' }).click();
+    const all = page.getByRole('dialog', { name: 'All reviewers of PR #9408' });
+    await expect(all.getByRole('listitem')).toHaveCount(10);
+    for (const name of ['dara-ops: requested changes', 'chen-li: approved', 'gleb-be: review dismissed', '@widgets-backend: awaiting review']) {
+      await expect(all.getByRole('img', { name })).toBeVisible();
+    }
+    await page.keyboard.press('Escape');
+    await expect(all).toHaveCount(0);
+    // The code view comes back from Settings.
+    await page.getByRole('button', { name: /^Settings/ }).click();
+    await page.getByRole('group', { name: 'Review column' }).getByRole('button', { name: 'Code' }).click();
+    await expect(row.locator('.review-wrap > button')).toBeVisible();
   });
 });

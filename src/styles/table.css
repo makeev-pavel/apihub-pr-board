@@ -172,3 +172,21 @@
 /* Your reviews (TABLE-29): GitHub's icon after the Review code, the dot in its attention color. */
 .review-wrap .mine { display: inline-flex; color: var(--accent); }
 .review-wrap .mine.requested { color: var(--warn); }
+
+/* The Review column as GitHub's Reviewers list (TABLE-30). */
+.reviewers { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.reviewer { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 1px 4px; margin: 0 -4px; border-radius: 4px; font-size: 12px; line-height: 18px; }
+.reviewer .who { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.reviewer .who.me { font-weight: 600; }
+.reviewer .state { display: inline-flex; flex: none; }
+.reviewer.pending .state { color: var(--warn); }
+.reviewer.again .state { color: var(--accent); }
+.reviewer.approved .state { color: var(--good); }
+.reviewer.changes .state { color: var(--bad); }
+.reviewer.commented .state, .reviewer.dismissed .state { color: var(--muted); }
+/* The viewer's own review is due: the line stands out as a call to act. */
+.reviewer.due { background: var(--warn-soft); box-shadow: inset 2px 0 0 var(--warn); }
+.reviewers-wrap { position: relative; text-align: left; }
+.reviewers-wrap .more { margin-top: 2px; padding: 0; border: 0; background: none; font: inherit; font-size: 12px; color: var(--accent); cursor: pointer; }
+.reviewers-wrap .more:hover { text-decoration: underline; }
+.reviewers-popover .reviewers { padding: 4px 0; }

@@ -5,7 +5,7 @@ import { readColumnWidths, writeColumnWidths } from '../board/storage.ts';
 
 // Column widths: the saved ones, the one being dragged, and spare width shared out so the table fills its container.
 // tableWrapRef goes on the scrolling container whose width the table fills.
-export function useColumnWidths(columns: Column[]) {
+export function useColumnWidths(columns: Column[], defaults: Widths = DEFAULT_WIDTHS) {
   const [savedWidths, setSavedWidths] = useState(readColumnWidths);
   const [dragWidths, setDragWidths] = useState<Widths | null>(null);
   const tableWrapRef = useRef<HTMLDivElement>(null);
@@ -19,7 +19,7 @@ export function useColumnWidths(columns: Column[]) {
   }, []);
 
   const resizingId = dragWidths ? Object.keys(dragWidths)[0] : null;
-  const widths = fitToWidth({ ...DEFAULT_WIDTHS, ...savedWidths, ...dragWidths }, availableWidth, resizingId, columns);
+  const widths = fitToWidth({ ...defaults, ...savedWidths, ...dragWidths }, availableWidth, resizingId, columns);
   const tableWidth = columns.reduce((sum, c) => sum + widths[c.id], 0);
   const commitWidths = (next: Widths) => {
     setSavedWidths(next);
@@ -32,7 +32,7 @@ export function useColumnWidths(columns: Column[]) {
       const next = { ...savedWidths, [id]: w };
       // Keep what the other flexible column showed during the drag, so nothing jumps on release.
       if (FLEX_COLUMNS.includes(id)) {
-        const fitted = fitToWidth({ ...DEFAULT_WIDTHS, ...next }, availableWidth, id, columns);
+        const fitted = fitToWidth({ ...defaults, ...next }, availableWidth, id, columns);
         for (const other of FLEX_COLUMNS) if (other !== id) next[other] = fitted[other];
       }
       commitWidths(next);

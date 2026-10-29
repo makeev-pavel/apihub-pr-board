@@ -11,22 +11,26 @@ import type { Rules } from './model/rules.ts';
 
 export type Theme = 'system' | 'light' | 'dark';
 export type Density = 'comfortable' | 'compact';
+export type ReviewColumn = 'code' | 'list';
 
 export interface Settings {
   rules: Rules;
   theme: Theme;
   density: Density;
+  // The Review column as a code or as GitHub's Reviewers list (SET-20).
+  reviewColumn: ReviewColumn;
   // Ids of columns the viewer turned off.
   hiddenColumns: string[];
   // Named lists of repositories for the Repositories menu (SET-19).
   repoGroups: RepoGroup[];
 }
 
-export const DEFAULT_SETTINGS: Settings = { rules: DEFAULT_RULES, theme: 'system', density: 'comfortable', hiddenColumns: [], repoGroups: [] };
+export const DEFAULT_SETTINGS: Settings = { rules: DEFAULT_RULES, theme: 'system', density: 'comfortable', reviewColumn: 'code', hiddenColumns: [], repoGroups: [] };
 export const MIN_STALE_DAYS = 1;
 export const MAX_STALE_DAYS = 365;
 export const THEMES: [Theme, string][] = [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']];
 export const DENSITIES: [Density, string][] = [['comfortable', 'Comfortable'], ['compact', 'Compact']];
+export const REVIEW_COLUMNS: [ReviewColumn, string][] = [['code', 'Code'], ['list', 'Reviewers']];
 
 const SETTINGS_KEY = 'apihub-pr-board.settings';
 
@@ -82,6 +86,7 @@ export function parseSettings(value: unknown): Settings {
     },
     theme: pick(stored.theme, THEMES, DEFAULT_SETTINGS.theme),
     density: pick(stored.density, DENSITIES, DEFAULT_SETTINGS.density),
+    reviewColumn: pick(stored.reviewColumn, REVIEW_COLUMNS, DEFAULT_SETTINGS.reviewColumn),
     // An id no column has any more, such as one from an older version, is dropped (SET-8).
     hiddenColumns: Array.isArray(stored.hiddenColumns)
       ? [...new Set(stored.hiddenColumns.filter((id): id is string => typeof id === 'string' && COLUMNS.some((column) => column.id === id)))]

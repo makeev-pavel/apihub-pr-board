@@ -55,6 +55,27 @@ export function reviewCases(now: number): FixtureEntry[] {
       latestOpinionatedReviews: conn([review('CHANGES_REQUESTED', 'boris-k', ago(1))]),
       reviewRequests: conn([requested('boris-k')]),
     }),
+    node('A crowd of reviewers: ten lines, so the Reviewers list shows the first three and +7 more. The mock viewer boris-k is still to review and leads the list.', {
+      title: 'feat(portal-backend): publish packages in batches',
+      author: user('anna-dev'), createdAt: ago(6), updatedAt: ago(0, 5),
+      latestOpinionatedReviews: conn([
+        review('APPROVED', 'chen-li', ago(2)), review('APPROVED', 'emil-qa', ago(1)), review('CHANGES_REQUESTED', 'dara-ops', ago(1, 3)),
+        review('DISMISSED', 'gleb-be', ago(3)), review('APPROVED', 'a-very-long-github-login-that-keeps-going', ago(0, 8)),
+      ]),
+      reviewRequests: conn([
+        requested('farah-ui'), requested('hana-docs'), requested('boris-k'), requested('new-contributor-42'), team('widgets-backend'),
+      ]),
+    }),
+    node('Your review is requested: boris-k, the mock viewer on Refresh, is the only reviewer.', {
+      title: 'fix(ui): show the publish date in the version list',
+      author: user('farah-ui'), createdAt: ago(1), updatedAt: ago(0, 4),
+      reviewRequests: conn([requested('boris-k')]),
+    }),
+    node('Approved by everyone asked: three approvals and nobody left to review.', {
+      title: 'chore(ci): cache the frontend dependencies',
+      author: user('dara-ops'), createdAt: ago(2), updatedAt: ago(0, 1),
+      latestOpinionatedReviews: conn([review('APPROVED', 'anna-dev', ago(0, 3)), review('APPROVED', 'boris-k', ago(0, 2)), review('APPROVED', 'gleb-be', ago(0, 1))]),
+    }),
     node('No reviews and nobody requested.', {
       title: 'docs(api): describe the export endpoint',
       author: user('gleb-be'), createdAt: ago(1), updatedAt: ago(1),

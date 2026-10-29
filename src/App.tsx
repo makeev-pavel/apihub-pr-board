@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { collectAuthors, selectedAuthors } from './board/authors.ts';
-import { boardColumns, isColumnShown } from './board/columns.ts';
+import { boardColumns, DEFAULT_WIDTHS, isColumnShown, REVIEWERS_LIST_WIDTHS } from './board/columns.ts';
 import { repositoriesSummary } from './board/format.ts';
 import { boardRepos, linkSettingsQuery, missingReposMessage } from './board/link.ts';
 import { readToken, storeToken } from './board/storage.ts';
@@ -9,6 +9,7 @@ import {
 } from './board/view.ts';
 import type { SortKey, View } from './board/view.ts';
 import { RefreshControl } from './components/header/RefreshControl.tsx';
+import { ViewerBadge } from './components/header/ViewerBadge.tsx';
 import { TokenDialog } from './components/settings/TokenDialog.tsx';
 import { Tiles } from './components/header/Tiles.tsx';
 import { UpdateInfo } from './components/header/UpdateInfo.tsx';
@@ -22,7 +23,7 @@ import { RepositoriesMenu } from './components/toolbar/RepositoriesMenu.tsx';
 import { CopyLink } from './components/toolbar/CopyLink.tsx';
 import { SearchHelp } from './components/toolbar/SearchHelp.tsx';
 import { REPOSITORIES } from './config.ts';
-import { ApiContext, NotesContext, RulesContext } from './context.ts';
+import { ApiContext, NotesContext, RulesContext, ReviewViewContext } from './context.ts';
 import { fetchOpenPullRequests } from './github/graphql.ts';
 import { REST_URL } from './github/rest.ts';
 import { useBoardSettings } from './hooks/useBoardSettings.ts';
@@ -83,7 +84,7 @@ export function App() {
   const pending = notLoaded ? wanted : missing;
   const offeredColumns = useMemo(() => boardColumns(repos.length), [repos.length]);
   const columns = useMemo(() => offeredColumns.filter((c) => isColumnShown(c, settings.hiddenColumns)), [offeredColumns, settings.hiddenColumns]);
-  const { tableWrapRef, widths, tableWidth, resize, canResetWidths, resetWidths } = useColumnWidths(columns);
+  const { tableWrapRef, widths, tableWidth, resize, canResetWidths, resetWidths } = useColumnWidths(columns, settings.reviewColumn === 'list' ? REVIEWERS_LIST_WIDTHS : DEFAULT_WIDTHS);
   const patch = useCallback((changes: Partial<View>) => setView((prev) => ({ ...prev, ...changes })), []);
   const onToggleLabel = useCallback((name: string) => {
     setView((prev) => ({ ...prev, q: toggleLabelFilter(prev.q, name) }));
@@ -131,7 +132,8 @@ export function App() {
     if (data.noSnapshot && !token && wanted.length && !tokenDismissed.current) setAskingToken(true);
   }, [data.noSnapshot, token, wanted.length]);
 
-  const viewer = data.source === 'live' && report && report.viewer ? report.viewer : '';
+  const viewerActor = data.source === 'live' && report && report.viewer ? report.viewer : null;
+  const viewer = viewerActor ? viewerActor.login : '';
   // Without a known viewer the Review requested filter has nobody to count for: it waits, kept in the address (FILTER-18).
   const activeQuick = useMemo(() => (viewer ? view.quick : view.quick.filter((id) => id !== 'mine')), [viewer, view.quick]);
   const derived = useMemo(() => {
@@ -167,9 +169,10 @@ export function App() {
   const isDefault = JSON.stringify(view) === JSON.stringify(DEFAULT_VIEW);
 
   const api = useMemo(() => ({ token, restUrl: DEV ? DEV.restUrl : REST_URL }), [token]);
+  const reviewView = useMemo(() => ({ list: settings.reviewColumn === 'list', viewer }), [settings.reviewColumn, viewer]);
 
   return (
-    <ApiContext.Provider value={api}><RulesContext.Provider value={rules}><NotesContext.Provider value={notesApi}>
+    <ApiContext.Provider value={api}><RulesContext.Provider value={rules}><NotesContext.Provider value={notesApi}><ReviewViewContext.Provider value={reviewView}>
       <header className="masthead">
         <h1>
           <span className="repo" title={headerRepos.length > 2 ? headerRepos.join(', ') : undefined}>{repositoriesSummary(headerRepos)}</span>
@@ -183,6 +186,7 @@ export function App() {
             settings={settings} onSettingsChange={setSettings} columns={offeredColumns}
             repositories={{ requested: link.repos, available: dataRepos, onChange: setRepos }}
             canResetWidths={canResetWidths} onResetWidths={resetWidths} />
+          {viewerActor ? <ViewerBadge viewer={viewerActor} /> : null}
         </div>
       </header>
 
@@ -243,6 +247,6 @@ export function App() {
         <TokenDialog onClose={closeTokenDialog}
           onSave={(value) => { setToken(value); setAskingToken(false); refresh(value); }} />
       ) : null}
-    </NotesContext.Provider></RulesContext.Provider></ApiContext.Provider>
+    </ReviewViewContext.Provider></NotesContext.Provider></RulesContext.Provider></ApiContext.Provider>
   );
 }

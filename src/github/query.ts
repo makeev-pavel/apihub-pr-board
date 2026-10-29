@@ -19,7 +19,7 @@ export const OPEN_PULL_REQUESTS_QUERY = `
 query($owner: String!, $repo: String!, $first: Int!, $after: String, $avatarSize: Int!, $checksPageSize: Int!, $commentsFetched: Int!,
   $withChecks: Boolean!, $withComments: Boolean!, $withProjectFields: Boolean!, $projectItems: Int!, $priorityField: String!,
   $estimateField: String!, $sprintField: String!) {
-  viewer { login }
+  viewer { login avatarUrl(size: $avatarSize) }
   repository(owner: $owner, name: $repo) {
     pullRequests(states: OPEN, first: $first, after: $after, orderBy: {field: CREATED_AT, direction: DESC}) {
       totalCount

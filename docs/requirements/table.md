@@ -66,6 +66,12 @@
 - **TABLE-14** The CI code **F** shows a small number when more than one distinct check failed.
 - **TABLE-29** After the Review code, a PR waiting for the viewer's review (**RULE-12**) shows GitHub's icons: the
   dot of a pending review, or the sync arrows of a re-requested one, with a tooltip that says which.
+- **TABLE-30** As a list of reviewers (**SET-20**), the Review cell shows each reviewer once, as GitHub's Reviewers
+  sidebar does: a small avatar, the login, and GitHub's icon for where the review stands (awaiting review, asked
+  again, requested changes, approved, review dismissed). Those still to review come first, the viewer's own request
+  leading; then requested changes, approvals, and dismissed reviews. The viewer's line is bold, and when their review
+  is due it has a highlighted background. More than four lines show the first three and a "+N more" button that
+  opens the whole list. A PR without reviewers says so.
 - **TABLE-15** A 3 px stripe on the left edge of a row mirrors CI: red when checks failed, yellow while they run,
   green when they passed, and none without checks.
 

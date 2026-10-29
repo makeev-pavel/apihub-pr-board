@@ -28,6 +28,8 @@
   field loses focus. Lists apply when their field loses focus or on Enter.
 - **SET-15** Compact density makes rows tighter and avatars smaller. Theme Light or Dark overrides the system
   setting; System follows it.
+- **SET-20** A Review column setting shows reviews as the Review code (**TABLE-8**), the default, or as a list of
+  reviewers (**TABLE-30**). It is kept in this browser; anything else stored falls back to the code.
 
 ## Settings in the address
 

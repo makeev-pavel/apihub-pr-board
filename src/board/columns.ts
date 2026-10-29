@@ -35,6 +35,8 @@ export const COLUMNS: Column[] = [
   { id: 'attention', sort: 'attention', label: 'Attention', cls: 'c-attn', width: 104, hint: 'Click an icon to see why the PR needs attention' },
 ];
 export const DEFAULT_WIDTHS: Widths = Object.fromEntries(COLUMNS.map((c) => [c.id, c.width]));
+// The Review column as a list of reviewers (TABLE-30) starts wide enough for a login.
+export const REVIEWERS_LIST_WIDTHS: Widths = { ...DEFAULT_WIDTHS, review: 180 };
 
 // Columns that absorb spare width so the table always fills the window.
 export const FLEX_COLUMNS = ['title', 'comment'];

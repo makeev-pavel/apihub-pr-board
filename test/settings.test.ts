@@ -117,3 +117,9 @@ test('SET-19: stored groups with the same name keep the first, and each holds up
   const settings = parseSettings({ repoGroups: [{ name: 'Core', repos }, { name: 'core', repos: ['acme/x'] }] });
   assert.deepEqual(settings.repoGroups.map((g) => [g.name, g.repos.length]), [['Core', 40]]);
 });
+
+test('SET-20: the Review column is a code or a list of reviewers, and anything else falls back to the code', () => {
+  assert.equal(parseSettings({ reviewColumn: 'list' }).reviewColumn, 'list');
+  assert.equal(parseSettings({ reviewColumn: 'people' }).reviewColumn, 'code');
+  assert.equal(DEFAULT_SETTINGS.reviewColumn, 'code');
+});

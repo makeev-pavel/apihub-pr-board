@@ -417,7 +417,7 @@ test('DATA-18 DATA-13: when one repository fails, the other reads stop instead o
   assert.ok(fetches <= 8, 'only the reads already started finish; got ' + fetches);
 });
 
-test('DATA-26: a live load names the viewer, the login of the token owner', async () => {
+test('DATA-26: a live load names the viewer, the token owner, with their avatar', async () => {
   const report = await fetchOpenPullRequests({ token: 't', repositories: [repository, gadgets], fetchImpl: mockFetch('ok').fetchImpl });
-  assert.equal(report.viewer, 'boris-k');
+  assert.deepEqual(report.viewer, { login: 'boris-k', avatarUrl: null, bot: false });
 });

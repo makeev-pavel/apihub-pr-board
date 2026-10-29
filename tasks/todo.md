@@ -569,3 +569,6 @@ again. Decisions taken without an answer: the tile shows for anyone with a token
 - [x] **V1. Your reviews:** read the viewer's login with live loads (DATA-26), work out requested and re-requested
   PRs (RULE-12), mark them in the Review cell (TABLE-29), and add the tile and `review:requested`, `review:again`
   (FILTER-18); unit and browser tests, a corner case, screenshots. About 2 hours.
+- [x] **V2. Reviewers list:** a Review column setting (SET-20) that shows GitHub's Reviewers list in the cell
+  (TABLE-30), the viewer leading and highlighted when their review is due; the viewer's avatar at the top right
+  (DATA-26); review corner cases with one reviewer and a crowd. About 2 hours.

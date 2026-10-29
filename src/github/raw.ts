@@ -104,7 +104,7 @@ export interface RawPullRequest {
 
 export interface RawResponse {
   data?: {
-    viewer?: { login?: string } | null;
+    viewer?: { login?: string; avatarUrl?: string | null } | null;
     repository?: {
       pullRequests?: {
         totalCount: number;

@@ -7,7 +7,7 @@ import { groupsToText, parseGroupLines } from '../../board/groups.ts';
 import { checkRepositoryList } from '../../repository.ts';
 import type { Rules } from '../../model/rules.ts';
 import {
-  DEFAULT_SETTINGS, DENSITIES, isValidStaleDays, MAX_STALE_DAYS, MIN_STALE_DAYS, parseList, THEMES,
+  DEFAULT_SETTINGS, DENSITIES, REVIEW_COLUMNS, isValidStaleDays, MAX_STALE_DAYS, MIN_STALE_DAYS, parseList, THEMES,
 } from '../../settings.ts';
 import type { Settings } from '../../settings.ts';
 import type { AreaId } from '../../types.ts';
@@ -168,6 +168,14 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
           <div className="segmented" role="group" aria-label="Density">
             {DENSITIES.map(([value, label]) => (
               <button key={value} type="button" aria-pressed={settings.density === value} onClick={() => onChange({ ...settings, density: value })}>{label}</button>
+            ))}
+          </div>
+        </div>
+        <div className="setting-row">
+          <span>Review column</span>
+          <div className="segmented" role="group" aria-label="Review column">
+            {REVIEW_COLUMNS.map(([value, label]) => (
+              <button key={value} type="button" aria-pressed={settings.reviewColumn === value} onClick={() => onChange({ ...settings, reviewColumn: value })}>{label}</button>
             ))}
           </div>
         </div>

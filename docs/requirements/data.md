@@ -73,8 +73,9 @@
   last load or attempt, so a failure is retried after 5 minutes too. A hidden tab pauses the countdown, and a tab that
   comes back after 5 minutes loads at once. A snapshot is replaced only on **Refresh** or by loading without one.
 
-- **DATA-26** A live load also reads the login of the token's owner, the viewer (**RULE-12**). A `prs.json` snapshot
-  leaves it out, because the token that wrote it is not the viewer's.
+- **DATA-26** A live load also reads the login and avatar of the token's owner, the viewer (**RULE-12**), and shows
+  them at the top right with a link to their GitHub profile. A `prs.json` snapshot leaves the viewer out, because the
+  token that wrote it is not the viewer's.
 
 ## Several repositories
 

@@ -36,6 +36,21 @@ test.describe('screenshots', () => {
     }
   }
 
+  test('TABLE-30 DATA-26: the Review column as a list of reviewers, with the viewer at the top right', async ({ page }) => {
+    await withSettings(page, { reviewColumn: 'list' });
+    await page.addInitScript(() => localStorage.setItem('apihub-pr-board.token', 'mock-token'));
+    await openBoard(page, { report: 'corner', refresh: 'ok', query: ALL });
+    await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+    await expect(page.locator('.viewer-badge')).toBeVisible();
+    // The PRs that wait for the viewer: one asked again, one with a crowd of reviewers, and a single request.
+    await page.getByRole('searchbox').fill('review:requested');
+    await page.getByRole('searchbox').blur();
+    // The badge appears where Refresh was, under the pointer.
+    await page.mouse.move(0, 0);
+    await settle(page);
+    await expect(page).toHaveScreenshot('board-reviewers-list.png');
+  });
+
   test('TABLE-26 TABLE-27: two repositories add the Repository column', async ({ page }) => {
     await openBoard(page, { report: 'two-repos', query: ALL + '&sort=repo&dir=asc' });
     await settle(page);

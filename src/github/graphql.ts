@@ -2,7 +2,7 @@
 
 import { repositoryName } from '../repository.ts';
 import type { Repository } from '../repository.ts';
-import type { PullRequest, Report } from '../types.ts';
+import type { Actor, PullRequest, Report } from '../types.ts';
 import { GitHubError } from './http.ts';
 import type { Fetch } from './http.ts';
 import { nodes, normalizePullRequest } from './normalize.ts';
@@ -50,7 +50,7 @@ async function postQuery(fetchImpl: Fetch, endpoint: string, token: string, vari
 
 interface RepositoryPullRequests {
   repo: string;
-  viewer: string;
+  viewer: Actor | null;
   prs: PullRequest[];
   warnings: string[];
 }
@@ -88,7 +88,7 @@ async function readRepository(repository: Repository, several: boolean, options:
   let first = PAGE_SIZE;
   // projectItems is non-null, so a refusal there nulls the whole issue; the page is then asked again without them.
   let withProjectFields = true;
-  let viewer = '';
+  let viewer: Actor | null = null;
   for (;;) {
     let body: RawResponse;
     try {
@@ -109,7 +109,8 @@ async function readRepository(repository: Repository, several: boolean, options:
       if (several) return { unreadable };
       throw graphqlError(body.errors![0]);
     }
-    if (body.data && body.data.viewer && typeof body.data.viewer.login === 'string') viewer = body.data.viewer.login;
+    const who = body.data && body.data.viewer;
+    if (who && typeof who.login === 'string') viewer = { login: who.login, avatarUrl: typeof who.avatarUrl === 'string' ? who.avatarUrl : null, bot: false };
     const connection = body.data && body.data.repository && body.data.repository.pullRequests;
     const fieldsRefused = (body.errors || []).find((error) => (error.path || []).join('.').includes('projectItems'));
     if (connection && fieldsRefused && withProjectFields) {

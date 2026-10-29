@@ -108,8 +108,8 @@ export interface PullRequest {
 }
 
 export interface Report {
-  // The login of the token owner, on live loads only (DATA-26).
-  viewer?: string;
+  // The token owner, on live loads only (DATA-26).
+  viewer?: Actor;
   // owner/name of every repository the report covers.
   repos: string[];
   generatedAt: string;
