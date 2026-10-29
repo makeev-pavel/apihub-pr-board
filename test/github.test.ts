@@ -333,3 +333,36 @@ test('DATA-9 DATA-11: a linked issue keeps its type and labels; an unknown type 
   assert.deepEqual(pr.issues[0].labels, [{ name: 'customer', color: 'd93f0b', description: '' }]);
   assert.deepEqual(pr.issues[2].labels, []);
 });
+
+test('DATA-25: the project fields come from the first project that sets each one, and broken values are dropped', () => {
+  const pr = normalizePullRequest({
+    ...baseNode,
+    closingIssuesReferences: { nodes: [
+      { number: 5, title: 'Planned', url: 'u', projectItems: { nodes: [
+        { priority: { name: 'Urgent', color: 'PURPLE' }, estimate: {}, sprint: null },
+        { priority: { name: 'Low', color: 'GRAY' }, estimate: { number: 13 }, sprint: { title: 'Sprint 42', startDate: '2026-10-25', duration: 14 } },
+        null,
+      ] } },
+      { number: 6, title: 'Odd', url: 'u', projectItems: { nodes: [{ priority: { color: 'RED' }, sprint: { title: 'S', startDate: 'soon', duration: 14 } }] } },
+      { number: 7, title: 'Unplanned', url: 'u' },
+    ] },
+  });
+  assert.deepEqual(pr.issues.map((i) => [i.priority, i.estimate, i.sprint]), [
+    [{ name: 'Urgent', color: 'purple' }, 13, { title: 'Sprint 42', startDate: '2026-10-25', duration: 14 }],
+    [null, null, null],
+    [null, null, null],
+  ]);
+});
+
+test('DATA-25 DATA-14: project fields the token cannot read are a warning, and the PRs still load', async () => {
+  const scenario = REFRESH_SCENARIOS.find((s) => s.id === 'ok')!;
+  const fetchImpl = async (_url: string, init: RequestInit) => {
+    const result = scenario.respond(JSON.parse(String(init.body)).variables, Date.parse('2026-10-28T12:00:00Z'));
+    const body = JSON.parse((result as { body: string }).body);
+    body.errors = [{ type: 'FORBIDDEN', path: ['repository', 'pullRequests', 'nodes', 0, 'closingIssuesReferences', 'nodes', 0, 'projectItems'], message: 'Resource not accessible by integration' }];
+    return new Response(JSON.stringify(body), { status: 200 });
+  };
+  const report = await fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl });
+  assert.ok(report.prs.length > 0);
+  assert.deepEqual(report.warnings, ['Project fields (Priority, Estimate, Sprint) are unavailable for this token: Resource not accessible by integration']);
+});

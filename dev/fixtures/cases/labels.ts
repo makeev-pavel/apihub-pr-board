@@ -38,6 +38,12 @@ export function labelCases(now: number): FixtureEntry[] {
       closingIssuesReferences: conn([{
         number: 512, title: 'Show the issue type and labels next to the PR', url: ISSUES_URL,
         issueType: { name: 'Epic', color: 'TEAL' },
+        // Two projects: the first sets only the priority, the second the estimate and the sprint, so each field comes
+        // from the first project that sets it.
+        projectItems: conn([
+          { priority: { name: 'Urgent', color: 'PURPLE' }, estimate: {}, sprint: null },
+          { priority: { name: 'Low', color: 'GRAY' }, estimate: { number: 13 }, sprint: { title: 'Sprint 42', startDate: ago(3).slice(0, 10), duration: 14 } },
+        ]),
         labels: conn([label('ux', 'c5def5'), label('customer', 'd93f0b'), label('Q4', '0e8a16'), label('needs design', 'fbca04'), label('frontend', '1d76db')]),
       }]),
     }),

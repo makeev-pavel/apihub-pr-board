@@ -60,7 +60,7 @@
 - **DATA-25** For each linked issue, the query reads its items in up to 3 GitHub Projects and, in each, the fields
   named Priority (single select: the option and its color), Estimate (number), and Sprint (iteration: its title,
   start date, and length in days). The first project that sets a field gives its value. A forbidden project read is
-  a partial error, as in **DATA-14**: the data loads without these fields. *Planned: task P1.*
+  a partial error, as in **DATA-14**: the data loads without these fields and the page shows a warning.
 - **DATA-16** A missing `prs.json` (HTTP 404) means there is no snapshot, which is not an error (**DATA-23**). When
   it is broken or another HTTP error comes back, the page says so and suggests Refresh with a token.
 - **DATA-23** Without a snapshot, the page loads live data by itself when it has a saved token and requested

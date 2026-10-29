@@ -26,6 +26,19 @@ const AREAS = [
   { scopes: ['ci', 'docs', 'release'], tag: '', module: '' },
 ];
 const TYPES = ['feat', 'fix', 'refactor', 'test', 'perf', 'docs'];
+// The project fields of a linked issue (DATA-25), rotating: a priority, an estimate, and the current or the last sprint.
+const PRIORITIES = [{ name: 'High', color: 'RED' }, { name: 'Medium', color: 'YELLOW' }, { name: 'Low', color: 'GRAY' }, null];
+const ESTIMATES = [1, 2, 3, 5, 8, null];
+const SPRINT_DAYS = 14;
+
+function projectItem(i: number, now: number) {
+  const day = (offset: number) => new Date(now - offset * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const sprint = i % 3 === 0 ? { title: 'Sprint 42', startDate: day(3), duration: SPRINT_DAYS }
+    : i % 3 === 1 ? { title: 'Sprint 41', startDate: day(3 + SPRINT_DAYS), duration: SPRINT_DAYS } : null;
+  const estimate = ESTIMATES[i % ESTIMATES.length];
+  return { priority: PRIORITIES[i % PRIORITIES.length], estimate: estimate === null ? null : { number: estimate }, sprint };
+}
+
 // The issue types of the linked issues, rotating; null stands for an organization without issue types.
 const ISSUE_TYPES = [{ name: 'Bug', color: 'RED' }, { name: 'Feature', color: 'BLUE' }, { name: 'Task', color: 'YELLOW' }, null];
 const SUBJECTS = [
@@ -106,6 +119,7 @@ export function typicalNodes(now: number): FixtureEntry[] {
           number: FIRST_ISSUE + i, title: (area.tag ? area.tag + ' ' : '') + 'Users ask to ' + random.pick(SUBJECTS), url: ISSUES_URL,
           issueType: ISSUE_TYPES[i % ISSUE_TYPES.length],
           labels: conn(i % 4 === 0 ? [label('customer', 'd93f0b')] : []),
+          projectItems: conn([projectItem(i, now)]),
         }]
         : []),
       projectsV2: conn(issueKind === 4 ? [{ title: 'Widgets sprint' }] : []),

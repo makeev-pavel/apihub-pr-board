@@ -7,7 +7,8 @@ import { GitHubError } from './http.ts';
 import type { Fetch } from './http.ts';
 import { nodes, normalizePullRequest } from './normalize.ts';
 import {
-  ALL_PARTS, AVATAR_SIZE, CHECKS_PAGE_SIZE, COMMENTS_FETCHED, MIN_PAGE_SIZE, OPEN_PULL_REQUESTS_QUERY, PAGE_SIZE,
+  ALL_PARTS, AVATAR_SIZE, CHECKS_PAGE_SIZE, COMMENTS_FETCHED, MIN_PAGE_SIZE, OPEN_PULL_REQUESTS_QUERY, PAGE_SIZE, PROJECT_FIELDS,
+  PROJECT_ITEMS,
 } from './query.ts';
 import type { QueryParts } from './query.ts';
 import type { RawPullRequest, RawResponse } from './raw.ts';
@@ -88,7 +89,8 @@ async function readRepository(repository: Repository, several: boolean, options:
     try {
       body = await postQuery(fetchImpl, endpoint, token, {
         owner: repository.owner, repo: repository.name, first, after, avatarSize: AVATAR_SIZE, checksPageSize: CHECKS_PAGE_SIZE, commentsFetched: COMMENTS_FETCHED,
-        withChecks: parts.checks, withComments: parts.comments,
+        withChecks: parts.checks, withComments: parts.comments, projectItems: PROJECT_ITEMS,
+        priorityField: PROJECT_FIELDS.priority, estimateField: PROJECT_FIELDS.estimate, sprintField: PROJECT_FIELDS.sprint,
       });
     } catch (error) {
       // A timeout comes back as 502-504, or, without CORS headers, as a failed fetch (status 0). The same page is asked
@@ -104,7 +106,13 @@ async function readRepository(repository: Repository, several: boolean, options:
     }
     const connection = body.data && body.data.repository && body.data.repository.pullRequests;
     for (const error of body.errors || []) {
-      if (!connection || !(error.path || []).join('.').includes('projectsV2')) throw graphqlError(error);
+      const path = (error.path || []).join('.');
+      // The project fields of linked issues (DATA-25) are optional too: GitHub sends null, and they show as unset.
+      if (connection && path.includes('projectItems')) {
+        warnings.add('Project fields (Priority, Estimate, Sprint) are unavailable for this token: ' + error.message);
+        continue;
+      }
+      if (!connection || !path.includes('projectsV2')) throw graphqlError(error);
       projectsAvailable = false;
       warnings.add('Project membership is unavailable for this token: ' + error.message);
     }

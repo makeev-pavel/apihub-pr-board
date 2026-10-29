@@ -11,9 +11,14 @@ export const COMMENTS_FETCHED = 5;
 
 export const AVATAR_SIZE = 48;
 
+// The GitHub Projects fields read from each linked issue (DATA-25), by name.
+export const PROJECT_FIELDS = { priority: 'Priority', estimate: 'Estimate', sprint: 'Sprint' };
+export const PROJECT_ITEMS = 3;
+
 export const OPEN_PULL_REQUESTS_QUERY = `
 query($owner: String!, $repo: String!, $first: Int!, $after: String, $avatarSize: Int!, $checksPageSize: Int!, $commentsFetched: Int!,
-  $withChecks: Boolean!, $withComments: Boolean!) {
+  $withChecks: Boolean!, $withComments: Boolean!, $projectItems: Int!, $priorityField: String!, $estimateField: String!,
+  $sprintField: String!) {
   repository(owner: $owner, name: $repo) {
     pullRequests(states: OPEN, first: $first, after: $after, orderBy: {field: CREATED_AT, direction: DESC}) {
       totalCount
@@ -41,7 +46,16 @@ query($owner: String!, $repo: String!, $first: Int!, $after: String, $avatarSize
           }
         }
         closingIssuesReferences(first: 10) {
-          nodes { number title url issueType { name color } labels(first: 10) { nodes { name color description } } }
+          nodes {
+            number title url issueType { name color } labels(first: 10) { nodes { name color description } }
+            projectItems(first: $projectItems) {
+              nodes {
+                priority: fieldValueByName(name: $priorityField) { ... on ProjectV2ItemFieldSingleSelectValue { name color } }
+                estimate: fieldValueByName(name: $estimateField) { ... on ProjectV2ItemFieldNumberValue { number } }
+                sprint: fieldValueByName(name: $sprintField) { ... on ProjectV2ItemFieldIterationValue { title startDate duration } }
+              }
+            }
+          }
         }
         projectsV2(first: 10) { nodes { title } }
         latestOpinionatedReviews(first: 20) { nodes { state submittedAt author { __typename login avatarUrl(size: $avatarSize) } } }

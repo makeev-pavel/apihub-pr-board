@@ -55,6 +55,18 @@ export interface Issue {
   // Null where the organization has no issue types, or in a prs.json written before they were collected.
   type: { name: string; color: IssueTypeColor | null } | null;
   labels: Label[];
+  // The GitHub Projects fields (DATA-25); null when no project sets them or the token cannot read projects.
+  priority: { name: string; color: IssueTypeColor | null } | null;
+  estimate: number | null;
+  sprint: Sprint | null;
+}
+
+export interface Sprint {
+  title: string;
+  // YYYY-MM-DD.
+  startDate: string;
+  // In days.
+  duration: number;
 }
 
 export interface Comment {

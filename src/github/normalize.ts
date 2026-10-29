@@ -6,7 +6,7 @@ import type {
   Actor, Checks, CiState, Comment, FailedCheck, Issue, IssueTypeColor, Label, MergeState, PullRequest, RequestedReviewer, ReviewState,
 } from '../types.ts';
 import type {
-  Connection, RawActor, RawComment, RawIssue, RawLabel, RawPullRequest, RawReview, RawReviewRequest, RawRollup,
+  Connection, RawActor, RawComment, RawIssue, RawLabel, RawProjectItem, RawPullRequest, RawReview, RawReviewRequest, RawRollup,
 } from './raw.ts';
 
 export const RECENT_COMMENTS = 2;
@@ -75,16 +75,36 @@ export function normalizeLabel(label: RawLabel): Label {
   };
 }
 
+function knownColor(color: string | null | undefined): IssueTypeColor | null {
+  const lower = (color || '').toLowerCase();
+  return (ISSUE_TYPE_COLORS as readonly string[]).includes(lower) ? lower as IssueTypeColor : null;
+}
+
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+// The first project that sets a field gives its value (DATA-25).
+function projectFields(items: RawProjectItem[]): Pick<Issue, 'priority' | 'estimate' | 'sprint'> {
+  const priority = items.map((item) => item.priority).find((value) => value && typeof value.name === 'string');
+  const estimate = items.map((item) => item.estimate).find((value) => value && typeof value.number === 'number');
+  const sprint = items.map((item) => item.sprint)
+    .find((value) => value && typeof value.title === 'string' && DAY.test(value.startDate || '') && typeof value.duration === 'number');
+  return {
+    priority: priority ? { name: priority.name!, color: knownColor(priority.color) } : null,
+    estimate: estimate ? estimate.number! : null,
+    sprint: sprint ? { title: sprint.title!, startDate: sprint.startDate!, duration: sprint.duration! } : null,
+  };
+}
+
 // An unknown type color becomes null, and the type shows in neutral colors.
 export function normalizeIssue(issue: RawIssue): Issue {
   const type = issue.issueType;
-  const color = type && type.color ? type.color.toLowerCase() : '';
   return {
     number: issue.number || null,
     title: issue.title,
     url: issue.url,
-    type: type ? { name: type.name, color: (ISSUE_TYPE_COLORS as readonly string[]).includes(color) ? color as IssueTypeColor : null } : null,
+    type: type ? { name: type.name, color: knownColor(type.color) } : null,
     labels: nodes(issue.labels).map(normalizeLabel),
+    ...projectFields(nodes(issue.projectItems)),
   };
 }
 

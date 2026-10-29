@@ -70,6 +70,15 @@ export interface RawIssue {
   url: string;
   issueType?: { name: string; color?: string | null } | null;
   labels?: Connection<RawLabel>;
+  projectItems?: Connection<RawProjectItem>;
+}
+
+// The project fields of an issue in one project, read by name; a field the project lacks, or leaves empty, is null
+// or an empty object.
+export interface RawProjectItem {
+  priority?: { name?: string; color?: string | null } | null;
+  estimate?: { number?: number | null } | null;
+  sprint?: { title?: string; startDate?: string; duration?: number } | null;
 }
 
 export interface RawPullRequest {

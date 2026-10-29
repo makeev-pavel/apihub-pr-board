@@ -542,7 +542,7 @@ Requested on October 29, 2026: the Priority, Estimate, and Sprint fields of GitH
 and the `priority:` and `sprint:` qualifiers. Whether a public-read token can read the organization's projects is
 checked in `dev:live`.
 
-- [ ] **P1. Query and data:** `projectItems` with `fieldValueByName` for the three fields, raw types, normalization,
+- [x] **P1. Query and data:** `projectItems` with `fieldValueByName` for the three fields, raw types, normalization,
   `prs.json` defaults, fixtures and a corner case, unit tests. About 1 hour.
 - [ ] **P2. Display and search:** the fields under each issue, the current sprint, `priority:` and `sprint:`; browser
   tests and screenshots. About 1 hour.

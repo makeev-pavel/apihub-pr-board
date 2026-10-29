@@ -32,6 +32,9 @@ function withLists(pr: PullRequest): PullRequest {
     ...issue,
     type: issue.type && typeof issue.type.name === 'string' ? issue.type : null,
     labels: Array.isArray(issue.labels) ? issue.labels : [],
+    priority: issue.priority && typeof issue.priority.name === 'string' ? issue.priority : null,
+    estimate: typeof issue.estimate === 'number' ? issue.estimate : null,
+    sprint: issue.sprint && typeof issue.sprint.title === 'string' ? issue.sprint : null,
   }));
   return fixed as unknown as PullRequest;
 }
