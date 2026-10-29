@@ -82,7 +82,7 @@ To work against real data, run `npm run dev:live`. It behaves like the published
 2. Push to `main`, or run the **Publish board** workflow manually. It runs the unit and browser tests first, and a
    failing test stops the deploy.
 3. Share a link that names the repositories: `https://<owner>.github.io/<repo>/?repos=owner/name,owner/other`
-   (up to 10). Each viewer saves their own fine-grained token, with public repository read access, in Settings.
+   (up to 40). Each viewer saves their own fine-grained token, with public repository read access, in Settings.
 
 A repository the token cannot read becomes a warning on the board. If project membership is not readable with the
 token, the board says so and reports such PRs as unchecked instead of guessing.

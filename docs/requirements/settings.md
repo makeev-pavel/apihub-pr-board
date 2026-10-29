@@ -31,7 +31,7 @@
 
 ## Settings in the address
 
-- **SET-16** A Repositories section at the top of the panel takes up to 10 entries as `owner/name`, separated by
+- **SET-16** A Repositories section at the top of the panel takes up to 40 entries as `owner/name`, separated by
   commas, spaces, or new lines, and applies like a list (**SET-14**). Applying writes `repos` to the address
   (**FILTER-14**); an empty field removes it. A malformed entry is not applied, and the field names the entry and
   what is wrong with it.
@@ -45,3 +45,7 @@
   now**. Saving stores the token (**SET-9**) and loads the data. The dialog opens by itself on a page without a
   snapshot whose link names repositories (**DATA-23**), and from **Refresh** without a token. After **Not now** it
   does not open by itself again until the page reloads; the banner's **Add token** button opens it.
+- **SET-19** A Repository groups section, under Repositories, defines named groups in a text field, one per line:
+  `<name>: owner/name, owner/name`. It applies like a list (**SET-14**); a line without a name, or with an entry that
+  is not `owner/name`, is not applied, and the field says which line and why. Up to 20 groups. The groups are kept
+  in this browser, not in the address; the board has none until the viewer adds them. *Planned: task G1.*

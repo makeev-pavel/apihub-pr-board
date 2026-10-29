@@ -21,6 +21,10 @@
   (**DATA-25**), each with its number of PRs, and No priority. Checked values show the PRs with an issue of one of
   them, or without any for No priority; nothing checked shows all. The choice lives in the address
   (`priority=High,Medium`).
+- **FILTER-17** Repositories, shown when Settings has repository groups (**SET-19**): a menu with a checkbox per group.
+  Checking a group adds its repositories to `repos` in the address, unchecking removes the ones no other checked group
+  has, and **All repositories** clears `repos`. A group shows as checked when all its repositories are in `repos`.
+  The link itself names the repositories, so it works without the groups. *Planned: task G2.*
 - **FILTER-7** **Reset view** shows when the view differs from the default and restores it. **Copy link to this
   view** copies the page address, says "Link copied", and asks to copy the address bar when the clipboard is blocked.
 
@@ -65,7 +69,7 @@
   (`hide=ci,assignee`, **SET-8**). Copy link keeps them, and **Reset view** leaves them alone. Without `repos` the
   board shows every repository of the data; without `bots` there are no extra bots; without `hide` the columns saved
   in this browser apply, and the address then shows them. A link with `hide` wins and is saved. Invalid entries are
-  dropped: a repository must be `owner/name` (up to 10), a bot a GitHub login (up to 50), and a column a known id.
+  dropped: a repository must be `owner/name` (up to 40), a bot a GitHub login (up to 50), and a column a known id.
 
 ## Several repositories
 

@@ -551,3 +551,12 @@ Changed on October 29, 2026, at the user's request: the Standup column became a 
 opens one Markdown document per PR (Preview and Edit). Daily checkboxes and the Not asked today tile are removed
 (NOTE-5, NOTE-6, NOTE-8); earlier notes move into the document.
 - [x] **P3. Priority filter:** a toolbar menu of the priorities on the board, kept in the address (FILTER-16).
+
+## Backlog: repository groups
+
+Requested on October 29, 2026, after the PR report of the CI repository: groups of repositories in Settings and a
+filter menu. Spec: SET-19, FILTER-17, and up to 40 repositories read four at a time (DATA-17, DATA-18).
+
+- [ ] **G0. 40 repositories, four at a time:** raise the limit and read repositories in parallel. About 30 min.
+- [ ] **G1. Groups in Settings:** parse and validate the group lines, keep them in this browser. About 45 min.
+- [ ] **G2. Repositories menu:** check groups to fill `repos`; unit and browser tests, screenshots. About 1 hour.
