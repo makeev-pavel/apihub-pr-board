@@ -24,8 +24,9 @@
 
 ## Comments panel
 
-- **PANEL-9** Clicking the Last comment cell opens a panel along the right edge of the window, full height, with its
-  own scroll, the PR number in its title, and a close button. It closes like a popover except that scrolling inside
+- **PANEL-9** Clicking the Last comment cell opens a panel along the right edge of the window, full height and 800
+  px wide (the window width less its margins when the window is narrower), with its own scroll, the PR number in its
+  title, and a close button. It closes like a popover except that scrolling inside
   it does not close it.
 - **PANEL-10** The panel shows the two comments from the data at once, then loads every issue comment and review
   summary of the PR from the GitHub REST API and shows them all, newest first and not cut. Its title then gives the

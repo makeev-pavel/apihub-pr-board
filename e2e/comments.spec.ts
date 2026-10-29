@@ -18,6 +18,17 @@ test.describe('comments panel', () => {
     const box = (await panel.boundingBox())!;
     expect(box.x + box.width).toBeGreaterThan(page.viewportSize()!.width - 20);
     expect(box.height).toBeGreaterThan(page.viewportSize()!.height - 40);
+    expect(Math.round(box.width)).toBe(800);
+    // A narrow window gets the panel at its whole width, less the margins. Resizing closes it, so it opens again.
+    await page.setViewportSize({ width: 600, height: 800 });
+    await expect(panel).toHaveCount(0);
+    // The cell is off to the right now: scroll to it first, because scrolling closes popovers (PANEL-1).
+    const preview = rows(page).first().locator('.comment-preview');
+    await preview.scrollIntoViewIfNeeded();
+    await preview.click();
+    const narrow = (await panel.boundingBox())!;
+    expect(narrow.x).toBeGreaterThanOrEqual(0);
+    expect(narrow.x + narrow.width).toBeLessThanOrEqual(600);
   });
 
   test('PANEL-9: scrolling inside keeps the panel open; the close button and Escape close it', async ({ page }) => {

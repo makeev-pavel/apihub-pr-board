@@ -6,9 +6,13 @@ import { markdownText, renderMarkdown } from '../../markdown.ts';
 import type { DerivedPullRequest } from '../../types.ts';
 import { Avatar } from '../common/Avatar.tsx';
 
-// Comments open in a panel along the right edge of the window, so long reports have the full height.
-const COMMENTS_PANEL_PX = 560;
-const COMMENTS_PANEL_STYLE: CSSProperties = { top: POPOVER_EDGE_PX, right: POPOVER_EDGE_PX, bottom: POPOVER_EDGE_PX, width: COMMENTS_PANEL_PX };
+// Comments open in a panel along the right edge of the window, so long reports have the full height, and wide enough
+// for code and tables; a narrow window gets its whole width.
+const COMMENTS_PANEL_PX = 800;
+const COMMENTS_PANEL_STYLE: CSSProperties = {
+  top: POPOVER_EDGE_PX, right: POPOVER_EDGE_PX, bottom: POPOVER_EDGE_PX,
+  width: 'min(' + COMMENTS_PANEL_PX + 'px, calc(100vw - ' + 2 * POPOVER_EDGE_PX + 'px))',
+};
 
 export function CommentCell({ pr, now }: { pr: DerivedPullRequest; now: number }) {
   const { open, ref, toggle } = usePopover(COMMENTS_PANEL_PX);
