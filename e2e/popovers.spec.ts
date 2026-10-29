@@ -129,8 +129,8 @@ test.describe('popovers', () => {
     await openBoard(page, { report: 'typical' });
     await page.locator('.source-button').click();
     const popover = page.getByRole('dialog', { name: 'Data source' });
-    await expect(popover.locator('.popover-title')).toHaveText('Hourly snapshot');
-    await expect(popover).toContainText('Published by the scheduled workflow just now, at ');
+    await expect(popover.locator('.popover-title')).toHaveText('Snapshot');
+    await expect(popover).toContainText('Published with the page just now, at ');
     await expect(popover).toContainText('Refresh loads live data from GitHub.');
   });
 });

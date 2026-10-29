@@ -72,7 +72,9 @@
 
 ## States
 
-- **TABLE-19** While `prs.json` loads, the table shows "Loading pull requests…".
+- **TABLE-19** While data loads and the table has no rows, the table shows a spinner with "Loading pull
+  requests…": for `prs.json`, for **Refresh**, and for a load without a snapshot (**DATA-23**). The spinner stops
+  when the system asks for reduced motion (**QUAL-5**).
 - **TABLE-20** When no PR matches the view, the table shows "No pull requests match this view", a hint to clear the
   search or select more authors, and a **Reset view** button.
 

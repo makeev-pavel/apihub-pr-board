@@ -24,6 +24,8 @@ import { ApiContext, RulesContext } from './context.ts';
 import { fetchOpenPullRequests } from './github/graphql.ts';
 import { REST_URL } from './github/rest.ts';
 import { useBoardSettings } from './hooks/useBoardSettings.ts';
+import { AUTO_REFRESH_MS } from './board/format.ts';
+import { useAutoRefresh } from './hooks/useAutoRefresh.ts';
 import { useColumnWidths } from './hooks/useColumnWidths.ts';
 import { useReportData } from './hooks/useReportData.ts';
 import { derive } from './model/derive.ts';
@@ -49,6 +51,7 @@ export function App() {
   const [token, setTokenState] = useState(readToken);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshError, setRefreshError] = useState<string | null>(null);
+  const [lastAttempt, setLastAttempt] = useState(0);
   const [now, setNow] = useState(Date.now);
   const { settings, setSettings, link, setRepos } = useBoardSettings();
 
@@ -96,6 +99,7 @@ export function App() {
     }
     setRefreshing(true);
     setRefreshError(null);
+    setLastAttempt(Date.now());
     // Skip the heavy parts of the query that only hidden columns would show.
     const parts = { checks: columns.some((c) => c.id === 'ci'), comments: columns.some((c) => c.id === 'comment') };
     const options = { token: withToken, repositories: names.map(parseRepository), parts };
@@ -116,6 +120,8 @@ export function App() {
     autoLoaded.current = key;
     refresh(token);
   });
+  // Live data loads again every 5 minutes while the tab is visible (DATA-24).
+  useAutoRefresh(data.source === 'live' && !!token && !refreshing, lastAttempt, AUTO_REFRESH_MS, () => refresh(token));
   useEffect(() => {
     if (data.noSnapshot && !token && wanted.length && !tokenDismissed.current) setAskingToken(true);
   }, [data.noSnapshot, token, wanted.length]);
@@ -210,7 +216,7 @@ export function App() {
           <tbody>
             {rows.length ? rows.map((pr) => <Row key={pullRequestKey(pr)} pr={pr} now={now} columns={columns} repos={repos} activeLabels={activeLabels} onToggleLabel={onToggleLabel} />)
               : <TableMessage colSpan={columns.length} onResetView={resetView}
-                kind={data.status === 'loading' || (!report && refreshing) ? 'loading'
+                kind={data.status === 'loading' || refreshing ? 'loading'
                   : notLoaded ? (wanted.length ? 'not-loaded' : 'no-repos') : data.status === 'error' ? 'not-loaded' : 'no-match'} />}
           </tbody>
         </table>

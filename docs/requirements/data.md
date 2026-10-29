@@ -24,7 +24,8 @@
 ## Refresh
 
 - **DATA-6** **Refresh** queries GitHub from the browser with the viewer's fine-grained token (public repository
-  read access) and replaces the data on the page. The page then marks the data as live.
+  read access) and replaces the data on the page. The page then marks the data as live. While a load runs, the rows
+  already on the page stay, and the new data updates them in one pass without moving the table's scroll position.
 - **DATA-7** A second Refresh cannot start while one is running.
 - **DATA-8** Refresh skips the parts of the query that only hidden columns show: failed check details when CI is
   hidden, and comment and review bodies when Last comment is hidden. Search cannot match comment text until a
@@ -62,6 +63,10 @@
   repositories and token loads once, so a repository that cannot be read does not load again and again. Without a
   token, a banner names the repositories and says to add a token in Settings. Without requested repositories, the
   table says to choose them in Settings or to open a link with `?repos=owner/name`.
+
+- **DATA-24** While the page shows live data and its tab is visible, it loads again every 5 minutes, counted from the
+  last load or attempt, so a failure is retried after 5 minutes too. A hidden tab pauses the countdown, and a tab that
+  comes back after 5 minutes loads at once. A snapshot is replaced only on **Refresh** or by loading without one.
 
 ## Several repositories
 

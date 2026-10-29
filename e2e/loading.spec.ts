@@ -1,6 +1,7 @@
-import { ALL, expect, openBoard, rows, test } from './helpers.ts';
+import { ALL, expect, MOCK_NOW, openBoard, rows, test } from './helpers.ts';
 
 const TOKEN_KEY = 'apihub-pr-board.token';
+const MINUTE_MS = 60 * 1000;
 
 test.describe('loading prs.json', () => {
   test('DATA-4 TABLE-2: the snapshot opens with a gray dot and its age', async ({ page }) => {
@@ -33,10 +34,11 @@ test.describe('loading prs.json', () => {
     await expect(page.locator('.empty').getByRole('button', { name: 'Reset view' })).toBeVisible();
   });
 
-  test('TABLE-19: a slow prs.json shows the loading row first', async ({ page }) => {
+  test('TABLE-19: a slow prs.json shows the loading row with a spinner first', async ({ page }) => {
     await page.request.post('/__dev/state', { data: { report: 'slow', refresh: 'ok' } });
     await page.goto('/');
-    await expect(page.getByText('Loading pull requests…')).toBeVisible();
+    await expect(page.getByRole('status')).toHaveText('Loading pull requests…');
+    await expect(page.locator('.board .spinner')).toBeVisible();
     await expect(page.getByText('Loading pull requests…')).toHaveCount(0, { timeout: 10_000 });
     await expect(page.locator('.board > tbody > tr').first()).toBeVisible();
   });
@@ -139,5 +141,57 @@ test.describe('loading prs.json', () => {
     await expect(dialog).toHaveCount(0);
     await expect(rows(page)).toHaveCount(4);
     expect(await page.evaluate((key) => localStorage.getItem(key), TOKEN_KEY)).toBe('mock-token');
+  });
+
+  test('TABLE-19 QUAL-5: an empty table shows the spinner while a load without a snapshot runs, still with reduced motion', async ({ page }) => {
+    await page.addInitScript((key) => localStorage.setItem(key, 'mock-token'), TOKEN_KEY);
+    await page.request.post('/__dev/state', { data: { report: 'missing', refresh: 'slow' } });
+    await page.goto('/?repos=acme/gadgets');
+    const spinner = page.locator('.board .spinner');
+    await expect(page.getByRole('status')).toHaveText('Loading pull requests…');
+    await expect(spinner).toHaveCSS('animation-name', 'spin');
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await expect(spinner).toHaveCSS('animation-name', 'none');
+    await expect(spinner).toHaveCount(0, { timeout: 10_000 });
+  });
+
+  test('DATA-24 PANEL-8: live data loads again every 5 minutes while the tab is visible, and a hidden tab waits', async ({ page }) => {
+    let loads = 0;
+    page.on('request', (request) => { if (request.url().endsWith('/__dev/graphql')) loads += 1; });
+    await page.addInitScript((key) => localStorage.setItem(key, 'mock-token'), TOKEN_KEY);
+    await openBoard(page, { report: 'missing', refresh: 'ok', query: 'repos=acme/gadgets' });
+    await expect(page.locator('.source-button')).toHaveText('live, just now');
+    expect(loads).toBe(1);
+    await page.locator('.source-button').click();
+    await expect(page.getByRole('dialog', { name: 'Data source' })).toContainText('It loads again every 5 minutes while this tab is visible.');
+    await page.keyboard.press('Escape');
+
+    await page.clock.runFor(4 * MINUTE_MS);
+    expect(loads).toBe(1);
+    await page.clock.runFor(MINUTE_MS);
+    await expect.poll(() => loads).toBe(2);
+
+    // Hidden: the countdown stops.
+    const setVisibility = (state: string) => page.evaluate((value) => {
+      Object.defineProperty(document, 'visibilityState', { value, configurable: true });
+      document.dispatchEvent(new Event('visibilitychange'));
+    }, state);
+    await setVisibility('hidden');
+    await page.clock.runFor(10 * MINUTE_MS);
+    expect(loads).toBe(2);
+    // Back after more than 5 minutes: it loads at once.
+    await page.clock.setFixedTime(Date.parse(MOCK_NOW) + 11 * MINUTE_MS);
+    await setVisibility('visible');
+    await expect.poll(() => loads).toBe(3);
+  });
+
+  test('DATA-24: a snapshot is not replaced on its own', async ({ page }) => {
+    let loads = 0;
+    page.on('request', (request) => { if (request.url().endsWith('/__dev/graphql')) loads += 1; });
+    await page.addInitScript((key) => localStorage.setItem(key, 'mock-token'), TOKEN_KEY);
+    await openBoard(page, { report: 'typical' });
+    await page.clock.runFor(11 * MINUTE_MS);
+    expect(loads).toBe(0);
+    await expect(page.locator('.source-button')).not.toHaveClass(/\blive\b/);
   });
 });

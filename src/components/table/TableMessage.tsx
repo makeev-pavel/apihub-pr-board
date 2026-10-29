@@ -5,7 +5,7 @@ export type TableMessageKind = 'loading' | 'no-repos' | 'not-loaded' | 'no-match
 export function TableMessage({ kind, colSpan, onResetView }: { kind: TableMessageKind; colSpan: number; onResetView: () => void }) {
   return (
     <tr><td colSpan={colSpan}><div className="empty">
-      {kind === 'loading' ? 'Loading pull requests…' : null}
+      {kind === 'loading' ? <span className="loading" role="status"><span className="spinner" aria-hidden="true"></span>Loading pull requests…</span> : null}
       {kind === 'no-repos' ? (
         <>
           <strong>Choose the repositories to show</strong>
