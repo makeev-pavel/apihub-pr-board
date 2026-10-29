@@ -28,6 +28,7 @@ import { AUTO_REFRESH_MS } from './board/format.ts';
 import { useAutoRefresh } from './hooks/useAutoRefresh.ts';
 import { useColumnWidths } from './hooks/useColumnWidths.ts';
 import { useNotes } from './hooks/useNotes.ts';
+import { useStandup } from './hooks/useStandup.ts';
 import { useReportData } from './hooks/useReportData.ts';
 import { derive } from './model/derive.ts';
 import { pullRequestKey } from './model/report.ts';
@@ -128,11 +129,12 @@ export function App() {
     if (data.noSnapshot && !token && wanted.length && !tokenDismissed.current) setAskingToken(true);
   }, [data.noSnapshot, token, wanted.length]);
 
-  const prs = useMemo(() => {
+  const derived = useMemo(() => {
     const shown = new Set(repos.map((repo) => repo.toLowerCase()));
     const inView = (report ? report.prs : []).filter((pr) => !link.repos.length || shown.has(pr.repo.toLowerCase()));
     return inView.map((pr) => derive(pr, now, rules));
   }, [report, repos, link.repos, now, rules]);
+  const prs = useStandup(derived, notesApi.notes, notesApi.today);
 
   const authors = useMemo(() => collectAuthors(prs), [prs]);
   const selected = useMemo(() => selectedAuthors(view.authors, authors), [view.authors, authors]);

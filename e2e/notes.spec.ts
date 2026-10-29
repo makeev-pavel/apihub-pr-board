@@ -89,4 +89,24 @@ test.describe('standup notes', () => {
     await page.getByRole('dialog', { name: 'Settings' }).getByRole('checkbox', { name: 'Standup' }).uncheck();
     await expect(page.locator('.board > thead > tr > th').last()).toHaveText(/^Attention/);
   });
+
+  test('NOTE-6 FILTER-1: the Not asked today tile counts the PRs nobody asked about and shows only them', async ({ page }) => {
+    await seedNotes(page, { [PR_KEY]: [{ date: YESTERDAY, asked: true, text: 'old' }] });
+    await openBoard(page, { report: 'typical', query: ALL });
+    const tile = page.getByRole('group', { name: 'Quick filters' }).getByRole('button', { name: /Not asked today$/ });
+    await expect(tile).toHaveText(/^36\s*Not asked today$/);
+    await page.getByRole('checkbox', { name: 'Status asked today, PR #206' }).check();
+    await expect(tile).toHaveText(/^35\s*Not asked today$/);
+    await tile.click();
+    await expect(rows(page)).toHaveCount(35);
+    await expect(page.getByRole('checkbox', { name: 'Status asked today, PR #206' })).toHaveCount(0);
+    await expect(page).toHaveURL(/quick=standup/);
+  });
+
+  test('NOTE-7: note: finds PRs by the text of their notes', async ({ page }) => {
+    await seedNotes(page, { [PR_KEY]: [{ date: YESTERDAY, asked: true, text: 'Flaky tests on CI' }] });
+    await openBoard(page, { report: 'typical', query: ALL + '&q=' + encodeURIComponent('note:flaky') });
+    await expect(rows(page)).toHaveCount(1);
+    await expect(rows(page).first().getByRole('link', { name: '#206', exact: true })).toBeVisible();
+  });
 });

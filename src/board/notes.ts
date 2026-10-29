@@ -1,6 +1,8 @@
 // Standup notes per PR and day, kept in this browser (NOTE-1, NOTE-2). Storage can be blocked, so every access is
 // guarded, and a stored entry is checked field by field.
 
+import type { Standup } from '../types.ts';
+
 export interface NoteEntry {
   // The viewer's local calendar day, YYYY-MM-DD.
   date: string;
@@ -42,6 +44,11 @@ export function noteFor(entries: NoteEntry[] | undefined, day: string): NoteEntr
 // The newest note from before the day: yesterday's promise, read today.
 export function earlierNote(entries: NoteEntry[] | undefined, day: string): NoteEntry | null {
   return (entries || []).find((entry) => entry.date < day) || null;
+}
+
+export function standupOf(entries: NoteEntry[] | undefined, day: string): Standup {
+  const today = noteFor(entries, day);
+  return { askedToday: !!today && today.asked, noteText: (entries || []).map((entry) => entry.text).filter(Boolean).join(' ').toLowerCase() };
 }
 
 // Changes one day's note. Text marks the PR as asked; a note with nothing left in it is removed.

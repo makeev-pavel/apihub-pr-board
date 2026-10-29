@@ -17,6 +17,4 @@ keep the same notes for their own PRs. The next day the notes show what was prom
   today.
 - **NOTE-5** At midnight the checkboxes start empty for the new day; yesterday's notes become history.
 - **NOTE-6** A quick filter tile, Not asked today, shows the PRs whose status has not been asked today (**FILTER-1**).
-  *Planned: task N4.*
 - **NOTE-7** The `note:` qualifier matches the text of any note of a PR, such as `note:tests`; `-note:` excludes.
-  *Planned: task N4.*

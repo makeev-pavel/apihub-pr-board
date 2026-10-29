@@ -1,7 +1,7 @@
 import { afterEach, test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  dayLabel, earlierNote, loadNotes, localDay, MAX_NOTE_DAYS, noteFor, parseNotes, saveNotes, setNote,
+  dayLabel, earlierNote, loadNotes, localDay, MAX_NOTE_DAYS, noteFor, parseNotes, saveNotes, setNote, standupOf,
 } from '../../src/board/notes.ts';
 
 const KEY = 'acme/widgets#7';
@@ -85,4 +85,11 @@ test('NOTE-2: stored notes survive a reload, invalid entries are dropped, and bl
   useStorage(true);
   assert.deepEqual(loadNotes(), {});
   assert.doesNotThrow(() => saveNotes(notes));
+});
+
+test('NOTE-6 NOTE-7: a PR is asked today only with a checked note today, and every note counts for search', () => {
+  const notes = setNote(setNote({}, KEY, '2026-10-27', { text: 'Fix the TESTS' }), KEY, '2026-10-28', { text: 'Merged soon' });
+  assert.deepEqual(standupOf(notes[KEY], '2026-10-28'), { askedToday: true, noteText: 'merged soon fix the tests' });
+  assert.deepEqual(standupOf(notes[KEY], '2026-10-29'), { askedToday: false, noteText: 'merged soon fix the tests' });
+  assert.deepEqual(standupOf(undefined, '2026-10-28'), { askedToday: false, noteText: '' });
 });

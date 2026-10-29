@@ -21,7 +21,8 @@ The requirements are in [docs/requirements/](docs/requirements/README.md).
 
 - **Search** takes plain words and GitHub-style qualifiers: `label:bug`, `label:"good first issue"`, `author:`,
   `assignee:`, `reviewer:` (reviewed or requested), `area:be|fe|other`, `ci:failing`, `review:approved`,
-  `is:draft|bot|conflict|stale|attention`, `no:issue|label|assignee|review`, `repo:`. A minus excludes: `-is:draft`.
+  `is:draft|bot|conflict|stale|attention`, `no:issue|label|assignee|review`, `repo:`, `note:`. A minus excludes:
+  `-is:draft`.
   A linked issue number such as `885` finds its PR.
   The **?** button next to the field lists them. Click a label on a row to filter by it.
 - **Area** (BE, FE, Other) comes from the labels and Conventional Commits scopes listed in Settings, `[BE]`/`[FE]`
@@ -33,6 +34,9 @@ The requirements are in [docs/requirements/](docs/requirements/README.md).
   or a bookmark carries them; everything else is saved in this browser.
 - **Several repositories:** with more than one, a Repository column comes first. A link such as
   `?repos=owner/a,owner/b` shows just those.
+- **Standup** column: check a PR when you asked about it today and write what was promised. The next day the note
+  shows as a faded reminder, and clicking it lists every earlier day. Notes stay in this browser. The Not asked today
+  tile lists the PRs still to ask about.
 - Click the last comment to open every comment of the PR in a panel on the right, rendered as GitHub Markdown.
   Without a token, GitHub allows 60 such loads an hour.
 - The dot next to the tiles shows where the data comes from (gray for a `prs.json` snapshot, green for live data)

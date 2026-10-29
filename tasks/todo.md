@@ -533,5 +533,5 @@ their own PRs), and they stay in this browser's `localStorage`. Spec: `docs/requ
   days) with unit tests. About 45 min.
 - [x] **N3. Standup column and popover:** checkbox, today's text, the latest earlier note faded, history newest first,
   the day change at midnight; browser tests. About 1.5 hours.
-- [ ] **N4. Quick filter and search:** the Not asked today tile and `note:`; unit and browser tests. About 30 min.
-- [ ] **N5. Docs, screenshots, and all checks.** About 30 min.
+- [x] **N4. Quick filter and search:** the Not asked today tile and `note:`; unit and browser tests. About 30 min.
+- [x] **N5. Docs, screenshots, and all checks.** About 30 min.
