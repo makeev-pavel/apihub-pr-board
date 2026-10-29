@@ -19,7 +19,7 @@ export const AREAS: Area[] = [
     modules: ['agent', 'agents-backend', 'api-linter-service', 'commons-go', 'java-task-consumer', 'libraries-backend',
       'portal-backend', 'test-service'],
     tag: /\[BE\]/i,
-    path: /(^|\s)\/?backend\//,
+    path: /(^|\s)\/?backend(\/|\s|$)/,
   },
   {
     id: 'fe',
@@ -28,7 +28,7 @@ export const AREAS: Area[] = [
       'build-task-consumer', 'class-view', 'compatibility-suites', 'ddlapi', 'graphapi', 'http-spec', 'json-crawl',
       'rest-playground', 'ui', 'ui-tests'],
     tag: /\[(FE|UI)\]/i,
-    path: /(^|\s)\/?frontend\//,
+    path: /(^|\s)\/?frontend(\/|\s|$)/,
   },
 ];
 
@@ -41,7 +41,7 @@ const MODULE_PREFIX = 'module:';
 
 export function areasOf(pr: Pick<PullRequest, 'title' | 'labels' | 'issues'>, areaModules = DEFAULT_AREA_MODULES): AreaId[] {
   // A module:ui label matches both "module:ui" and "ui" in the lists; a plain label matches only its own name.
-  const names = (pr.labels || []).map((l) => l.name.toLowerCase())
+  const names = pr.labels.map((l) => l.name.toLowerCase())
     .flatMap((name) => (name.startsWith(MODULE_PREFIX) ? [name, name.slice(MODULE_PREFIX.length)] : [name]));
   const scope = TITLE_SCOPE.exec(pr.title);
   if (scope) names.push(...scope[1].toLowerCase().split(',').map((m) => m.trim()));

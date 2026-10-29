@@ -55,8 +55,9 @@ export interface RawComment {
   author?: RawActor | null;
 }
 
+// GitHub also answers Mannequin, a placeholder of an imported repository, with none of the fields the query asks for.
 export type RawRequestedReviewer =
-  | { __typename: 'User' | 'Bot'; login: string; avatarUrl?: string | null }
+  | { __typename: 'User' | 'Bot' | 'Mannequin'; login?: string; avatarUrl?: string | null }
   | { __typename: 'Team'; name: string; avatarUrl?: string | null };
 
 export interface RawReviewRequest {
@@ -106,6 +107,7 @@ export interface RawResponse {
   data?: {
     viewer?: { login?: string; avatarUrl?: string | null } | null;
     repository?: {
+      nameWithOwner?: string;
       pullRequests?: {
         totalCount: number;
         pageInfo: { hasNextPage: boolean; endCursor: string | null };

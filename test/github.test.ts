@@ -314,8 +314,9 @@ test('DATA-9 DATA-13 DATA-27: a page GitHub cannot answer in time is asked again
   const notes: string[] = [];
   const report = await fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl, onProgress: (e) => { if (e.note) notes.push(e.note); } });
   // DATA-27: the loading status says why the load slows down.
-  assert.deepEqual(notes, ['GitHub timed out; asking for 10 pull requests a page', 'GitHub timed out; asking for 5 pull requests a page']);
-  const full =await fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl: mockFetch('ok').fetchImpl });
+  // A failed fetch may be a network failure too, so it says less than a 504 does.
+  assert.deepEqual(notes, ['GitHub did not answer; asking for 10 pull requests a page', 'GitHub timed out; asking for 5 pull requests a page']);
+  const full = await fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl: mockFetch('ok').fetchImpl });
   assert.equal(report.prs.length, full.prs.length);
   assert.deepEqual(sizes.slice(0, 3), [20, 10, 5]);
   assert.ok(sizes.slice(3).every((size) => size === 5), 'later pages keep the size that worked');
@@ -472,4 +473,94 @@ test('DATA-18 DATA-13: a repository being read stops at its next page once anoth
   await new Promise((resolve) => setTimeout(resolve, 5));
   const last = widgets.at(-1)!;
   assert.ok(last.total !== null && last.read < last.total, 'the read stopped before its last page; got ' + JSON.stringify(last));
+});
+
+// A fetch that answers each query from a function of its variables.
+function answering(answer: (variables: Record<string, unknown>) => unknown) {
+  const seen: Record<string, unknown>[] = [];
+  const fetchImpl = async (_url: string, init: RequestInit) => {
+    const variables = JSON.parse(String(init.body)).variables;
+    seen.push(variables);
+    return new Response(JSON.stringify(answer(variables)), { status: 200 });
+  };
+  return { fetchImpl, seen };
+}
+
+const page = (prs: RawPullRequest[], after: string | null, extra: Record<string, unknown> = {}) => ({
+  data: { repository: { ...extra, pullRequests: { totalCount: 2, pageInfo: { hasNextPage: !!after, endCursor: after }, nodes: prs } } },
+});
+
+test('DATA-25: when project fields are refused on a later page, the repository is read again from the start without them', async () => {
+  const { fetchImpl, seen } = answering((v) => {
+    if (!v.after && v.withProjectFields) return page([{ ...baseNode, number: 2 }], 'p2');
+    if (v.after && v.withProjectFields) {
+      return { ...page([{ ...baseNode, number: 1 }], null), errors: [{ message: 'no', path: ['repository', 'pullRequests', 'nodes', 0, 'closingIssuesReferences', 'nodes', 0, 'projectItems'] }] };
+    }
+    return v.after ? page([{ ...baseNode, number: 1 }], null) : page([{ ...baseNode, number: 2 }], 'p2');
+  });
+  const report = await fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl });
+  assert.deepEqual(seen.map((v) => [v.after, v.withProjectFields]), [[null, true], ['p2', true], [null, false], ['p2', false]]);
+  assert.deepEqual(report.prs.map((pr) => pr.number), [2, 1]);
+  assert.ok(report.warnings.some((w) => w.startsWith('Project fields')));
+});
+
+test('DATA-20: PRs take GitHub\'s spelling of the repository name, and the viewer is asked for on the first page only', async () => {
+  const { fetchImpl, seen } = answering((v) => (v.after ? page([baseNode], null, { nameWithOwner: 'Acme/Widgets' })
+    : page([{ ...baseNode, number: 2 }], 'p2', { nameWithOwner: 'Acme/Widgets' })));
+  const report = await fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl });
+  assert.deepEqual(report.repos, ['Acme/Widgets']);
+  assert.ok(report.prs.every((pr) => pr.repo === 'Acme/Widgets'));
+  assert.deepEqual(seen.map((v) => v.withViewer), [true, false]);
+  // A different repository, such as one renamed on GitHub, keeps the requested name.
+  const renamed = answering(() => page([baseNode], null, { nameWithOwner: 'acme/sprockets' }));
+  assert.deepEqual((await fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl: renamed.fetchImpl })).repos, ['acme/widgets']);
+});
+
+test('DATA-18: a repository answered as null without errors is a warning among several, and no repositories is an error', async () => {
+  const { fetchImpl } = answering((v) => (v.repo === 'widgets' ? page([baseNode], null) : { data: { repository: null } }));
+  const report = await fetchOpenPullRequests({ token: 't', repositories: [repository, gadgets], fetchImpl });
+  assert.deepEqual(report.repos, ['acme/widgets']);
+  assert.ok(report.warnings.includes('Repository acme/gadgets was not found, or the token cannot read it.'));
+  await assert.rejects(fetchOpenPullRequests({ token: 't', repositories: [gadgets], fetchImpl }), /acme\/gadgets was not found/);
+  await assert.rejects(fetchOpenPullRequests({ token: 't', repositories: [], fetchImpl }), /No repositories to read/);
+});
+
+test('DATA-7: an aborted load stops reading and says it was replaced', async () => {
+  const controller = new AbortController();
+  let calls = 0;
+  const fetchImpl = async (_url: string, init: RequestInit) => {
+    calls += 1;
+    controller.abort();
+    if (init.signal && init.signal.aborted) throw new DOMException('aborted', 'AbortError');
+    return new Response('{}', { status: 200 });
+  };
+  await assert.rejects(fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl, signal: controller.signal }), { name: 'LoadAborted' });
+  assert.equal(calls, 1);
+});
+
+test('DATA-9: a mannequin among requested reviewers is skipped, since it has no login', () => {
+  const pr = normalizePullRequest({ ...baseNode, reviewRequests: { nodes: [
+    { requestedReviewer: { __typename: 'Mannequin' } },
+    { requestedReviewer: { __typename: 'User', login: 'boris-k' } },
+  ] } });
+  assert.deepEqual(pr.requestedReviewers.map((r) => r.login), ['boris-k']);
+});
+
+test('SEC-3: a failed check links only to an https address', () => {
+  const contexts = { totalCount: 2, nodes: [
+    { __typename: 'StatusContext', context: 'gate', state: 'FAILURE', targetUrl: 'javascript:alert(1)' },
+    { __typename: 'CheckRun', name: 'build', conclusion: 'FAILURE', detailsUrl: 'https://ci.example/1' },
+  ] };
+  const checks = failedChecks({ state: 'FAILURE', contexts } as never)!;
+  assert.deepEqual(checks.failed.map((c) => c.url), [null, 'https://ci.example/1']);
+});
+
+test('DATA-10: a cut body never splits a two-unit character or leaves an HTML comment open', () => {
+  const emoji = 'x'.repeat(COMMENT_BODY_LIMIT - 1) + '😀tail';
+  const [cut] = recentComments([{ createdAt: '2026-10-01T00:00:00Z', body: emoji }], []);
+  assert.ok(!/[\ud800-\udbff]…$/.test(cut.body), 'no lone high surrogate before the ellipsis');
+  const comment = 'Intro ' + '<!-- ' + 'h'.repeat(COMMENT_BODY_LIMIT) + ' -->';
+  const [open] = recentComments([{ createdAt: '2026-10-01T00:00:00Z', body: comment }], []);
+  assert.equal(open.body, 'Intro…');
+  assert.equal(open.truncated, true);
 });

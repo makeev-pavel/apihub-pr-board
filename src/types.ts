@@ -1,8 +1,14 @@
 // The shape of prs.json and of the rows the board derives from it.
 
-export type CiState = 'passing' | 'failing' | 'running' | 'none';
-export type ReviewState = 'approved' | 'changes_requested' | 'none';
-export type MergeState = 'clean' | 'conflicts' | 'unknown';
+// The login GitHub shows for a deleted account.
+export const GHOST_LOGIN = 'ghost';
+
+export const CI_STATES = ['passing', 'failing', 'running', 'none'] as const;
+export type CiState = typeof CI_STATES[number];
+export const REVIEW_STATES = ['approved', 'changes_requested', 'none'] as const;
+export type ReviewState = typeof REVIEW_STATES[number];
+export const MERGE_STATES = ['clean', 'conflicts', 'unknown'] as const;
+export type MergeState = typeof MERGE_STATES[number];
 export type AreaId = 'be' | 'fe';
 
 export interface Actor {
@@ -44,19 +50,19 @@ export interface Checks {
   complete: boolean;
 }
 
-// GitHub's issue type colors (IssueTypeColor), lowercased; the page maps each to a theme token.
-export const ISSUE_TYPE_COLORS = ['gray', 'blue', 'green', 'yellow', 'orange', 'red', 'pink', 'purple'] as const;
-export type IssueTypeColor = typeof ISSUE_TYPE_COLORS[number];
+// GitHub's color names for issue types and project options, lowercased; the page maps each to a theme token.
+export const NAMED_COLORS = ['gray', 'blue', 'green', 'yellow', 'orange', 'red', 'pink', 'purple'] as const;
+export type NamedColor = typeof NAMED_COLORS[number];
 
 export interface Issue {
   number: number | null;
   title: string;
   url: string;
   // Null where the organization has no issue types, or in a prs.json written before they were collected.
-  type: { name: string; color: IssueTypeColor | null } | null;
+  type: { name: string; color: NamedColor | null } | null;
   labels: Label[];
   // The GitHub Projects fields (DATA-25); null when no project sets them or the token cannot read projects.
-  priority: { name: string; color: IssueTypeColor | null } | null;
+  priority: { name: string; color: NamedColor | null } | null;
   estimate: number | null;
   sprint: Sprint | null;
 }

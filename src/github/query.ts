@@ -21,6 +21,7 @@ query($owner: String!, $repo: String!, $first: Int!, $after: String, $avatarSize
   $estimateField: String!, $sprintField: String!, $withViewer: Boolean!) {
   viewer @include(if: $withViewer) { login avatarUrl(size: $avatarSize) }
   repository(owner: $owner, name: $repo) {
+    nameWithOwner
     pullRequests(states: OPEN, first: $first, after: $after, orderBy: {field: CREATED_AT, direction: DESC}) {
       totalCount
       pageInfo { hasNextPage endCursor }

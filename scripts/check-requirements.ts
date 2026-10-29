@@ -1,4 +1,5 @@
-// Fails when a requirement in docs/requirements/ has no unit or browser test, or a test names an unknown id.
+// Fails when a requirement in docs/requirements/ has no unit or browser test, an id is defined twice, or a test names
+// an unknown id.
 // Usage: node scripts/check-requirements.ts
 
 import { readdirSync, readFileSync } from 'node:fs';
@@ -27,4 +28,5 @@ console.log('Requirements with tests: ' + result.covered.length + ' of ' + total
 if (result.missing.length) console.error('Requirements without a test: ' + result.missing.join(', '));
 for (const { id, file } of result.unknown) console.error('Unknown requirement ' + id + ' in ' + file);
 for (const { id, file } of result.stale) console.error('Removed requirement ' + id + ' still named in ' + file);
-if (result.missing.length || result.unknown.length || result.stale.length) process.exit(1);
+for (const id of result.duplicate) console.error('Requirement ' + id + ' is defined more than once');
+if (result.missing.length || result.unknown.length || result.stale.length || result.duplicate.length) process.exit(1);

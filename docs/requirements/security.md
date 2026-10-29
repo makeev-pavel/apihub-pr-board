@@ -9,8 +9,9 @@
 
 ## Untrusted content
 
-- **SEC-3** Everything that comes from GitHub (titles, labels, logins, comments, check names) is untrusted. Plain
-  text renders as text, never as HTML. Label colors are used only when they are six hex digits.
+- **SEC-3** Everything that comes from GitHub (titles, labels, logins, comments, check names) is untrusted. Plain text
+  renders as text, never as HTML. Label colors are used only when they are six hex digits. A failed check links to its
+  log only when the address is `https`, since third-party integrations set it.
 - **SEC-4** Comment Markdown is rendered with `marked` and then sanitized with DOMPurify. The result has no scripts,
   event handler attributes, `style` tags or attributes, forms, SVG, MathML, image maps, `class` or `id` attributes,
   or `javascript:` links, and every link opens in a new tab with `rel="noopener noreferrer"`.

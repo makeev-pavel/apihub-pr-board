@@ -1,6 +1,7 @@
 // Adds the fields the board computes for each PR: age, areas, attention, bot authorship, and the search text.
 
 import { sameName } from '../repository.ts';
+import { GHOST_LOGIN } from '../types.ts';
 import type { DerivedPullRequest, PullRequest, Sprint } from '../types.ts';
 import { areasOf } from './areas.ts';
 import { cleanCommentText } from './comments.ts';
@@ -39,29 +40,22 @@ export function isCurrentSprint(sprint: Sprint | null, now: number): boolean {
 // RULE-12: on a PR the viewer did not open, a personal review request is new, or again after an earlier review.
 export function myReview(pr: PullRequest, viewer: string): DerivedPullRequest['myReview'] {
   if (!viewer || (pr.author && sameName(pr.author.login, viewer))) return null;
-  if (!(pr.requestedReviewers || []).some((r) => !r.team && sameName(r.login, viewer))) return null;
-  return (pr.reviewers || []).some((r) => sameName(r.login, viewer)) ? 'again' : 'requested';
+  if (!pr.requestedReviewers.some((r) => !r.team && sameName(r.login, viewer))) return null;
+  return pr.reviewers.some((r) => sameName(r.login, viewer)) ? 'again' : 'requested';
 }
 
 export function derive(pr: PullRequest, now: number, rules: Rules = DEFAULT_RULES, viewer = ''): DerivedPullRequest {
   const ageDays = daysBetween(pr.createdAt, now);
-  const comments = pr.comments || [];
+  const { comments, labels, reviewers, requestedReviewers } = pr;
   const latestComment = comments[0] || null;
   const commentText = latestComment ? cleanCommentText(latestComment.body) : '';
-  const authorKey = pr.author ? pr.author.login : 'ghost';
-  const labels = pr.labels || [];
-  const reviewers = pr.reviewers || [];
-  const requestedReviewers = pr.requestedReviewers || [];
+  const authorKey = pr.author ? pr.author.login : GHOST_LOGIN;
   const attention = attentionReasons(pr, ageDays, rules);
-  const areas = areasOf({ ...pr, labels }, rules.areaModules);
+  const areas = areasOf(pr, rules.areaModules);
   return {
     ...pr,
-    comments,
     latestComment,
     areas,
-    labels,
-    reviewers,
-    requestedReviewers,
     authorKey,
     bot: isBot(pr.author, rules.extraBots),
     ageDays,

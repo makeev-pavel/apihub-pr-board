@@ -10,7 +10,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 function pr(fields: Record<string, unknown> = {}): PullRequest {
   return {
     number: 1, title: 'feat: t', base: 'main', ci: 'passing', review: 'none', mergeable: 'clean', draft: false, author: { login: 'a', bot: false }, assignees: [],
-    createdAt: new Date(NOW - DAY_MS).toISOString(), issues: [{ title: 'i' }], projects: [], comment: null,
+    createdAt: new Date(NOW - DAY_MS).toISOString(), issues: [{ title: 'i' }], projects: [], labels: [], reviewers: [], requestedReviewers: [], comments: [],
     ...fields,
   } as unknown as PullRequest;
 }

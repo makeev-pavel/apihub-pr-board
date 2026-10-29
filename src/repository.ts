@@ -1,5 +1,6 @@
-// The target repositories. They are configuration, not code: the build reads them from PR_BOARD_REPO, so nothing
-// in git names the organization that owns them.
+// Repository names and the list helpers shared by repositories, logins, and Settings fields. The repositories are
+// configuration, not code: they come from the link, Settings, repository groups, or PR_BOARD_REPO, so nothing in git
+// names the organization that owns them.
 
 export const REPO_VARIABLE = 'PR_BOARD_REPO';
 export const MAX_REPOSITORIES = 40;
@@ -56,10 +57,9 @@ export function uniqueNames(names: string[]): string[] {
 }
 
 export function parseRepositories(value: string | undefined): Repository[] {
-  const entries = splitList(value || '');
-  if (!entries.length) return [parseRepository('')];
-  entries.forEach(parseRepository);
-  const repositories = uniqueNames(entries).map(parseRepository);
+  const entries = uniqueNames(splitList(value || ''));
+  if (!entries.length) parseRepository('');
+  const repositories = entries.map(parseRepository);
   if (repositories.length > MAX_REPOSITORIES) {
     throw new Error(REPO_VARIABLE + ' lists ' + repositories.length + ' repositories; the board reads at most ' + MAX_REPOSITORIES + '.');
   }

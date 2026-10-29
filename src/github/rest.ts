@@ -81,7 +81,7 @@ export async function fetchAllComments({ number, repository, token = '', fetchIm
   ]);
   const merged = mergeComments(
     comments.items.map((c) => ({ createdAt: c.created_at, body: c.body || '', url: c.html_url, author: restActor(c.user) })),
-    reviews.items.map((r) => ({ submittedAt: r.submitted_at, body: r.body, url: r.html_url, author: restActor(r.user) })),
+    reviews.items.map((r) => ({ submittedAt: r.submitted_at, body: r.body || '', url: r.html_url, author: restActor(r.user) })),
   );
   return { comments: merged.map((c) => ({ ...c, truncated: false })), complete: comments.complete && reviews.complete };
 }

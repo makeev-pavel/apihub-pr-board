@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { derive } from '../../src/model/derive.ts';
 import { parseReport, pullRequestKey, snapshotReport } from '../../src/model/report.ts';
 import type { PullRequest } from '../../src/types.ts';
 
@@ -87,4 +88,32 @@ test('DATA-26: a snapshot leaves the viewer out and names the run that wrote it'
   assert.equal('viewer' in snapshot, false);
   assert.deepEqual(snapshot, { repos: ['acme/widgets'], generatedAt: 'g', warnings: [], prs: [], runUrl: 'https://example.test/run/1' });
   assert.equal(report.viewer.login, 'boris-k', 'the live report keeps its viewer');
+});
+
+test('DATA-5: broken list entries and scalar fields get defaults, so the row still derives and renders', () => {
+  const [pr] = parseReport({ repo: 'acme/widgets', generatedAt: '2026-10-28T12:00:00Z', prs: [{
+    number: 3, title: 7, ci: 'exploded', review: null, mergeable: 'MAYBE', createdAt: 'not a date', author: { name: 'no login' },
+    labels: [null, { name: 'bug' }, { color: 'fff' }], assignees: [null, { login: 'boris-k' }], comments: [null, { body: 'hi', at: '2026-10-27T00:00:00Z' }],
+    reviewers: [{ state: 'APPROVED' }], projects: ['P', 5],
+    issues: [{ number: 'x', title: 'Issue', url: 'u', labels: [null, { name: 'customer' }], sprint: { title: 'S', startDate: '2026-01-01', duration: 1e10 } }],
+  }] }).prs;
+  assert.deepEqual([pr.title, pr.ci, pr.review, pr.mergeable, pr.author, pr.base, pr.draft], ['', 'none', 'none', 'unknown', null, 'main', false]);
+  assert.equal(pr.createdAt, '2026-10-28T12:00:00Z', 'a bad date falls back to the file time');
+  assert.deepEqual(pr.labels.map((l) => l.name), ['bug']);
+  assert.deepEqual(pr.assignees.map((a) => a.login), ['boris-k']);
+  assert.equal(pr.comments.length, 1);
+  assert.deepEqual(pr.reviewers, []);
+  assert.deepEqual(pr.projects, ['P']);
+  assert.deepEqual([pr.issues[0].number, pr.issues[0].labels.map((l) => l.name), pr.issues[0].sprint], [null, ['customer'], null]);
+  const row = derive(pr, Date.parse('2026-10-28T12:00:00Z'));
+  assert.equal(row.ageDays, 0);
+  assert.ok(row.searchText.includes('bug'));
+});
+
+test('DATA-25: a sprint lasts a whole number of days, up to a year', () => {
+  const sprint = (duration: unknown) => parseReport({ repo: 'acme/widgets', prs: [{ number: 1, issues: [
+    { title: 'i', url: 'u', sprint: { title: 'S', startDate: '2026-01-01', duration } },
+  ] }] }).prs[0].issues[0].sprint;
+  assert.equal(sprint(14)!.duration, 14);
+  for (const bad of [0, 1.5, 367, 1e10, '14']) assert.equal(sprint(bad), null, String(bad));
 });

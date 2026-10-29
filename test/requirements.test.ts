@@ -41,3 +41,14 @@ test('S2: ids count only at the start of a test title', () => {
   const result = checkRequirements(SPEC, { 'x.test.ts': "test('the title mentions DATA-1 later', () => {});" });
   assert.deepEqual(result.missing, ['DATA-1', 'SET-2']);
 });
+
+test('an id defined twice is reported, a marker counts only inside its own bullet, and double-quoted titles name ids', () => {
+  const spec = {
+    'a.md': '- **DATA-1** First.\n- **DATA-2** Second.\n\nLater prose says *Planned for later.',
+    'b.md': '- **DATA-1** Again.\n',
+  };
+  const result = checkRequirements(spec, { 'x.test.ts': 'test("DATA-1: covered", () => {});' });
+  assert.deepEqual(result.duplicate, ['DATA-1']);
+  assert.deepEqual(result.covered, ['DATA-1']);
+  assert.deepEqual(result.missing, ['DATA-2'], 'the prose after the list does not mark DATA-2 as planned');
+});

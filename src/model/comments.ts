@@ -5,5 +5,5 @@ export function stripHtmlComments(body: string | null | undefined): string {
 }
 
 export function cleanCommentText(body: string | null | undefined): string {
-  return stripHtmlComments(body).replace(/\s+/g, ' ').trim();
+  return stripHtmlComments(body).replace(/\s+/g, ' ');
 }

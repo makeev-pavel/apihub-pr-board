@@ -2,6 +2,7 @@
 
 import { stripHtmlComments } from '../model/comments.ts';
 import { parseNamedColor, parseSprint } from '../model/fields.ts';
+import { GHOST_LOGIN } from '../types.ts';
 import type {
   Actor, Checks, CiState, Comment, FailedCheck, Issue, Label, MergeState, PullRequest, RequestedReviewer, ReviewState,
 } from '../types.ts';
@@ -49,8 +50,22 @@ export function reviewState(reviews: RawReview[]): ReviewState {
   return reviews.some((r) => r.state === 'APPROVED') ? 'approved' : 'none';
 }
 
+// The cut never splits a character made of two UTF-16 units, and never leaves an HTML comment open, which would hide
+// the rest of the rendered body.
 function clip(body: string): { body: string; truncated: boolean } {
-  return body.length > COMMENT_BODY_LIMIT ? { body: body.slice(0, COMMENT_BODY_LIMIT).trimEnd() + '…', truncated: true } : { body, truncated: false };
+  if (body.length <= COMMENT_BODY_LIMIT) return { body, truncated: false };
+  let end = COMMENT_BODY_LIMIT;
+  const code = body.charCodeAt(end);
+  if (code >= 0xdc00 && code <= 0xdfff) end -= 1;
+  let cut = body.slice(0, end);
+  const open = cut.lastIndexOf('<!--');
+  if (open >= 0 && cut.indexOf('-->', open) < 0) cut = cut.slice(0, open);
+  return { body: cut.trimEnd() + '…', truncated: true };
+}
+
+// Check links come from third-party integrations, so only https ones reach a link on the page (SEC-3).
+function httpsUrl(url: string | null | undefined): string | null {
+  return url && /^https:\/\//i.test(url) ? url : null;
 }
 
 // Newest first: issue comments and review summaries together, skipping bodies that are empty or only HTML comments.
@@ -103,6 +118,8 @@ function requestedReviewer(request: RawReviewRequest): RequestedReviewer | null 
   const reviewer = request.requestedReviewer;
   if (!reviewer) return null;
   if (reviewer.__typename === 'Team') return { login: reviewer.name, avatarUrl: reviewer.avatarUrl || null, bot: false, team: true };
+  // A mannequin from an imported repository comes back without the fields the query asks for, so it has no login.
+  if (typeof reviewer.login !== 'string') return null;
   return { login: reviewer.login, avatarUrl: reviewer.avatarUrl || null, bot: reviewer.__typename === 'Bot', team: false };
 }
 
@@ -118,11 +135,11 @@ export function failedChecks(rollup: RawRollup | null | undefined): Checks | nul
         name: c.name,
         workflow: (run && run.workflow && run.workflow.name) || null,
         conclusion: c.conclusion.toLowerCase(),
-        url: c.detailsUrl || null,
+        url: httpsUrl(c.detailsUrl),
         description: '',
       });
     } else if (c.__typename === 'StatusContext' && FAILED_STATUS_STATES.has(c.state)) {
-      failed.push({ name: c.context, workflow: null, conclusion: c.state.toLowerCase(), url: c.targetUrl || null, description: c.description || '' });
+      failed.push({ name: c.context, workflow: null, conclusion: c.state.toLowerCase(), url: httpsUrl(c.targetUrl), description: c.description || '' });
     }
   }
   return { failed, total: contexts.totalCount, complete: !(contexts.pageInfo && contexts.pageInfo.hasNextPage) };
@@ -131,7 +148,8 @@ export function failedChecks(rollup: RawRollup | null | undefined): Checks | nul
 export function normalizePullRequest(node: RawPullRequest, { repo = '', projectsAvailable = true } = {}): PullRequest {
   const commit = nodes(node.commits)[0];
   const rollup = commit && commit.commit && commit.commit.statusCheckRollup;
-  const review = reviewState(nodes(node.latestOpinionatedReviews));
+  const reviews = nodes(node.latestOpinionatedReviews);
+  const review = reviewState(reviews);
   const ci = (rollup && CI_BY_ROLLUP[rollup.state]) || 'none';
   return {
     repo,
@@ -141,14 +159,14 @@ export function normalizePullRequest(node: RawPullRequest, { repo = '', projects
     draft: node.isDraft,
     base: node.baseRefName,
     author: person(node.author),
-    assignees: nodes(node.assignees).map((a) => ({ login: a.login, avatarUrl: a.avatarUrl || null, bot: false })),
+    assignees: nodes(node.assignees).map((a) => person(a)!),
     createdAt: node.createdAt,
     updatedAt: node.updatedAt,
     ci,
     checks: ci === 'failing' ? failedChecks(rollup) : null,
     review,
-    reviewers: nodes(node.latestOpinionatedReviews).map((r) => ({
-      ...(person(r.author) || { login: 'ghost', avatarUrl: null, bot: false }),
+    reviewers: reviews.map((r) => ({
+      ...(person(r.author) || { login: GHOST_LOGIN, avatarUrl: null, bot: false }),
       state: r.state || '',
       at: r.submittedAt || null,
     })),

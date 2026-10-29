@@ -63,6 +63,9 @@
   | `priority:` | `priority:high`, `priority:none` (**TABLE-28**) |
   | `sprint:` | `sprint:current`, `sprint:42`, `sprint:none` (**TABLE-28**) |
 
+- **FILTER-19** `label:`, `repo:`, and `priority:` match a whole name, without regard to case, as GitHub does, so
+  `label:bug` does not match `debug`. `sprint:` matches a whole word of the sprint title or the whole title, so
+  `sprint:42` finds "Sprint 42" but not "Sprint 142". People qualifiers match part of a login.
 - **FILTER-10** A qualifier still being typed, such as `label:`, filters nothing yet. An unknown qualifier is a
   plain word.
 - **FILTER-11** Clicking a label chip adds `label:<name>` to the search, quoted when the name has spaces. Clicking it
@@ -90,5 +93,5 @@
 
 ## Several repositories
 
-- **FILTER-15** The `repo:` qualifier matches the repository name or `owner/name`, such as `repo:gadgets` or
-  `-repo:acme/widgets`. Plain words match the repository name too.
+- **FILTER-15** The `repo:` qualifier matches the whole repository name or `owner/name`, such as `repo:gadgets` or
+  `-repo:acme/widgets`, so `repo:widgets` does not match `widgets-legacy`. Plain words match the repository name too.

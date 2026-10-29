@@ -5,8 +5,13 @@ import type { AreaId, DerivedPullRequest } from '../types.ts';
 // GitHub-style search: free words plus qualifiers such as label:bug, author:anna-dev, -is:draft, label:"good first issue".
 const QUERY_TOKEN = /(-?)(?:([a-z]+):)?(?:"([^"]*)"?|(\S+))/gi;
 
+// Values arrive lowercased. People match part of a login; labels, repositories, and priorities match the whole name,
+// as on GitHub, so label:bug never matches "debug".
 const includes = (haystack: string, needle: string) => haystack.toLowerCase().includes(needle);
 const anyIncludes = (list: string[], needle: string) => list.some((item) => includes(item, needle));
+const equals = (name: string, value: string) => name.toLowerCase() === value;
+// A sprint matches by a whole word of its title, so sprint:42 finds "Sprint 42" but not "Sprint 142".
+const hasWord = (title: string, value: string) => title.toLowerCase().split(/[^a-z0-9]+/).includes(value) || equals(title, value);
 
 export interface SearchQualifier {
   hint: string;
@@ -25,18 +30,18 @@ export const SEARCH_QUALIFIERS: Record<string, SearchQualifier> = {
   },
   label: {
     hint: 'label:bug, label:"module:ui"',
-    test: (pr, v) => (v === 'none' ? !pr.labels.length : anyIncludes(pr.labels.map((l) => l.name), v)),
+    test: (pr, v) => (v === 'none' ? !pr.labels.length : pr.labels.some((l) => equals(l.name, v))),
   },
   base: { hint: 'base:develop', test: (pr, v) => includes(pr.base, v) },
-  repo: { hint: 'repo:widgets, repo:acme/widgets', test: (pr, v) => includes(pr.repo, v) },
+  repo: { hint: 'repo:widgets, repo:acme/widgets', test: (pr, v) => equals(pr.repo, v) || equals(pr.repo.slice(pr.repo.indexOf('/') + 1), v) },
   priority: {
     hint: 'priority:high, priority:none (from GitHub Projects)',
-    test: (pr, v) => (v === 'none' ? !pr.issues.some((i) => i.priority) : pr.issues.some((i) => !!i.priority && includes(i.priority.name, v))),
+    test: (pr, v) => (v === 'none' ? !pr.issues.some((i) => i.priority) : pr.issues.some((i) => !!i.priority && equals(i.priority.name, v))),
   },
   sprint: {
     hint: 'sprint:current, sprint:42, sprint:none',
     test: (pr, v) => (v === 'current' ? pr.inCurrentSprint : v === 'none' ? !pr.issues.some((i) => i.sprint)
-      : pr.issues.some((i) => !!i.sprint && includes(i.sprint.title, v))),
+      : pr.issues.some((i) => !!i.sprint && hasWord(i.sprint.title, v))),
   },
   note: { hint: 'note:tests (your notes)', test: (pr, v) => !!pr.noteText && pr.noteText.includes(v) },
   area: { hint: 'area:be, area:fe, area:other', test: (pr, v) => (v === 'other' ? !pr.areas.length : pr.areas.includes(v as AreaId)) },

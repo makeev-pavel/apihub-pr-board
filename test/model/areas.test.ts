@@ -10,7 +10,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 function pr(fields: Record<string, unknown> = {}): PullRequest {
   return {
     number: 1, title: 'feat: t', base: 'main', ci: 'passing', review: 'none', mergeable: 'clean', draft: false, author: { login: 'a', bot: false }, assignees: [],
-    createdAt: new Date(NOW - DAY_MS).toISOString(), issues: [{ title: 'i' }], projects: [], comment: null,
+    createdAt: new Date(NOW - DAY_MS).toISOString(), issues: [{ title: 'i' }], projects: [], labels: [], reviewers: [], requestedReviewers: [], comments: [],
     ...fields,
   } as unknown as PullRequest;
 }
@@ -21,4 +21,10 @@ test('RULE-11: areas come from module labels, the title scope, [FE]/[BE] tags, a
   assert.deepEqual(areasOf(pr({ title: 'fix: [BE] x', issues: [{ title: '[FE] y' }] })), ['be', 'fe']);
   assert.deepEqual(areasOf(pr({ title: 'chore: deps: bump x in /backend/agent' })), ['be']);
   assert.deepEqual(areasOf(pr({ title: 'chore: deps: bump x in /', labels: [{ name: 'module:ci' }] })), []);
+});
+
+test('RULE-11: a Dependabot directory at the root counts, with or without a path below it', () => {
+  assert.deepEqual(areasOf(pr({ title: 'chore(deps): bump vite from 8.1 to 8.2 in /frontend' })), ['fe']);
+  assert.deepEqual(areasOf(pr({ title: 'chore(deps): bump go in /backend in the go group' })), ['be']);
+  assert.deepEqual(areasOf(pr({ title: 'chore(deps): bump x in /frontends' })), []);
 });

@@ -40,11 +40,13 @@
     `<name>` in a list, and any other label matches its own name, without regard to case;
   - the PR title or a linked issue title has the tag `[BE]` for BE, or `[FE]` or `[UI]` for FE, without regard to
     case;
-  - the PR title or a linked issue title has a `backend/` or `frontend/` path, as Dependabot titles do.
+  - the PR title or a linked issue title names a `backend` or `frontend` directory, such as `in /frontend` or
+    `backend/agent`, as Dependabot titles do.
 
 ## Your reviews
 
 - **RULE-12** With a known viewer (**DATA-26**), a PR the viewer did not open waits for the viewer's review when the
   viewer, as a person, is among its requested reviewers. It is re-requested when the viewer has also reviewed it before
-  (approved, requested changes, left review comments, or a dismissed review): the author asks the viewer to look again.
-  Requests to the viewer's teams do not count, because a public-read token often cannot see them.
+  (approved, requested changes, or a dismissed review; GitHub's latest decisions leave comment-only reviews out): the
+  author asks the viewer to look again. Requests to the viewer's teams do not count, because a public-read token often
+  cannot see them.

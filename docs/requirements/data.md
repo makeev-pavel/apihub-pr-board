@@ -20,8 +20,10 @@
 - **DATA-4** When `prs.json` is published next to the page, the page opens with it, so it works without a token. The
   dev server's mocks always serve one; the published page has none and loads live data (**DATA-23**).
 - **DATA-5** `prs.json` holds the repositories it covers (**DATA-19**), the generation time, the workflow run link,
-  warnings, and the normalized PRs. The page checks its shape: a file without a PR list counts as broken, missing
-  optional fields get defaults, and an entry without a positive whole PR number is skipped.
+  warnings, and the normalized PRs. The page checks its shape: a file without a PR list counts as broken, and an entry
+  without a positive whole PR number is skipped. Every other field a row reads is checked: a missing or wrong value gets
+  its default (no CI, no approval, unknown mergeability, the file's time for a bad date), and a list keeps only its
+  well-formed entries, so one broken entry cannot blank the page.
 
 ## Refresh
 
@@ -45,16 +47,22 @@
   - up to 10 linked issues from the Development field (number, title, URL, issue type, and up to 10 labels) and up to
     10 GitHub Projects;
   - the latest decision of up to 20 reviewers and up to 20 pending review requests, users and teams;
-  - the overall CI state of the last commit and, for failing PRs only, the failed checks among the first 100;
-  - the last 5 issue comments and the last 10 review summaries.
+  - the overall CI state of the last commit and its first 100 checks, of which only failing PRs keep the failed ones;
+  - the last 5 issue comments and the last 10 review summaries;
+  - GitHub's spelling of the repository name, which the PRs take when it differs from the requested one only in case;
+  - the viewer (**DATA-26**), on the first page of each repository only.
+
+  A requested reviewer without a login, such as a placeholder account of an imported repository, is skipped.
 - **DATA-10** Only the two newest comments are kept, issue comments and review summaries together. Comments that are
-  empty or hold only HTML comment markers are skipped. Each kept body is cut at 4,000 characters and marked as cut.
+  empty or hold only HTML comment markers are skipped. Each kept body is cut at 4,000 characters and marked as cut. The
+  cut never splits a character, and never leaves an HTML comment open, which would hide the rest of the body.
 - **DATA-11** A label color that is not six hex digits is dropped, and the label shows in neutral colors.
 - **DATA-12** Entries that GitHub returns as `null` inside lists are skipped.
-- **DATA-25** For each linked issue, the query reads its items in up to 3 GitHub Projects and, in each, the fields
-  named Priority (single select: the option and its color), Estimate (number), and Sprint (iteration: its title,
-  start date, and length in days). The first project that sets a field gives its value. A forbidden project read is
-  a partial error, as in **DATA-14**: the data loads without these fields and the page shows a warning.
+- **DATA-25** For each linked issue, the query reads its items in up to 3 GitHub Projects and, in each, the fields named
+  Priority (single select: the option and its color), Estimate (number), and Sprint (iteration: its title, start date,
+  and length in days). The first project that sets a field gives its value. A forbidden project read is a partial error,
+  as in **DATA-14**: the repository is read again from its first page without these fields, so no PR keeps fields that
+  others lack, and the page shows a warning.
 
 ## Errors
 
@@ -111,8 +119,9 @@
   this change, with one repository and PRs without one, still loads: its PRs belong to that repository. A PR
   whose repository is missing, not `owner/name`, or not in the file's list gets the file's only repository, or none
   when there are several.
-- **DATA-20** A PR is identified by its repository and number. Two PRs with the same number in different
-  repositories are two rows with their own comments, and the comments panel reads each PR from its own repository.
+- **DATA-20** A PR is identified by its repository, as GitHub spells it (**DATA-9**), and number. Two PRs with the same
+  number in different repositories are two rows with their own comments, and the comments panel reads each PR from its
+  own repository.
 - **DATA-21** With mock data the dev server shows `acme/widgets` alone by default. A DEV panel scenario adds the
   fictional `acme/gadgets`, with PR numbers that repeat those of `acme/widgets`.
 - **DATA-22** When the address asks for repositories (**FILTER-14**) that the data on the page does not cover, the

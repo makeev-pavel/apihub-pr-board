@@ -11,7 +11,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 function pr(fields: Record<string, unknown> = {}): PullRequest {
   return {
     number: 1, title: 'feat: t', base: 'main', ci: 'passing', review: 'none', mergeable: 'clean', draft: false, author: { login: 'a', bot: false }, assignees: [],
-    createdAt: new Date(NOW - DAY_MS).toISOString(), issues: [{ title: 'i' }], projects: [], comment: null,
+    createdAt: new Date(NOW - DAY_MS).toISOString(), issues: [{ title: 'i' }], projects: [], labels: [], reviewers: [], requestedReviewers: [], comments: [],
     ...fields,
   } as unknown as PullRequest;
 }
@@ -113,4 +113,23 @@ test('FILTER-18: review:requested and review:again find the PRs that wait for th
   assert.deepEqual(hits('review:requested'), [true, true, false]);
   assert.deepEqual(hits('review:again'), [false, true, false]);
   assert.deepEqual(hits('-review:requested'), [false, false, true]);
+});
+
+test('FILTER-15 FILTER-19: label:, repo:, and priority: match the whole name, and sprint: a whole word of the title', () => {
+  const labels = { labels: [{ name: 'debug' }, { name: 'Module:UI' }] };
+  assert.equal(search('label:bug', labels), false);
+  assert.ok(search('label:module:ui', labels));
+  const repo = { repo: 'acme/widgets-legacy', labels: [] };
+  assert.equal(search('repo:widgets', repo), false);
+  assert.equal(search('repo:acme', repo), false);
+  assert.ok(search('repo:widgets-legacy', repo));
+  assert.ok(search('repo:ACME/widgets-legacy', repo));
+  assert.ok(search('-repo:acme/widgets', repo));
+  const issue = (priority: string, sprint: string) => ({ labels: [], issues: [{ title: 'i', labels: [],
+    priority: { name: priority, color: null }, sprint: { title: sprint, startDate: '2026-01-01', duration: 14 } }] });
+  assert.equal(search('priority:high', issue('Highest', 'Sprint 142')), false);
+  assert.ok(search('priority:highest', issue('Highest', 'Sprint 142')));
+  assert.equal(search('sprint:42', issue('Low', 'Sprint 142')), false);
+  assert.ok(search('sprint:42', issue('Low', 'Sprint 42')));
+  assert.ok(search('sprint:"sprint 42"', issue('Low', 'Sprint 42')));
 });
