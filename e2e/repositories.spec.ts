@@ -173,4 +173,34 @@ test.describe('several repositories', () => {
     const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('apihub-pr-board.settings')!).repoGroups);
     expect(stored).toEqual([{ name: 'Widgets', repos: ['acme/widgets'] }, { name: 'Gadgets', repos: ['acme/gadgets'] }]);
   });
+
+  test('FILTER-17: a group inside a checked one is locked until that one goes, and a refused choice is forgotten on reopening', async ({ page }) => {
+    const many = (prefix: string) => Array.from({ length: 21 }, (_, i) => 'acme/' + prefix + i).join(', ');
+    await page.addInitScript((groups) => localStorage.setItem('apihub-pr-board.settings', JSON.stringify({ repoGroups: groups })), [
+      { name: 'All', repos: ['acme/widgets', 'acme/gadgets'] },
+      { name: 'Widgets', repos: ['acme/widgets'] },
+      { name: 'Left', repos: many('l').split(', ') },
+      { name: 'Right', repos: many('r').split(', ') },
+    ]);
+    await openBoard(page, { report: 'two-repos', query: ALL });
+    const button = page.getByRole('button', { name: /^Repositories:/ });
+    await button.click();
+    const menu = page.getByRole('group', { name: 'Repositories' });
+    await menu.getByRole('checkbox', { name: 'All' }).check();
+    const widgets = menu.getByRole('checkbox', { name: 'Widgets' });
+    await expect(widgets).toBeChecked();
+    await expect(widgets).toBeDisabled();
+    await expect(menu.locator('label').filter({ hasText: 'Widgets' })).toHaveAttribute('title', 'Included in All. Uncheck All to remove it.');
+    // Unchecking All takes Widgets with it.
+    await menu.getByRole('checkbox', { name: 'All' }).uncheck();
+    await expect(widgets).not.toBeChecked();
+    expect(page.url()).not.toContain('repos=');
+
+    await menu.getByRole('checkbox', { name: 'Left' }).check();
+    await menu.getByRole('checkbox', { name: 'Right' }).click();
+    await expect(menu.getByRole('alert')).toHaveText('Adding Right would make 42 repositories; the board reads at most 40. Uncheck a group first.');
+    await button.click();
+    await button.click();
+    await expect(menu.getByRole('alert')).toHaveCount(0);
+  });
 });

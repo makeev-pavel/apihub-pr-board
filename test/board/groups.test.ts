@@ -41,10 +41,24 @@ test('FILTER-17: a group inside another checked group cannot be unchecked alone,
   const inner = { name: 'Widgets', repos: ['acme/widgets'] };
   const outer = { name: 'Everything', repos: ['acme/widgets', 'acme/gadgets'] };
   const repos = ['acme/widgets', 'acme/gadgets'];
-  assert.equal(groupLock(inner, [inner, outer], repos), 'Included in Everything');
+  assert.equal(groupLock(inner, [inner, outer], repos), 'Included in Everything. Uncheck Everything to remove it.');
   assert.equal(groupLock(outer, [inner, outer], repos), null);
   assert.equal(groupLock(inner, [inner, outer], ['acme/widgets']), null, 'nothing else covers it');
   const big = { name: 'Big', repos: Array.from({ length: 30 }, (_, i) => 'acme/a' + i) };
   const more = { name: 'More', repos: Array.from({ length: 20 }, (_, i) => 'acme/b' + i) };
-  assert.deepEqual(toggleGroup(more, [big, more], big.repos), { error: 'Adding More would make 50 repositories; the board reads at most 40.' });
+  assert.deepEqual(toggleGroup(more, [big, more], big.repos), { error: 'Adding More would make 50 repositories; the board reads at most 40. Uncheck a group first.' });
+});
+
+test('FILTER-17: unchecking a group also unchecks the groups inside it, so two equal groups never lock each other', () => {
+  const inner = { name: 'Widgets', repos: ['acme/widgets'] };
+  const outer = { name: 'Everything', repos: ['acme/widgets', 'acme/gadgets'] };
+  const repos = ['acme/widgets', 'acme/gadgets'];
+  assert.deepEqual(toggleGroup(outer, [inner, outer], repos), [], 'Widgets goes with Everything');
+  const twin = { name: 'Same', repos: ['ACME/gadgets', 'acme/widgets'] };
+  assert.equal(groupLock(outer, [outer, twin], repos), null);
+  assert.equal(groupLock(twin, [outer, twin], repos), null);
+  assert.deepEqual(toggleGroup(twin, [outer, twin], repos), []);
+  // A repository another, wider group needs stays.
+  const tools = { name: 'Tools', repos: ['acme/gadgets', 'acme/tools'] };
+  assert.deepEqual(toggleGroup(outer, [inner, outer, tools], [...repos, 'acme/tools']), ['acme/gadgets', 'acme/tools']);
 });

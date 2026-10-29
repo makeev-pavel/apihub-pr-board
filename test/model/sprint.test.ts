@@ -1,4 +1,6 @@
 // Runs in a zone far from UTC, so a return to UTC dates would fail: there, the local day and the UTC day differ.
+// The imports below run before this line, but Node reads TZ when a date is used, so it still applies; the first
+// assertion checks that.
 process.env.TZ = 'Pacific/Auckland';
 
 import { test } from 'node:test';

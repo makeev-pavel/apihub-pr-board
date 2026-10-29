@@ -23,7 +23,7 @@ export function RepositoriesMenu({ groups, repos, setRepos }: { groups: RepoGrou
   };
   return (
     <div className="menu-wrap" ref={ref}>
-      <button type="button" className="btn" aria-haspopup="true" aria-expanded={open} onClick={() => setOpen(!open)}>
+      <button type="button" className="btn" aria-haspopup="true" aria-expanded={open} onClick={() => { setError(null); setOpen(!open); }}>
         Repositories: <strong>{summary}</strong> <span className="arrow" aria-hidden="true">{open ? '▲' : '▼'}</span>
       </button>
       {open ? (
