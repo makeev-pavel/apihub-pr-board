@@ -566,6 +566,11 @@ menu filters the rows of the loaded data instead of filling `repos`, with Ungrou
 
 - [x] **G3. Groups filter rows:** a `*` marks default groups (SET-19); checked groups live in `groups` and narrow
   the rows before the other filters (FILTER-17); unit and browser tests. About 1.5 hours.
+- [x] **G4. Load the checked groups:** without `repos`, Refresh and the first load read only the repositories of
+  the checked groups, up to 40 (DATA-18); unit and browser tests. About 30 min.
+- [x] **G5. Groups in the address:** `repogroups` carries the groups like `hide` (FILTER-14, SET-19); a long
+  repository name is cut at its start (TABLE-26); the Reviewers list puts requested changes first and approvals
+  last (TABLE-30). About 1 hour.
 
 ## Backlog: your reviews
 

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { collectAuthors, selectedAuthors } from './board/authors.ts';
 import { boardColumns, DEFAULT_WIDTHS, isColumnShown, REVIEWERS_LIST_WIDTHS } from './board/columns.ts';
 import { repositoriesSummary } from './board/format.ts';
-import { checkedGroups, groupCounts, groupFilter, groupOptions, groupsSelection } from './board/groups.ts';
+import { checkedGroups, groupCounts, groupFilter, groupOptions, groupRepositories, groupsSelection } from './board/groups.ts';
 import { boardRepos, linkSettingsQuery, missingReposMessage } from './board/link.ts';
 import { readToken, readWizardDone, storeToken, storeWizardDone } from './board/storage.ts';
 import {
@@ -39,7 +39,7 @@ import { useReportData } from './hooks/useReportData.ts';
 import { derive } from './model/derive.ts';
 import { pullRequestKey } from './model/report.ts';
 import { activeLabelFilters, parseQuery, toggleLabelFilter } from './model/search.ts';
-import { parseRepository, repositoryName } from './repository.ts';
+import { MAX_REPOSITORIES, parseRepository, repositoryName } from './repository.ts';
 import type { DevConfig } from './types.ts';
 
 declare global {
@@ -77,11 +77,17 @@ export function App() {
   const rules = settings.rules;
   const dataRepos = useMemo(() => (report ? report.repos : REPOSITORIES.map(repositoryName)), [report]);
   // The address may narrow the board to some repositories, or ask for ones the data does not have.
-  const { shown: repos, missing } = useMemo(() => boardRepos(dataRepos, link.repos), [dataRepos, link.repos]);
-  // Without a snapshot the repositories come only from the link or Settings, as on the published page (DATA-23).
-  const wanted = link.repos;
+  const repos = useMemo(() => boardRepos(dataRepos, link.repos).shown, [dataRepos, link.repos]);
+  // The repositories to load: those of the address, or else those of the checked repository groups (DATA-18).
+  // Without a snapshot they come only from there, as on the published page (DATA-23).
+  const groups = settings.repoGroups;
+  const groupNames = useMemo(() => groupOptions(groups, repos), [groups, repos]);
+  const checked = useMemo(() => checkedGroups(view.groups, groups, groupNames), [view.groups, groups, groupNames]);
+  const groupRepos = useMemo(() => groupRepositories(groups.filter((group) => checked.includes(group.name))), [groups, checked]);
+  const wanted = link.repos.length ? link.repos : groupRepos;
+  const missing = useMemo(() => boardRepos(dataRepos, wanted).missing, [dataRepos, wanted]);
   const notLoaded = data.noSnapshot && !report;
-  const headerRepos = link.repos.length ? link.repos : notLoaded ? [] : dataRepos;
+  const headerRepos = link.repos.length ? link.repos : notLoaded ? wanted : dataRepos;
   const pending = notLoaded ? wanted : missing;
   const offeredColumns = useMemo(() => boardColumns(repos.length), [repos.length]);
   const columns = useMemo(() => offeredColumns.filter((c) => isColumnShown(c, settings.hiddenColumns)), [offeredColumns, settings.hiddenColumns]);
@@ -105,11 +111,16 @@ export function App() {
   const closeTokenDialog = useCallback(() => { tokenDismissed.current = true; setAskingToken(false); }, []);
 
   const refresh = (withToken: string) => {
-    // Refresh reads the repositories the address asks for, or else those on the page; the build's list only counts
-    // before the data loads.
-    const names = link.repos.length ? link.repos : report && report.repos.length ? report.repos : REPOSITORIES.map(repositoryName);
+    // Refresh reads the repositories the address asks for, or else those of the checked groups, or else those on the
+    // page; the build's list only counts before the data loads.
+    const names = wanted.length ? wanted : report && report.repos.length ? report.repos : REPOSITORIES.map(repositoryName);
     if (!names.length) {
       setRefreshError('Choose the repositories to show in Settings first.');
+      return;
+    }
+    if (names.length > MAX_REPOSITORIES) {
+      setRefreshError('The checked groups name ' + names.length + ' repositories; the board reads at most ' + MAX_REPOSITORIES
+        + '. Uncheck a group in the Repositories menu.');
       return;
     }
     // Skip the heavy parts of the query that only hidden columns would show.
@@ -148,10 +159,7 @@ export function App() {
   const allPrs = useNoteText(derived, notesApi.notes);
 
   // Repository groups narrow the rows before every other filter, so the menus count only what the groups show.
-  const groups = settings.repoGroups;
-  const groupNames = useMemo(() => groupOptions(groups, repos), [groups, repos]);
-  const checked = useMemo(() => checkedGroups(view.groups, groups, groupNames), [view.groups, groups, groupNames]);
-  const perGroup = useMemo(() => groupCounts(groups, groupNames, allPrs.map((pr) => pr.repo)), [groups, groupNames, allPrs]);
+  const perGroup = useMemo(() => groupCounts(groups, groupNames, repos, allPrs.map((pr) => pr.repo)), [groups, groupNames, repos, allPrs]);
   const prs = useMemo(() => {
     if (!groups.length) return allPrs;
     const shows = groupFilter(groups, checked);

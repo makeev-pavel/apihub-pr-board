@@ -34,7 +34,7 @@ export function RepositoriesMenu({ groups, options, checked, counts, setChecked 
             <label key={name} title={title(name)}>
               <input type="checkbox" checked={checked.includes(name)} onChange={() => toggle(name)} />
               <span>{name}</span>
-              <span className="n">{counts.get(name) || 0}</span>
+              <span className="n">{counts.has(name) ? counts.get(name) : ''}</span>
             </label>
           ))}
         </div>

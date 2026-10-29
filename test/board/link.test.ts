@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  applyLinkColumns, boardRepos, cleanBots, linkSettingsQuery, MAX_BOTS, missingReposMessage, moveStoredBots, parseLinkSettings,
+  applyLinkColumns, applyLinkGroups, boardRepos, cleanBots, linkSettingsQuery, MAX_BOTS, missingReposMessage, moveStoredBots, parseLinkSettings,
 } from '../../src/board/link.ts';
 import { DEFAULT_SETTINGS } from '../../src/settings.ts';
 
@@ -82,5 +82,30 @@ test('SET-8 SET-17: a link with hidden columns wins and is kept; without one, th
   assert.deepEqual(fromStorage.link.hidden, ['ci']);
   assert.deepEqual(applyLinkColumns({ ...stored, hiddenColumns: ['standup', 'ci'] }, { repos: [], bots: [] }).link.hidden, ['ci'],
     'an id no column has stays out of the address');
+  assert.equal(fromStorage.changed, false);
+});
+
+const GROUPS = [
+  { name: 'Monorepo & Co', repos: ['acme/widgets', 'acme/tools'], isDefault: true },
+  { name: 'Old', repos: ['acme/gadgets'] },
+];
+
+test('FILTER-14 SET-19: repository groups travel in the address, readable, and a broken list is ignored', () => {
+  const query = linkSettingsQuery({ repos: [], bots: [], groups: GROUPS });
+  assert.equal(query, 'repogroups=*Monorepo%20%26%20Co:acme/widgets,acme/tools;Old:acme/gadgets');
+  assert.deepEqual(parseLinkSettings('?' + query).groups, GROUPS);
+  assert.equal(parseLinkSettings('?q=x').groups, undefined);
+  assert.equal(parseLinkSettings('?repogroups=Old:gadgets').groups, undefined, 'an entry that is not owner/name');
+  assert.deepEqual(parseLinkSettings('?repogroups=').groups, []);
+  assert.equal(linkSettingsQuery({ repos: [], bots: [], groups: [] }), '');
+});
+
+test('SET-19: a link with groups wins and is kept; without one, the saved groups go into the address', () => {
+  const stored = { ...DEFAULT_SETTINGS, repoGroups: [GROUPS[1]] };
+  const fromLink = applyLinkGroups(stored, { repos: [], bots: [], groups: GROUPS });
+  assert.deepEqual(fromLink.settings.repoGroups, GROUPS);
+  assert.equal(fromLink.changed, true);
+  const fromStorage = applyLinkGroups(stored, { repos: [], bots: [] });
+  assert.deepEqual(fromStorage.link.groups, [GROUPS[1]]);
   assert.equal(fromStorage.changed, false);
 });

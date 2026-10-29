@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  checkedGroups, groupCounts, groupFilter, groupOptions, groupsSelection, groupsSummary, groupsToText, parseGroupLines, UNGROUPED,
+  checkedGroups, groupCounts, groupFilter, groupOptions, groupRepositories, groupsSelection, groupsSummary, groupsToText, parseGroupLines, UNGROUPED,
 } from '../../src/board/groups.ts';
 import type { RepoGroup } from '../../src/board/groups.ts';
 
@@ -27,11 +27,12 @@ test('SET-19: a wrong line is named with the reason', () => {
   assert.deepEqual(parseGroupLines(many), { error: 'Up to 20 groups; this list has 21.' });
 });
 
-test('SET-19: a leading * marks a default group; a name with a comma or named Ungrouped is refused', () => {
+test('SET-19: a leading * marks a default group; a name with a comma, a semicolon, or named Ungrouped is refused', () => {
   const parsed = parseGroupLines('* Core: acme/widgets\nTools: acme/tools');
   assert.deepEqual(parsed, { groups: [{ name: 'Core', repos: ['acme/widgets'], isDefault: true }, { name: 'Tools', repos: ['acme/tools'] }] });
   assert.equal(groupsToText((parsed as { groups: RepoGroup[] }).groups), '*Core: acme/widgets\nTools: acme/tools');
-  assert.deepEqual(parseGroupLines('Core, old: acme/widgets'), { error: 'Line 1: the group name "Core, old" has a comma.' });
+  assert.deepEqual(parseGroupLines('Core, old: acme/widgets'), { error: 'Line 1: the group name "Core, old" has a comma or a semicolon.' });
+  assert.deepEqual(parseGroupLines('Core; old: acme/widgets'), { error: 'Line 1: the group name "Core; old" has a comma or a semicolon.' });
   assert.deepEqual(parseGroupLines('ungrouped: acme/widgets'),
     { error: 'Line 1: "Ungrouped" names the repositories in no group; choose another name.' });
 });
@@ -71,8 +72,12 @@ test('FILTER-17: rows show when their repository is in a checked group, or in no
   assert.deepEqual(DATA.filter(groupFilter(GROUPS, [UNGROUPED])), ['acme/misc']);
   assert.deepEqual(DATA.filter(groupFilter(GROUPS, [])), []);
   // A repository in two groups counts in both.
-  const counts = groupCounts(GROUPS, groupOptions(GROUPS, DATA), ['acme/gadgets', 'acme/gadgets', 'acme/widgets', 'acme/misc']);
+  const prRepos = ['acme/gadgets', 'acme/gadgets', 'acme/widgets', 'acme/misc'];
+  const counts = groupCounts(GROUPS, groupOptions(GROUPS, DATA), DATA, prRepos);
   assert.deepEqual([...counts], [['Core', 3], ['Tools', 2], [UNGROUPED, 1]]);
+  // A group with no repository in the data is not loaded, so it has no count.
+  const late = { name: 'Late', repos: ['acme/later'] };
+  assert.equal(groupCounts([...GROUPS, late], [...groupOptions(GROUPS, DATA), 'Late'], DATA, prRepos).has('Late'), false);
 });
 
 test('FILTER-17: the button names all, none, up to two groups, or how many', () => {
@@ -81,4 +86,10 @@ test('FILTER-17: the button names all, none, up to two groups, or how many', () 
   assert.equal(groupsSummary([], options), 'None');
   assert.equal(groupsSummary(['A', UNGROUPED], options), 'A, Ungrouped');
   assert.equal(groupsSummary(['A', 'B', 'C'], options), '3 selected');
+});
+
+test('DATA-18: the board loads every repository of the groups once, in the order the groups list them', () => {
+  assert.deepEqual(groupRepositories([...GROUPS, { name: 'More', repos: ['ACME/widgets', 'acme/misc'] }]),
+    ['acme/widgets', 'acme/gadgets', 'acme/tools', 'acme/misc']);
+  assert.deepEqual(groupRepositories([]), []);
 });

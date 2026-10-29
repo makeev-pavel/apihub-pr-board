@@ -8,11 +8,14 @@ const review = (login: string, state: string) => ({ login, avatarUrl: null, bot:
 const entries = (fields: Partial<PullRequest>) =>
   reviewerEntries({ reviewers: [], requestedReviewers: [], ...fields } as PullRequest).map((e) => e.actor.login + ':' + e.status);
 
-test('TABLE-30: reviewers are listed once each, those still to answer first, as on GitHub', () => {
+test('TABLE-30: reviewers are listed once each: requested changes, then those still to answer, and approvals last', () => {
   assert.deepEqual(entries({
-    reviewers: [review('anna-dev', 'APPROVED'), review('chen-li', 'CHANGES_REQUESTED'), review('Boris-K', 'DISMISSED'), review('dara-ops', 'COMMENTED')],
+    reviewers: [
+      review('anna-dev', 'APPROVED'), review('chen-li', 'CHANGES_REQUESTED'), review('Boris-K', 'DISMISSED'), review('dara-ops', 'COMMENTED'),
+      review('ivan-qa', 'DISMISSED'),
+    ],
     requestedReviewers: [person('hana-docs'), person('boris-k'), { ...person('backend'), team: true }],
-  }), ['hana-docs:pending', 'Boris-K:again', 'backend:pending', 'chen-li:changes', 'anna-dev:approved', 'dara-ops:commented']);
+  }), ['chen-li:changes', 'hana-docs:pending', 'Boris-K:again', 'backend:pending', 'dara-ops:commented', 'ivan-qa:dismissed', 'anna-dev:approved']);
 });
 
 test('TABLE-30: a team of the same name as a reviewer is not that reviewer asked again', () => {
@@ -21,9 +24,12 @@ test('TABLE-30: a team of the same name as a reviewer is not that reviewer asked
   assert.deepEqual(entries({}), []);
 });
 
-test('TABLE-30: the viewer asked for a review leads the list, so a long list never hides it', () => {
-  const pr = { reviewers: [], requestedReviewers: [person('anna-dev'), person('chen-li'), person('Boris-K')] } as unknown as PullRequest;
-  assert.deepEqual(reviewerEntries(pr, 'boris-k').map((e) => e.actor.login), ['Boris-K', 'anna-dev', 'chen-li']);
+test('TABLE-30: the viewer asked for a review leads those still to answer, after requested changes', () => {
+  const pr = {
+    reviewers: [review('dara-ops', 'CHANGES_REQUESTED')],
+    requestedReviewers: [person('anna-dev'), person('chen-li'), person('Boris-K')],
+  } as unknown as PullRequest;
+  assert.deepEqual(reviewerEntries(pr, 'boris-k').map((e) => e.actor.login), ['dara-ops', 'Boris-K', 'anna-dev', 'chen-li']);
 });
 
 test('TABLE-30: only the viewer\'s own line is marked as theirs, never a team of the same name', () => {

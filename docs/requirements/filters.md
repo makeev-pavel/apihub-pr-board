@@ -26,14 +26,15 @@
   them, or without any for No priority; nothing checked shows all. The choice lives in the address
   (`priority=High,Medium`).
 - **FILTER-17** Repositories, shown when Settings has repository groups (**SET-19**): a menu with a checkbox per group,
-  each with its number of open PRs, and **Ungrouped** for the repositories of the data that are in no group. It
-  shows only the rows of the repositories in a checked group, or in no group while Ungrouped is checked; a
-  repository in two groups shows when either is checked. The data and `repos` stay as they are. The other menus and
-  the tiles count only the rows the groups let through. **All** checks every entry, and **None** checks none, which
-  shows no rows. Without a choice the groups marked as default are checked, or every entry when none is marked. A
-  different choice lives in the address (`groups=Backend,Ungrouped`; an empty `groups=` checks none); names match
-  without regard to case, unknown ones are dropped, and a link that names only unknown groups gets the default. The
-  button reads All, None, up to two names, or "N selected".
+  each with its number of open PRs, and **Ungrouped** for the repositories of the data that are in no group. It shows
+  only the rows of the repositories in a checked group, or in no group while Ungrouped is checked; a repository in two
+  groups shows when either is checked. Without `repos`, only the checked groups load (**DATA-18**), and a group none of
+  whose repositories is loaded shows no count. The other menus and the tiles count only the rows the groups let through.
+  **All** checks every entry, and **None** checks none, which shows no rows. Without a choice the groups marked as
+  default are checked, or every entry when none is marked. A different choice lives in the address
+  (`groups=Backend,Ungrouped`; an empty `groups=` checks none); names match without regard to case, unknown ones are
+  dropped, and a link that names only unknown groups gets the default. The button reads All, None, up to two names, or
+  "N selected".
 - **FILTER-7** **Reset view** shows when the view differs from the default and restores it. **Copy link to this
   view** copies the page address, says "Link copied", and asks to copy the address bar when the clipboard is blocked.
 
@@ -74,12 +75,15 @@
   URL query (`q`, `authors`, `draft`, `area`, `priority`, `groups`, `quick`, `sort`, `dir`). Defaults are left out,
   so the default view has a clean address. Opening a link restores the view; unknown values fall back to the
   defaults.
-- **FILTER-14** The address also carries three settings: `repos`, the repositories to show
-  (`repos=acme/widgets,acme/gadgets`), `bots`, the extra bot logins (**SET-5**), and `hide`, the hidden columns
-  (`hide=ci,assignee`, **SET-8**). Copy link keeps them, and **Reset view** leaves them alone. Without `repos` the
-  board shows every repository of the data; without `bots` there are no extra bots; without `hide` the columns saved
-  in this browser apply, and the address then shows them. A link with `hide` wins and is saved. Invalid entries are
-  dropped: a repository must be `owner/name` (up to 40), a bot a GitHub login (up to 50), and a column a known id.
+- **FILTER-14** The address also carries four settings: `repos`, the repositories to show
+  (`repos=acme/widgets,acme/gadgets`), `bots`, the extra bot logins (**SET-5**), `hide`, the hidden columns
+  (`hide=ci,assignee`, **SET-8**), and `repogroups`, the repository groups (**SET-19**), as
+  `repogroups=*Core:acme/widgets,acme/gadgets;Tools:acme/tools`. Groups work like `hide`: a link with them wins and is
+  saved, and without it the saved groups go into the address; a list with a wrong group is ignored. Copy link keeps
+  them, and **Reset view** leaves them alone. Without `repos` the board shows every repository of the data; without
+  `bots` there are no extra bots; without `hide` the columns saved in this browser apply, and the address then shows
+  them. A link with `hide` wins and is saved. Invalid entries are dropped: a repository must be `owner/name` (up to 40),
+  a bot a GitHub login (up to 50), and a column a known id.
 
 ## Several repositories
 

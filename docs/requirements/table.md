@@ -67,12 +67,12 @@
 - **TABLE-29** After the Review code, a PR waiting for the viewer's review (**RULE-12**) shows GitHub's icons: the
   dot of a pending review, or the sync arrows of a re-requested one, with a tooltip that says which.
 - **TABLE-30** As a list of reviewers (**SET-20**), the Review cell shows each reviewer once, as GitHub's Reviewers
-  sidebar does: a small avatar, the login, and GitHub's icon for where the review stands (awaiting review, asked
-  again, requested changes, approved, left review comments, review dismissed). Those still to review come first, the
-  viewer's own request leading; then requested changes, approvals, comments, and dismissed reviews. The viewer's
-  line is bold, and when their review is due it has a highlighted background. More than four lines show the first
-  three and a "+N more" button that opens the whole list. A PR without reviewers says so. A dismissed review has
-  its own icon, so the list does not rely on color alone.
+  sidebar does: a small avatar, the login, and GitHub's icon for where the review stands (awaiting review, asked again,
+  requested changes, approved, left review comments, review dismissed). Requested changes come first, then those still
+  to review, the viewer's own request leading; then comments, dismissed reviews, and approvals. The viewer's line is
+  bold, and when their review is due it has a highlighted background. More than four lines show the first three and a
+  "+N more" button that opens the whole list. A PR without reviewers says so. A dismissed review has its own icon, so
+  the list does not rely on color alone.
 - **TABLE-15** A 3 px stripe on the left edge of a row mirrors CI: red when checks failed, yellow while they run,
   green when they passed, and none without checks.
 
@@ -113,10 +113,10 @@
 
 ## Several repositories
 
-- **TABLE-26** When the data covers more than one repository, a Repository column comes first. It shows the
-  repository name without its owner, such as `widgets` for `acme/widgets`, linked to the repository, with
-  `owner/name` in the tooltip; the owner shows only when two repositories on the board have the same name. It sorts
-  A to Z first, with ties by PR number, newest first. It can be hidden in Settings (**SET-8**). With one repository the
-  column and its Settings entry are absent.
+- **TABLE-26** When the data covers more than one repository, a Repository column comes first. It shows the repository
+  name without its owner, such as `widgets` for `acme/widgets`, linked to the repository, with `owner/name` in the
+  tooltip; a name too long for the column is cut at its start, such as `…apihub-ui`; the owner shows only when two
+  repositories on the board have the same name. It sorts A to Z first, with ties by PR number, newest first. It can be
+  hidden in Settings (**SET-8**). With one repository the column and its Settings entry are absent.
 - **TABLE-27** With several repositories the header names them in place of one repository name. More than two
   show as the first one and "+N more", with the full list in the tooltip.

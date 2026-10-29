@@ -160,7 +160,7 @@ test.describe('several repositories', () => {
     const button = page.getByRole('button', { name: /^Repositories:/ });
     await expect(button).toHaveText(/Repositories:\s*Gadgets & Co/);
     await expect(rows(page)).toHaveCount(4);
-    expect(page.url()).not.toContain('groups=');
+    expect(page.url()).not.toMatch(/[?&]groups=/);
     expect(page.url()).not.toContain('repos=');
     await button.click();
     const menu = page.getByRole('group', { name: 'Repositories' });
@@ -175,7 +175,7 @@ test.describe('several repositories', () => {
     // Checking the default group again leaves the address clean.
     await menu.getByRole('checkbox', { name: 'Gadgets & Co' }).check();
     await expect(rows(page)).toHaveCount(4);
-    expect(page.url()).not.toContain('groups=');
+    expect(page.url()).not.toMatch(/[?&]groups=/);
     // The groups stay in this browser.
     const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('apihub-pr-board.settings')!).repoGroups);
     expect(stored).toEqual([{ name: 'Widgets', repos: ['acme/widgets'] }, { name: 'Gadgets & Co', repos: ['acme/gadgets'], isDefault: true }]);
@@ -198,4 +198,48 @@ test.describe('several repositories', () => {
     await expect(rows(page)).toHaveCount(4);
     await expect(page).toHaveURL(/[?&]groups=Gadgets(&|$)/);
   });
+
+  test('DATA-18: without repos in the address, Refresh reads only the repositories of the checked groups', async ({ page }) => {
+    await page.addInitScript((key) => localStorage.setItem(key, 'mock-token'), TOKEN_KEY);
+    await page.addInitScript((groups) => localStorage.setItem('apihub-pr-board.settings', JSON.stringify({ repoGroups: groups })), [
+      { name: 'Widgets', repos: ['acme/widgets'] },
+      { name: 'Gadgets', repos: ['acme/gadgets'], isDefault: true },
+    ]);
+    await openBoard(page, { report: 'mixed', refresh: 'ok', query: ALL });
+    const banner = page.locator('.banner.warn');
+    await expect(banner).toHaveText('acme/gadgets is not in the snapshot. Refresh loads it.');
+    await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+    await expect(page.locator('.source-button')).toHaveText('live, just now');
+    await expect(banner).toHaveCount(0);
+    await expect(rows(page)).toHaveCount(4);
+    expect(page.url()).not.toContain('repos=');
+  });
+
+  test('DATA-18: groups with more than 40 repositories stop Refresh with the reason', async ({ page }) => {
+    await page.addInitScript((key) => localStorage.setItem(key, 'mock-token'), TOKEN_KEY);
+    const many = (prefix: string) => Array.from({ length: 21 }, (_, i) => 'acme/' + prefix + i);
+    await page.addInitScript((groups) => localStorage.setItem('apihub-pr-board.settings', JSON.stringify({ repoGroups: groups })), [
+      { name: 'Left', repos: many('l') },
+      { name: 'Right', repos: many('r') },
+    ]);
+    await openBoard(page, { report: 'two-repos', refresh: 'ok', query: ALL });
+    await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+    await expect(page.getByRole('alert')).toHaveText('Refresh failed. The checked groups name 42 repositories; the board reads at most 40.'
+      + ' Uncheck a group in the Repositories menu.');
+  });
+
+  test('FILTER-14 SET-19: a link with repository groups fills the menu, is saved, and Settings edits go into the address', async ({ page }) => {
+    await openBoard(page, { report: 'two-repos', query: ALL + '&repogroups=Widgets:acme/widgets;*Gadgets%20%26%20Co:acme/gadgets' });
+    const button = page.getByRole('button', { name: /^Repositories:/ });
+    await expect(button).toHaveText(/Repositories:\s*Gadgets & Co/);
+    await expect(rows(page)).toHaveCount(4);
+    const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('apihub-pr-board.settings')!).repoGroups);
+    expect(stored).toEqual([{ name: 'Widgets', repos: ['acme/widgets'] }, { name: 'Gadgets & Co', repos: ['acme/gadgets'], isDefault: true }]);
+    await page.getByRole('button', { name: /^Settings/ }).click();
+    const field = page.getByRole('dialog', { name: 'Settings' }).getByRole('textbox', { name: 'Repository groups' });
+    await field.fill('Gadgets: acme/gadgets');
+    await field.press('Control+Enter');
+    await expect(page).toHaveURL(/[?&]repogroups=Gadgets:acme\/gadgets(&|$)/);
+  });
 });
+

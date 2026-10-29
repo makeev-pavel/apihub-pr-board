@@ -1,7 +1,7 @@
 // Repository groups (SET-19, FILTER-17): named lists of repositories defined in Settings. The Repositories menu checks
 // groups to show only the rows of their repositories; the data itself does not change.
 
-import { checkRepositoryList } from '../repository.ts';
+import { checkRepositoryList, uniqueNames } from '../repository.ts';
 
 export interface RepoGroup {
   name: string;
@@ -15,9 +15,9 @@ export const MAX_GROUPS = 20;
 // The menu entry for repositories of the data that are in no group. No group may take its name.
 export const UNGROUPED = 'Ungrouped';
 
-// A group name goes into the address as part of a comma-separated list, so it holds no comma.
+// Group names go into the address in lists split by commas and semicolons, so they hold neither.
 export function groupNameError(name: string): string | null {
-  if (name.includes(',')) return 'the group name "' + name + '" has a comma.';
+  if (/[,;]/.test(name)) return 'the group name "' + name + '" has a comma or a semicolon.';
   if (name.toLowerCase() === UNGROUPED.toLowerCase()) return '"' + UNGROUPED + '" names the repositories in no group; choose another name.';
   return null;
 }
@@ -50,6 +50,12 @@ export function parseGroupLines(text: string): { groups: RepoGroup[] } | { error
 
 export function groupsToText(groups: RepoGroup[]): string {
   return groups.map((group) => (group.isDefault ? '*' : '') + group.name + ': ' + group.repos.join(', ')).join('\n');
+}
+
+// Every repository of the groups, once, in the order the groups list them. The board loads those of the checked
+// groups when the address names no repositories (DATA-18).
+export function groupRepositories(groups: RepoGroup[]): string[] {
+  return uniqueNames(groups.flatMap((group) => group.repos));
 }
 
 const inAnyGroup = (groups: RepoGroup[]) => new Set(groups.flatMap((group) => group.repos.map((repo) => repo.toLowerCase())));
@@ -94,10 +100,14 @@ export function groupFilter(groups: RepoGroup[], checked: string[]): (repo: stri
   };
 }
 
-// The number of PRs of each entry; a repository in two groups counts in both.
-export function groupCounts(groups: RepoGroup[], options: string[], prRepos: string[]): Map<string, number> {
+// The number of PRs of each entry; a repository in two groups counts in both. A group none of whose repositories is
+// in the data has no count, since its PRs are not loaded.
+export function groupCounts(groups: RepoGroup[], options: string[], dataRepos: string[], prRepos: string[]): Map<string, number> {
+  const loaded = new Set(dataRepos.map((repo) => repo.toLowerCase()));
   const counts = new Map<string, number>();
   for (const name of options) {
+    const group = groups.find((g) => g.name === name);
+    if (group && !group.repos.some((repo) => loaded.has(repo.toLowerCase()))) continue;
     const test = groupFilter(groups, [name]);
     counts.set(name, prRepos.filter(test).length);
   }

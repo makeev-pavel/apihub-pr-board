@@ -1,8 +1,10 @@
 // Settings that travel in the page address, so a link or a bookmark carries them: the repositories to show, the extra
-// bot logins, and the hidden columns. They sit beside the view in the query, but Reset view leaves them alone.
+// bot logins, the hidden columns, and the repository groups. They sit beside the view in the query, but Reset view leaves them alone.
 
 import { isRepositoryName, MAX_REPOSITORIES, sameName, splitList, uniqueNames } from '../repository.ts';
 import { COLUMNS } from './columns.ts';
+import { parseGroupLines } from './groups.ts';
+import type { RepoGroup } from './groups.ts';
 import { parseList } from '../settings.ts';
 import type { Settings } from '../settings.ts';
 
@@ -22,6 +24,19 @@ export interface LinkSettings {
   bots: string[];
   // Ids of the hidden columns; undefined when the address does not say, so the saved ones apply.
   hidden?: string[];
+  // The repository groups; undefined when the address does not name them, so the saved ones apply.
+  groups?: RepoGroup[];
+}
+
+// Groups in the address: "*Name:owner/name,owner/name;Name:owner/name". Group names hold no ; or , (SET-19).
+function parseLinkGroups(value: string): RepoGroup[] | undefined {
+  const parsed = parseGroupLines(value.split(';').join('\n'));
+  return 'groups' in parsed ? parsed.groups : undefined;
+}
+
+function linkGroupsValue(groups: RepoGroup[]): string {
+  const keep = (text: string) => encodeURIComponent(text).replace(/%2F/g, '/').replace(/%2C/g, ',').replace(/%3A/g, ':').replace(/%2A/g, '*');
+  return groups.map((group) => keep((group.isDefault ? '*' : '') + group.name + ':' + group.repos.join(','))).join(';');
 }
 
 export function parseLinkSettings(search: string): LinkSettings {
@@ -29,7 +44,9 @@ export function parseLinkSettings(search: string): LinkSettings {
   const repos = uniqueNames(splitList(params.get('repos') || '').filter(isRepositoryName)).slice(0, MAX_REPOSITORIES);
   const hide = params.get('hide');
   const hidden = hide === null ? undefined : uniqueNames(splitList(hide).filter((id) => COLUMNS.some((column) => column.id === id)));
-  return { repos, bots: cleanBots(parseList(params.get('bots') || '')), hidden };
+  const groupsValue = params.get('repogroups');
+  const groups = groupsValue === null ? undefined : parseLinkGroups(groupsValue);
+  return { repos, bots: cleanBots(parseList(params.get('bots') || '')), hidden, ...(groups ? { groups } : {}) };
 }
 
 // Repository names are only letters, digits, and . _ - /, so they stay readable in the link; logins are encoded.
@@ -38,6 +55,7 @@ export function linkSettingsQuery(link: LinkSettings): string {
   if (link.repos.length) parts.push('repos=' + link.repos.join(','));
   if (link.bots.length) parts.push('bots=' + link.bots.map(encodeURIComponent).join(','));
   if (link.hidden && link.hidden.length) parts.push('hide=' + link.hidden.join(','));
+  if (link.groups && link.groups.length) parts.push('repogroups=' + linkGroupsValue(link.groups));
   return parts.join('&');
 }
 
@@ -82,4 +100,11 @@ export function applyLinkColumns(settings: Settings, link: LinkSettings): { sett
   const known = settings.hiddenColumns.filter((id) => COLUMNS.some((column) => column.id === id));
   if (link.hidden === undefined) return { settings, link: { ...link, hidden: known }, changed: false };
   return { settings: { ...settings, hiddenColumns: link.hidden }, link, changed: true };
+}
+
+// Repository groups work like hidden columns: a link that names them wins and is saved; otherwise the saved ones go
+// into the address, so a copied link carries the same groups.
+export function applyLinkGroups(settings: Settings, link: LinkSettings): { settings: Settings; link: LinkSettings; changed: boolean } {
+  if (link.groups === undefined) return { settings, link: { ...link, groups: settings.repoGroups }, changed: false };
+  return { settings: { ...settings, repoGroups: link.groups }, link, changed: true };
 }

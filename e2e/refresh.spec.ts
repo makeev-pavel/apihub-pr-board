@@ -162,10 +162,12 @@ test.describe('reviewers list', () => {
 
     await page.getByRole('button', { name: 'Refresh', exact: true }).click();
     await expect(page.locator('.source-button')).toHaveText('live, just now');
-    // The viewer's own request leads the list and stands out.
-    await expect(list.getByRole('listitem').first()).toHaveClass(/\bdue\b/);
-    await expect(list.getByRole('listitem').first()).toHaveText('boris-k (you)');
-    await expect(list.getByRole('listitem').first().getByRole('img', { name: 'awaiting review' })).toBeVisible();
+    // Requested changes come first; the viewer's own request leads the reviews not given yet and stands out.
+    await expect(list.getByRole('listitem').first().getByRole('img', { name: 'requested changes' })).toBeVisible();
+    const mine = list.getByRole('listitem').nth(1);
+    await expect(mine).toHaveClass(/\bdue\b/);
+    await expect(mine).toHaveText('boris-k (you)');
+    await expect(mine.getByRole('img', { name: 'awaiting review' })).toBeVisible();
     await row.getByRole('button', { name: 'Show all 10 reviewers of PR #9408' }).click();
     const all = page.getByRole('dialog', { name: 'All reviewers of PR #9408' });
     await expect(all.getByRole('listitem')).toHaveCount(10);

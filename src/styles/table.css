@@ -126,6 +126,9 @@
 .c-state { text-align: center; }
 .c-repo { font-size: 12px; }
 .c-repo a { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+/* A long name is cut at its start, so the distinctive end shows, such as "…apihub-ui" (TABLE-26). The name itself
+   stays left to right inside its bdi. */
+.c-repo a { direction: rtl; text-align: left; }
 .c-repo a:hover { color: var(--fg); }
 .board > thead > tr > th.c-state > button, .board > thead > tr > th.c-state > span:not(.col-resizer) { justify-content: center; }
 /* QUAL-11: a code that opens a popover shows an outline and a ▾ at rest, so it reads as a button before hover. */

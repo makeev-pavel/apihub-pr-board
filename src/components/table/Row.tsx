@@ -29,7 +29,7 @@ export const Row = memo(function Row({ pr, now, columns, repos, activeLabels, on
   const cells: Record<string, ReactNode> = {
     repo: (
       <td key="repo" className="c-repo mono">
-        {pr.repo ? <a href={'https://github.com/' + pr.repo} target="_blank" rel="noopener" title={pr.repo}>{repositoryLabel(pr.repo, repos)}</a>
+        {pr.repo ? <a href={'https://github.com/' + pr.repo} target="_blank" rel="noopener" title={pr.repo}><bdi>{repositoryLabel(pr.repo, repos)}</bdi></a>
           : <span className="dash">—</span>}
       </td>
     ),

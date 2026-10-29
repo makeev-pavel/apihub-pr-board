@@ -14,11 +14,12 @@ export interface ReviewerEntry {
 }
 
 const BY_STATE: Record<string, ReviewerStatus> = { APPROVED: 'approved', CHANGES_REQUESTED: 'changes', DISMISSED: 'dismissed' };
-// Reviews already given, the ones that block the PR first.
-const DONE_ORDER: ReviewerStatus[] = ['changes', 'approved', 'commented', 'dismissed'];
+// What still holds the PR comes first: requested changes, then reviews not given yet, and approvals last. Pending
+// and asked again share a rank, so requests keep GitHub's order.
+const RANK: Record<ReviewerStatus, number> = { changes: 0, pending: 1, again: 1, commented: 2, dismissed: 3, approved: 4 };
 
-// Requested reviewers come first: they still owe a review. A person asked again after a review of their own is listed
-// once, as asked again. The viewer's own request leads, so a long list never hides it.
+// A person asked again after a review of their own is listed once, as asked again. The viewer's own request leads
+// the reviews not given yet.
 export function reviewerEntries(pr: PullRequest, viewer = ''): ReviewerEntry[] {
   const isViewer = (actor: Actor, team: boolean) => !!viewer && !team && sameName(actor.login, viewer);
   const requested = pr.requestedReviewers.map((r): ReviewerEntry => {
@@ -28,7 +29,7 @@ export function reviewerEntries(pr: PullRequest, viewer = ''): ReviewerEntry[] {
   });
   const done = pr.reviewers
     .filter((r) => !requested.some((e) => !e.team && sameName(e.actor.login, r.login)))
-    .map((r): ReviewerEntry => ({ actor: r, team: false, status: BY_STATE[r.state] || 'commented', mine: isViewer(r, false) }))
-    .sort((a, b) => DONE_ORDER.indexOf(a.status) - DONE_ORDER.indexOf(b.status));
-  return [...requested.filter((e) => e.mine), ...requested.filter((e) => !e.mine), ...done];
+    .map((r): ReviewerEntry => ({ actor: r, team: false, status: BY_STATE[r.state] || 'commented', mine: isViewer(r, false) }));
+  return [...requested.filter((e) => e.mine), ...requested.filter((e) => !e.mine), ...done]
+    .sort((a, b) => RANK[a.status] - RANK[b.status]);
 }
