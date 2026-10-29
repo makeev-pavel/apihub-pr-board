@@ -95,9 +95,12 @@ export const COMMENT_BODY_LIMIT = 4000;
   - `prs.json` on page load: typical board and corner cases, typical board only, corner cases only, two
     repositories, no PRs, 300 PRs, project data unavailable, a three-day-old snapshot, a slow load, a missing file,
     invalid JSON, and JSON without a PR list;
-  - Refresh: success, several pages, forbidden projects, fewer PRs than `totalCount`, a slow response, pages one by
-    one for the load status, 401, 502, repository not found, and a network failure.
-- Corner cases are raw GraphQL nodes, so they go through the same normalization as real data.
+  - live loads: success, several pages, forbidden projects, project fields refused on a later page, fewer PRs than
+    `totalCount`, a slow response, pages one by one for the load status, 401, 502, repository not found, and a network
+    failure.
+- Corner cases are raw GraphQL nodes, so they go through the same normalization as real data. The GraphQL mock reads
+  the client's own variables type, honors every `@include` switch and the number of comments and reviews asked for,
+  and the REST mock answers only the two lists the comments panel reads, with GitHub's `[bot]` logins.
 - `PR_BOARD_MOCK_NOW` (an ISO time) pins the mock clock, so every scenario returns the same dates on every run.
   Browser and screenshot tests set it; without it the mocks follow the real clock.
 

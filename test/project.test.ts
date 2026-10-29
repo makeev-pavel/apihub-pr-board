@@ -66,4 +66,14 @@ test('QUAL-6: colors in the stylesheets come only from the theme tokens', () => 
   }
   const tokens = readFileSync('src/styles/tokens.css', 'utf8');
   assert.equal(tokens.match(/--surface:/g)?.length, 3, 'light, system dark, and chosen dark');
+  // The dark theme is written twice, for the system setting and for the chosen theme; the two copies must not drift.
+  const declarations = (block: string) => [...block.matchAll(/(--[a-z0-9-]+):\s*([^;]+);/g)].map((m) => m[1] + ':' + m[2].trim()).sort();
+  const blocks = [...tokens.matchAll(/\{([^{}]*--surface:[^{}]*)\}/g)].map((m) => declarations(m[1]));
+  assert.equal(blocks.length, 3);
+  assert.deepEqual(blocks[1], blocks[2], 'the system dark and the chosen dark tokens are the same');
+  // Every token that differs by theme is set in the dark theme too; fonts, label ink, and issue type colors are shared.
+  const THEMED = /^--(bg|surface|fg|muted|line|accent|bad|warn|running|good|idle|example-ink|shadow|backdrop|group)/;
+  const dark = new Set(blocks[1].map((d) => d.split(':')[0]));
+  const missing = blocks[0].map((d) => d.split(':')[0]).filter((name) => THEMED.test(name) && !dark.has(name));
+  assert.deepEqual(missing, [], 'light tokens without a dark value');
 });

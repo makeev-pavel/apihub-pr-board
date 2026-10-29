@@ -20,7 +20,7 @@ export function titleCases(now: number): FixtureEntry[] {
       }]),
     }),
     node('A long unbroken title and a long target branch wrap inside the cell.', {
-      title: 'chore: regenerate frontend/apihub-ui/src/components/ApiOperationsTable/OperationsTableRowWithNestedDiffBadges.generated.ts',
+      title: 'chore: regenerate frontend/widgets-ui/src/components/ApiOperationsTable/OperationsTableRowWithNestedDiffBadges.generated.ts',
       author: user('dara-ops'), baseRefName: 'release/2026.4-hotfix-operations-diff-rendering',
       createdAt: ago(1, 2), updatedAt: ago(1, 1),
     }),
@@ -39,7 +39,7 @@ export function titleCases(now: number): FixtureEntry[] {
       createdAt: ago(5), updatedAt: ago(0, 9),
     }),
     node('Title has no Conventional Commits type at all.', {
-      title: 'APIHUB-1234 Add export of operation groups',
+      title: 'WIDGET-1234 Add export of operation groups',
       author: user('gleb-be'), createdAt: ago(2), updatedAt: ago(1),
     }),
     node('Title type "feature" is not in the allowed list; "feat" is.', {

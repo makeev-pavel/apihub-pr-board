@@ -1,8 +1,9 @@
 /* The board table: layout, columns, rows, and the cells. */
 .table-wrap {
   background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
-  overflow: auto; min-width: 0; flex: 1 1 auto; min-height: 160px;
+  overflow: auto; min-width: 0; min-height: 160px;
 }
+/* #app > * holds every other part at its size; the table takes the rest. */
 #app > .table-wrap { flex: 1 1 auto; }
 /* Column widths come from <colgroup>; the table grows past the viewport and scrolls inside .table-wrap. */
 .board { border-collapse: separate; border-spacing: 0; table-layout: fixed; }
@@ -105,7 +106,7 @@
 .attn { display: inline-block; }
 .attn-icon {
   position: relative; width: 24px; height: 24px; border-radius: 50%; border: 0; cursor: pointer;
-  background: var(--bad-soft); color: var(--bad); font-weight: 700; font-size: 13px; display: inline-grid; place-items: center;
+  background: var(--bad-soft); color: var(--bad); font-weight: 600; font-size: 13px; display: inline-grid; place-items: center;
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--bad) 45%, transparent);
 }
 .attn-icon:hover, .attn-icon[aria-expanded="true"] { background: var(--bad); color: var(--surface); }
@@ -119,17 +120,14 @@
 .loading { display: inline-flex; align-items: center; gap: 10px; }
 .spinner { width: 18px; height: 18px; border: 2px solid var(--line-strong); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
 
 .pill.short { justify-content: center; min-width: 30px; padding: 0 7px; gap: 0; font-weight: 600; }
 .pill.short.running { animation: pulse 1.4s ease-in-out infinite; }
-@media (prefers-reduced-motion: reduce) { .pill.short.running { animation: none; } }
 .c-state { text-align: center; }
 .c-repo { font-size: 12px; }
-.c-repo a { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
-/* A long name is cut at its start, so the distinctive end shows, such as "…apihub-ui" (TABLE-26). The name itself
+/* A long name is cut at its start, so the distinctive end shows, such as "…gadgets-ui" (TABLE-26). The name itself
    stays left to right inside its bdi. */
-.c-repo a { direction: rtl; text-align: left; }
+.c-repo a { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: rtl; text-align: left; color: var(--muted); }
 /* The name of a repository in a group sits on the group's tint (TABLE-31). */
 .c-repo a.tinted { display: inline-block; max-width: 100%; vertical-align: top; padding: 1px 6px; border-radius: 4px; color: var(--fg); }
 .c-repo a:hover { color: var(--fg); }
@@ -145,7 +143,9 @@
 .pill.running { background: var(--running-soft); color: var(--running-ink); }
 .review-wrap { display: inline-flex; align-items: center; gap: 4px; }
 /* Reviewers who were asked but have not answered yet. */
-.pending { font-size: 11px; font-weight: 500; color: var(--muted); white-space: nowrap; cursor: help; }
+/* The ◷N count after the Review code, and its sample in the legend; a line of the Reviewers list with status pending
+   is styled on its own. */
+.review-wrap > .pending, .legend-item > .pending { font-size: 11px; font-weight: 500; color: var(--muted); white-space: nowrap; cursor: help; }
 
 /* The Issue column (TABLE-8): the type, the number, then the title on up to two lines, and the issue's labels. */
 .issue-list { display: grid; gap: 8px; font-size: 13px; }
@@ -192,7 +192,7 @@
 .reviewer.commented .state, .reviewer.dismissed .state { color: var(--muted); }
 /* The viewer's own review is due: the line stands out as a call to act. */
 .reviewer.due { background: var(--warn-soft); box-shadow: inset 2px 0 0 var(--warn); }
-.reviewers-wrap { position: relative; text-align: left; }
+.reviewers-wrap { text-align: left; }
 .reviewers-wrap .more { margin-top: 2px; padding: 0; border: 0; background: none; font: inherit; font-size: 12px; color: var(--accent); cursor: pointer; }
 .reviewers-wrap .more:hover { text-decoration: underline; }
 .reviewers-popover .reviewers { padding: 4px 0; }
@@ -205,4 +205,4 @@
 .load-status .load-lines { margin: 4px 0 0; padding: 0; list-style: none; color: var(--muted); font-size: 12px; line-height: 18px; }
 .load-status.floating { position: fixed; right: 24px; bottom: 44px; z-index: 30; max-width: min(520px, calc(100vw - 48px)); padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); box-shadow: var(--shadow); }
 .load-status.finished { align-items: center; }
-.load-status .done-mark { color: var(--good); font-weight: 700; }
+.load-status .done-mark { color: var(--good); font-weight: 600; }

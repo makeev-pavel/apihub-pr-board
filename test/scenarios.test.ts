@@ -49,3 +49,22 @@ test('DATA-21: the two-repository scenario repeats PR numbers, and the REST mock
   const mixed = JSON.parse((REPORT_SCENARIOS.find((s) => s.id === 'mixed')!.respond(at) as { body: string }).body);
   assert.deepEqual(mixed.repos, ['acme/widgets'], 'the default board stays one repository');
 });
+
+test('DATA-21: the copies of the 300-PR scenario answer comments, as the PRs they copy do', () => {
+  const at = Date.parse('2026-10-28T12:00:00Z');
+  // Before, the copies were unknown to the REST mock, which answered 404.
+  const copies = Array.from({ length: 20 }, (_, i) => restComments('acme/widgets', 20000 + i, at));
+  assert.ok(copies.every((copy) => copy !== null));
+  assert.ok(copies.some((copy) => copy!.comments.length > 0));
+});
+
+test('DATA-8 DATA-9: the GraphQL mock leaves out what the query switches off and keeps the last comments it asks for', () => {
+  const ok = REFRESH_SCENARIOS.find((s) => s.id === 'ok')!;
+  const at = Date.parse('2026-10-28T12:00:00Z');
+  const page = (variables: Record<string, unknown>) => {
+    const result = ok.respond({ owner: 'acme', repo: 'widgets', first: 100, after: null, ...variables }, at) as { body: string };
+    return JSON.parse(result.body).data.repository.pullRequests.nodes as { comments?: { nodes: unknown[] }; reviews?: unknown }[];
+  };
+  assert.ok(page({ withComments: false }).every((node) => node.comments === undefined && node.reviews === undefined));
+  assert.ok(page({ commentsFetched: 1 }).every((node) => !node.comments || node.comments.nodes.length <= 1));
+});

@@ -11,7 +11,7 @@ import {
   ALL_PARTS, AVATAR_SIZE, CHECKS_PAGE_SIZE, COMMENTS_FETCHED, MIN_PAGE_SIZE, OPEN_PULL_REQUESTS_QUERY, PAGE_SIZE, PROJECT_FIELDS,
   PROJECT_ITEMS,
 } from './query.ts';
-import type { QueryParts } from './query.ts';
+import type { QueryParts, QueryVariables } from './query.ts';
 import type { RawPullRequest, RawResponse } from './raw.ts';
 
 export const GRAPHQL_URL = 'https://api.github.com/graphql';
@@ -38,7 +38,7 @@ export interface FetchOptions {
   signal?: AbortSignal;
 }
 
-async function postQuery(fetchImpl: Fetch, endpoint: string, token: string, variables: Record<string, unknown>,
+async function postQuery(fetchImpl: Fetch, endpoint: string, token: string, variables: QueryVariables,
   signal: AbortSignal | undefined): Promise<RawResponse> {
   let response: Response;
   try {

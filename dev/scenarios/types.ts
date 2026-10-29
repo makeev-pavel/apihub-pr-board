@@ -1,20 +1,14 @@
 // How mock scenarios answer the dev server.
 
+import type { QueryVariables } from '../../src/github/query.ts';
+
 // How the mock answers: an HTTP status and body, optionally after a delay, or a dropped connection.
 export type MockResponse =
   | { status: number; body: string; delayMs?: number; destroy?: false }
   | { destroy: true; delayMs?: number };
 
-export interface GraphqlVariables {
-  owner: string;
-  repo: string;
-  first: number;
-  after: string | null;
-  // The @include switch of the project fields; only false leaves them out.
-  withProjectFields?: boolean;
-  // The @include switch of the viewer; only false leaves it out.
-  withViewer?: boolean;
-}
+// What the client sends; tests may leave out the switches, which then count as on.
+export type GraphqlVariables = Pick<QueryVariables, 'owner' | 'repo' | 'first' | 'after'> & Partial<QueryVariables>;
 
 export interface ReportScenario {
   id: string;

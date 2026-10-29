@@ -22,7 +22,7 @@ test('RULE-6: valid Conventional Commits titles pass', () => {
 });
 
 test('RULE-6: invalid titles explain what is wrong', () => {
-  assert.match(titleProblem('APIHUB-1234 Add export') ?? '', /expected "type\(scope\): subject"/);
+  assert.match(titleProblem('WIDGET-1234 Add export') ?? '', /expected "type\(scope\): subject"/);
   assert.match(titleProblem('fix(ui):no space') ?? '', /expected/);
   assert.match(titleProblem('Revert "feat: x"') ?? '', /expected/);
   assert.match(titleProblem('feature: add x') ?? '', /type "feature" is not allowed/);

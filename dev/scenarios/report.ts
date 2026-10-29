@@ -3,6 +3,7 @@
 import { normalizePullRequest } from '../../src/github/normalize.ts';
 import type { Report } from '../../src/types.ts';
 import { cornerCaseNodes } from '../fixtures/corner-cases.ts';
+import { DAY_MS } from '../fixtures/builders.ts';
 import type { FixtureEntry } from '../fixtures/builders.ts';
 import { gadgetsEntries } from '../fixtures/gadgets.ts';
 import { DEV_REPOSITORY, GADGETS_REPOSITORY } from '../fixtures/people.ts';
@@ -10,7 +11,6 @@ import { typicalNodes } from '../fixtures/typical.ts';
 import { MANY_PRS, manyEntries, mixedEntries } from './entries.ts';
 import type { MockResponse, ReportScenario } from './types.ts';
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 const STALE_SNAPSHOT_DAYS = 3;
 const SLOW_REPORT_MS = 3000;

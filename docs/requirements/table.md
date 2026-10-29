@@ -123,7 +123,7 @@
 
 - **TABLE-26** When the data covers more than one repository, a Repository column comes first. It shows the repository
   name without its owner, such as `widgets` for `acme/widgets`, linked to the repository, with `owner/name` in the
-  tooltip; a name too long for the column is cut at its start, such as `…apihub-ui`; the owner shows only when two
+  tooltip; a name too long for the column is cut at its start, such as `…gadgets-ui`; the owner shows only when two
   repositories on the board have the same name. It sorts A to Z first, with ties by PR number, newest first. It can be
   hidden in Settings (**SET-8**). With one repository the column and its Settings entry are absent.
 - **TABLE-31** With repository groups (**SET-19**), each group takes one of six soft tints in turn, by its place in

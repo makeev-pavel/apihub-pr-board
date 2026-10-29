@@ -1,5 +1,6 @@
 // Corner cases. Attention: the age limit and PRs with several problems at once.
 
+import { STALE_DAYS } from '../../../src/model/rules.ts';
 import { checks, conn, review, rollup, run, user } from '../builders.ts';
 import type { FixtureEntry } from '../builders.ts';
 import { caseKit } from './kit.ts';
@@ -24,13 +25,14 @@ export function attentionCases(now: number): FixtureEntry[] {
       createdAt: ago(214), updatedAt: ago(160),
       comments: conn([{ createdAt: ago(160), author: user('chen-li'), body: 'Please split this into the parser change and the UI change.' }]),
     }),
-    node('Open exactly 10 days: still within the limit.', {
+    // The default age limit, so the two cases follow it if it changes (RULE-7).
+    node('Open exactly ' + STALE_DAYS + ' days: still within the limit.', {
       title: 'fix(builder): keep operation order stable across rebuilds',
-      author: user('emil-qa'), createdAt: ago(10, 2), updatedAt: ago(2),
+      author: user('emil-qa'), createdAt: ago(STALE_DAYS, 2), updatedAt: ago(2),
     }),
-    node('Open 11 days: one day over the limit.', {
+    node('Open ' + (STALE_DAYS + 1) + ' days: one day over the limit.', {
       title: 'fix(builder): normalize trailing slashes in server URLs',
-      author: user('emil-qa'), createdAt: ago(11, 2), updatedAt: ago(2),
+      author: user('emil-qa'), createdAt: ago(STALE_DAYS + 1, 2), updatedAt: ago(2),
     }),
     node('Three problems at once: the icon shows a counter.', {
       title: 'WIP export',

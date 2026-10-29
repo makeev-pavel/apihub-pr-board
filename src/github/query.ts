@@ -15,6 +15,25 @@ export const AVATAR_SIZE = 48;
 export const PROJECT_FIELDS = { priority: 'Priority', estimate: 'Estimate', sprint: 'Sprint' };
 export const PROJECT_ITEMS = 3;
 
+// The variables of OPEN_PULL_REQUESTS_QUERY. The GraphQL mock reads the same type, so the two cannot drift apart.
+export interface QueryVariables {
+  owner: string;
+  repo: string;
+  first: number;
+  after: string | null;
+  avatarSize: number;
+  checksPageSize: number;
+  commentsFetched: number;
+  withChecks: boolean;
+  withComments: boolean;
+  withProjectFields: boolean;
+  projectItems: number;
+  priorityField: string;
+  estimateField: string;
+  sprintField: string;
+  withViewer: boolean;
+}
+
 export const OPEN_PULL_REQUESTS_QUERY = `
 query($owner: String!, $repo: String!, $first: Int!, $after: String, $avatarSize: Int!, $checksPageSize: Int!, $commentsFetched: Int!,
   $withChecks: Boolean!, $withComments: Boolean!, $withProjectFields: Boolean!, $projectItems: Int!, $priorityField: String!,

@@ -11,16 +11,36 @@ import type { GraphqlVariables, MockResponse, RefreshScenario } from './types.ts
 const SLOW_REFRESH_MS = 4000;
 const PACED_PAGE_MS = 500;
 const SMALL_PAGE = 7;
+// reviews(last: 10) in the query.
+const REVIEWS_FETCHED = 10;
 const MISSING_PRS = 3;
 
-function graphqlPage(entries: FixtureEntry[], variables: GraphqlVariables, { pageSize = variables.first, totalExtra = 0, projectsError = false } = {}): MockResponse {
+// Like GitHub, the mock leaves out what the query's @include switches off, and keeps only the last comments and reviews
+// the query asks for.
+function asQueried(node: FixtureEntry['node'], variables: GraphqlVariables): FixtureEntry['node'] {
+  const next = { ...node };
+  if (variables.withProjectFields === false && next.closingIssuesReferences) {
+    next.closingIssuesReferences = { nodes: (next.closingIssuesReferences.nodes || []).map((issue) => (issue ? { ...issue, projectItems: undefined } : issue)) };
+  }
+  if (variables.withComments === false) {
+    delete next.comments;
+    delete next.reviews;
+  } else {
+    if (next.comments && variables.commentsFetched) next.comments = { nodes: (next.comments.nodes || []).slice(-variables.commentsFetched) };
+    if (next.reviews) next.reviews = { nodes: (next.reviews.nodes || []).slice(-REVIEWS_FETCHED) };
+  }
+  if (variables.withChecks === false && next.commits) {
+    next.commits = { nodes: (next.commits.nodes || []).map((commit) => (commit && commit.commit && commit.commit.statusCheckRollup
+      ? { commit: { statusCheckRollup: { ...commit.commit.statusCheckRollup, contexts: undefined } } } : commit)) };
+  }
+  return next;
+}
+
+function graphqlPage(entries: FixtureEntry[], variables: GraphqlVariables,
+  { pageSize = variables.first, totalExtra = 0, projectsError = false, fieldsRefusedAfterFirstPage = false } = {}): MockResponse {
   const offset = variables.after ? Number(variables.after) : 0;
-  // Like GitHub, the mock leaves out what the query's @include switches off.
-  const withoutFields = (node: FixtureEntry['node']) => (variables.withProjectFields === false && node.closingIssuesReferences
-    ? { ...node, closingIssuesReferences: { nodes: (node.closingIssuesReferences.nodes || []).map((issue) => (issue ? { ...issue, projectItems: undefined } : issue)) } }
-    : node);
   const slice = entries.slice(offset, offset + pageSize)
-    .map(({ node }) => withoutFields(projectsError ? { ...node, projectsV2: null } : node));
+    .map(({ node }) => asQueried(projectsError ? { ...node, projectsV2: null } : node, variables));
   const next = offset + slice.length;
   const body: RawResponse = {
     data: {
@@ -34,6 +54,11 @@ function graphqlPage(entries: FixtureEntry[], variables: GraphqlVariables, { pag
       },
     },
   };
+  // GitHub refuses the project fields of an issue in a project the token cannot read, and nulls that issue.
+  if (fieldsRefusedAfterFirstPage && offset > 0 && variables.withProjectFields !== false && slice.length) {
+    body.errors = [{ type: 'FORBIDDEN', path: ['repository', 'pullRequests', 'nodes', 0, 'closingIssuesReferences', 'nodes', 0, 'projectItems'],
+      message: 'Resource not accessible by integration' }];
+  }
   if (projectsError && slice.length) {
     body.errors = slice.map((_, i) => ({
       type: 'FORBIDDEN',
@@ -82,6 +107,8 @@ export const REFRESH_SCENARIOS: RefreshScenario[] = [
   { id: 'ok', label: 'Success', respond: ok },
   { id: 'paginated', label: 'Success over several pages', respond: board(mixedEntries, { pageSize: SMALL_PAGE }) },
   { id: 'projects-error', label: 'Partial error: projects forbidden', respond: board(typicalNodes, { projectsError: true }) },
+  // The refusal comes on a later page, so the load reads the repository again from its first page (DATA-25).
+  { id: 'fields-error', label: 'Partial error: project fields forbidden', respond: board(mixedEntries, { pageSize: SMALL_PAGE, fieldsRefusedAfterFirstPage: true }) },
   { id: 'count-mismatch', label: 'Fewer PRs than totalCount', respond: board(typicalNodes, { totalExtra: MISSING_PRS }) },
   // Only the first page waits, so the delay stays 4 s however many pages the board takes.
   { id: 'slow', label: 'Slow response (4 s)', respond: (v, now) => ({ ...ok(v, now), delayMs: v.after ? 0 : SLOW_REFRESH_MS }) },

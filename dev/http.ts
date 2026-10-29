@@ -28,5 +28,6 @@ export async function respondMock(res: ServerResponse, result: MockResponse) {
     res.socket?.destroy();
     return;
   }
-  send(res, result.status, result.body, result.status === 200 ? JSON_TYPE : TEXT_TYPE);
+  // GitHub answers errors in JSON too, such as 401 Bad credentials; plain text stays plain text.
+  send(res, result.status, result.body, /^\s*[[{]/.test(result.body) ? JSON_TYPE : TEXT_TYPE);
 }

@@ -3,7 +3,7 @@
 
 import type { RawPullRequest } from '../../src/github/raw.ts';
 import {
-  agoFrom, bot, checks, conn, ISSUES_URL, label, PULLS_URL, requested, review, rollup, run, user,
+  agoFrom, bot, checks, conn, DAY_MS, ISSUES_URL, label, PULLS_URL, requested, review, rollup, run, user,
 } from './builders.ts';
 import type { FixtureEntry } from './builders.ts';
 import { PEOPLE } from './people.ts';
@@ -32,7 +32,7 @@ const ESTIMATES = [1, 2, 3, 5, 8, null];
 const SPRINT_DAYS = 14;
 
 function projectItem(i: number, now: number) {
-  const day = (offset: number) => new Date(now - offset * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const day = (offset: number) => new Date(now - offset * DAY_MS).toISOString().slice(0, 10);
   const sprint = i % 3 === 0 ? { title: 'Sprint 42', startDate: day(3), duration: SPRINT_DAYS }
     : i % 3 === 1 ? { title: 'Sprint 41', startDate: day(3 + SPRINT_DAYS), duration: SPRINT_DAYS } : null;
   const estimate = ESTIMATES[i % ESTIMATES.length];
@@ -74,8 +74,9 @@ function seeded(seed: number) {
 
 function reviewsFor(kind: number, author: string, others: string[], at: string) {
   const [first, second] = others.filter((p) => p !== author);
-  const decided = { 0: [review('APPROVED', first, at)], 1: [], 2: [review('CHANGES_REQUESTED', first, at)],
-    3: [review('APPROVED', first, at), review('APPROVED', second, at)], 4: [] }[kind] || [];
+  // One list per kind: approved, nothing yet, changes requested, two approvals, and nothing yet with a request.
+  const decided = [[review('APPROVED', first, at)], [], [review('CHANGES_REQUESTED', first, at)],
+    [review('APPROVED', first, at), review('APPROVED', second, at)], []][kind];
   const waiting = kind === 3 || kind === 4 ? [requested(others.find((p) => p !== author && p !== first && p !== second)!)] : [];
   return { latestOpinionatedReviews: conn(decided), reviewRequests: conn(waiting) };
 }

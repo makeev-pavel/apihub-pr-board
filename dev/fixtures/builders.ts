@@ -6,7 +6,9 @@ import type {
 import { avatarUrl } from '../avatars.ts';
 import { REPO_URL } from './people.ts';
 
-const HOUR_MS = 60 * 60 * 1000;
+const MINUTE_MS = 60 * 1000;
+const HOUR_MS = 60 * MINUTE_MS;
+export const DAY_MS = 24 * HOUR_MS;
 // A mock PR and the note the board shows under its title.
 export interface FixtureEntry {
   node: RawPullRequest;
@@ -16,7 +18,7 @@ export interface FixtureEntry {
 
 export const PULLS_URL = REPO_URL + '/pulls';
 export const ISSUES_URL = REPO_URL + '/issues';
-export const ACTIONS_URL = REPO_URL + '/actions';
+const ACTIONS_URL = REPO_URL + '/actions';
 
 export function user(login: string): RawActor & { avatarUrl: string } {
   return { __typename: 'User', login, avatarUrl: avatarUrl(login) };
@@ -54,7 +56,7 @@ export function review(state: string, login: string | null, submittedAt: string)
 }
 
 export function requested(login: string): RawReviewRequest {
-  return { requestedReviewer: { __typename: 'User', login, avatarUrl: avatarUrl(login) } };
+  return { requestedReviewer: { ...user(login), __typename: 'User' } };
 }
 
 export function team(name: string): RawReviewRequest {
@@ -64,5 +66,5 @@ export function team(name: string): RawReviewRequest {
 // An ISO time the given amount before now.
 export function agoFrom(now: number) {
   return (days: number, hours = 0, minutes = 0) =>
-    new Date(now - days * 24 * HOUR_MS - hours * HOUR_MS - minutes * 60 * 1000).toISOString();
+    new Date(now - days * DAY_MS - hours * HOUR_MS - minutes * MINUTE_MS).toISOString();
 }

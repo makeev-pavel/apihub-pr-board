@@ -564,3 +564,12 @@ test('DATA-10: a cut body never splits a two-unit character or leaves an HTML co
   assert.equal(open.body, 'Intro…');
   assert.equal(open.truncated, true);
 });
+
+test('DATA-25: the mock that refuses project fields on a later page leads to a complete read without them', async () => {
+  const { fetchImpl } = mockFetch('fields-error');
+  const report = await fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl });
+  const full = await fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl: mockFetch('ok').fetchImpl });
+  assert.equal(report.prs.length, full.prs.length);
+  assert.ok(report.prs.every((pr) => pr.issues.every((issue) => issue.priority === null && issue.sprint === null)));
+  assert.ok(report.warnings.some((w) => w.startsWith('Project fields')));
+});

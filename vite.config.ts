@@ -8,12 +8,13 @@ export default defineConfig(({ command, mode }) => {
   // Builds and live mode may name real repositories in PR_BOARD_REPO, as defaults; without it the page takes them from
   // the link or Settings, like the published page (DATA-1). Mock data is fictional, so the dev server shows the
   // fictional repository whatever the variable says.
-  const value = command === 'build' || mode === LIVE_MODE ? process.env[REPO_VARIABLE] : DEV_REPOSITORY;
+  const live = mode === LIVE_MODE;
+  const value = command === 'build' || live ? process.env[REPO_VARIABLE] : DEV_REPOSITORY;
   const repositories = value ? parseRepositories(value) : [];
   return {
     // Relative asset paths, so the site works under any GitHub Pages path.
     base: './',
-    plugins: [react(), devMocks({ repositories })],
+    plugins: [react(), devMocks({ repositories, live })],
     define: { __PR_BOARD_REPO__: JSON.stringify(repositories.map(repositoryName).join(',')) },
     server: { port: 5173 },
     build: { outDir: '_site', emptyOutDir: true },

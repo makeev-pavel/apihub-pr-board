@@ -1,5 +1,5 @@
-// Vite plugin for the dev server: mocked /prs.json and GraphQL scenarios, or live GitHub data in --mode live.
-// It also injects the DEV panel. None of this runs in `vite build`.
+// Vite plugin for the dev server: mocked /prs.json, GraphQL, REST, and avatars from scenarios, or live GitHub data in
+// --mode live. It also injects the DEV panel. None of this runs in `vite build`.
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Plugin } from 'vite';
@@ -21,15 +21,15 @@ const LIVE_CACHE_MS = 5 * 60 * 1000;
 
 const REST_PREFIX = '/__dev/rest';
 
-// /repos/<owner>/<repo>/issues/<n>/comments or /repos/<owner>/<repo>/pulls/<n>/reviews
-const REST_ROUTE = /^\/repos\/([^/]+\/[^/]+)\/(issues|pulls)\/(\d+)\/(comments|reviews)$/;
+// The two REST lists the comments panel reads, as GitHub names them.
+const REST_ROUTE = /^\/repos\/([^/]+\/[^/]+)\/(?:issues\/(\d+)\/comments|pulls\/(\d+)\/reviews)$/;
 
-export function devMocks({ repositories }: { repositories: Repository[] }): Plugin {
+// live comes from the same mode check as the repositories in vite.config.ts, so the two never disagree.
+export function devMocks({ repositories, live }: { repositories: Repository[]; live: boolean }): Plugin {
   const state = { report: REPORT_SCENARIOS[0].id, refresh: REFRESH_SCENARIOS[0].id };
   // Mock answers use this clock; the live cache below keeps real time.
   const now = mockClock();
   const token = process.env.GITHUB_TOKEN || '';
-  let live = false;
   let liveCache: { at: number; body: string } | null = null;
 
   async function serveReport(res: ServerResponse) {
@@ -59,9 +59,10 @@ export function devMocks({ repositories }: { repositories: Repository[] }): Plug
 
   function serveRest(res: ServerResponse, pathname: string) {
     const match = REST_ROUTE.exec(pathname.slice(REST_PREFIX.length));
-    const found = match ? restComments(match[1], Number(match[3]), now()) : null;
+    const comments = !!match && match[2] !== undefined;
+    const found = match ? restComments(match[1], Number(comments ? match[2] : match[3]), now()) : null;
     if (!match || !found) return send(res, 404, JSON.stringify({ message: 'Not Found' }), JSON_TYPE);
-    return send(res, 200, JSON.stringify(match[4] === 'comments' ? found.comments : found.reviews), JSON_TYPE);
+    return send(res, 200, JSON.stringify(comments ? found.comments : found.reviews), JSON_TYPE);
   }
 
   // Generated avatars for the fictional cast; anything under missing/ is a broken image on purpose.
@@ -101,8 +102,7 @@ export function devMocks({ repositories }: { repositories: Repository[] }): Plug
   return {
     name: 'apihub-pr-board-dev-mocks',
     apply: 'serve',
-    configResolved(config) {
-      live = config.mode === LIVE_MODE;
+    configResolved() {
       const snapshot = token && repositories.length ? 'a snapshot of ' + repositories.map(repositoryName).join(', ')
         : 'no snapshot; enter the repositories and a token on the page';
       console.log(live ? 'Data: live GitHub API, ' + snapshot : 'Data: mock scenarios (switch them in the DEV panel)');
