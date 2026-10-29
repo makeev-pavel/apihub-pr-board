@@ -529,7 +529,7 @@ their own PRs), and they stay in this browser's `localStorage`. Spec: `docs/requ
 `feat/standup-notes`.
 
 - [x] **N1. Spec** (NOTE-1 to NOTE-7). About 20 min.
-- [ ] **N2. Notes model and storage:** `src/board/notes.ts` (per PR and local day, validated on load, capped at 100
+- [x] **N2. Notes model and storage:** `src/board/notes.ts` (per PR and local day, validated on load, capped at 100
   days) with unit tests. About 45 min.
 - [ ] **N3. Standup column and popover:** checkbox, today's text, the latest earlier note faded, history newest first,
   the day change at midnight; browser tests. About 1.5 hours.
