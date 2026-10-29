@@ -13,7 +13,7 @@ The requirements are in [docs/requirements/](docs/requirements/README.md).
 - The page is React and TypeScript, bundled by Vite. It queries GitHub from the browser with the viewer's own
   fine-grained token, which stays in that browser and never goes into the link.
 - With repositories in the link and a saved token, the board loads by itself when it opens. **Refresh** loads it
-  again.
+  again. Without a token, a dialog explains how to create one on GitHub and takes it.
 - `src/github/` holds the query, the normalization, and the GitHub clients. `scripts/build-site.ts` can still write a
   `prs.json` snapshot next to the page, so it opens without a token; the workflow does not run it.
 

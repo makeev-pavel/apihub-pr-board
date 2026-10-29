@@ -25,3 +25,14 @@
 .token-form label { font-size: 12px; font-weight: 600; }
 .token-form input { padding: 7px 10px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); color: var(--fg); font: inherit; }
 .token-form .actions { border: 0; padding: 0; margin: 4px 0 0; }
+
+/* The token dialog (SET-18): centered over a dimmed page. */
+.dialog-backdrop { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px; background: color-mix(in srgb, var(--fg) 35%, transparent); }
+.token-dialog { width: min(460px, 100%); display: grid; gap: 10px; padding: 18px 20px; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--surface); color: var(--fg); box-shadow: var(--shadow); }
+.token-dialog h2 { margin: 0; font-size: 16px; }
+.token-dialog p, .token-dialog ol { margin: 0; font-size: 13px; }
+.token-dialog ol { padding-left: 20px; display: grid; gap: 4px; }
+.token-dialog code { font-family: var(--font-mono); font-size: 12px; }
+.token-dialog input { padding: 6px 8px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); color: var(--fg); font: inherit; }
+.token-dialog .actions { display: flex; gap: 8px; }
+.banner-action { margin-left: 10px; }

@@ -70,7 +70,7 @@ test.describe('loading prs.json', () => {
   test('DATA-23: without prs.json and without a token, a banner names the repositories and asks for a token', async ({ page }) => {
     await openBoard(page, { report: 'missing', query: 'repos=acme/gadgets' });
     await expect(page.locator('.banner.bad')).toHaveCount(0);
-    await expect(page.locator('.banner.warn')).toHaveText('acme/gadgets is not loaded yet. Add a GitHub token in Settings, then Refresh loads it.');
+    await expect(page.locator('.banner.warn')).toContainText('acme/gadgets is not loaded yet. Add a GitHub token in Settings, then Refresh loads it.');
     await expect(page.getByText('No pull requests loaded yet')).toBeVisible();
   });
 
@@ -101,5 +101,43 @@ test.describe('loading prs.json', () => {
     await expect(page.locator('.banner.bad')).toContainText('Refresh failed.');
     await page.waitForTimeout(1000);
     expect(graphqlCalls).toBe(1);
+  });
+
+  test('SET-18: without a token, a dialog explains how to create one; Not now and Escape close it until a reload', async ({ page }) => {
+    await openBoard(page, { report: 'missing', query: 'repos=acme/gadgets' });
+    const dialog = page.getByRole('dialog', { name: 'Add a GitHub token' });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole('link', { name: 'Create a fine-grained token' }))
+      .toHaveAttribute('href', 'https://github.com/settings/personal-access-tokens/new');
+    await expect(dialog).toContainText('Public repositories (read-only)');
+    await expect(dialog).toContainText('github_pat_');
+    await expect(dialog.getByLabel('Token')).toHaveAttribute('type', 'password');
+    await expect(dialog.locator('form')).toHaveCount(0);
+    await dialog.getByRole('button', { name: 'Not now' }).click();
+    await expect(dialog).toHaveCount(0);
+    // It stays closed when the repositories change, here from one to two.
+    await page.getByRole('button', { name: /^Settings/ }).click();
+    const field = page.getByRole('dialog', { name: 'Settings' }).getByRole('textbox', { name: 'Repositories' });
+    await field.fill('acme/widgets acme/gadgets');
+    await field.press('Enter');
+    await expect(page).toHaveURL(/repos=acme\/widgets,acme\/gadgets/);
+    await expect(dialog).toHaveCount(0);
+    await page.keyboard.press('Escape');
+    await page.locator('.banner.warn').getByRole('button', { name: 'Add token' }).click();
+    await expect(dialog).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+  });
+
+  test('SET-18 DATA-23: Save and load in the dialog stores the token and loads the board', async ({ page }) => {
+    await openBoard(page, { report: 'missing', refresh: 'ok', query: ALL + '&repos=acme/gadgets' });
+    const dialog = page.getByRole('dialog', { name: 'Add a GitHub token' });
+    const save = dialog.getByRole('button', { name: 'Save and load' });
+    await expect(save).toBeDisabled();
+    await dialog.getByLabel('Token').fill('mock-token');
+    await dialog.getByLabel('Token').press('Enter');
+    await expect(dialog).toHaveCount(0);
+    await expect(rows(page)).toHaveCount(4);
+    expect(await page.evaluate((key) => localStorage.getItem(key), TOKEN_KEY)).toBe('mock-token');
   });
 });

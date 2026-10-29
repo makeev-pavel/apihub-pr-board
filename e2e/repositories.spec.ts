@@ -112,11 +112,11 @@ test.describe('several repositories', () => {
   test('DATA-22: repositories missing from the snapshot get a banner, and Refresh with a token loads them', async ({ page }) => {
     await openBoard(page, { report: 'mixed', refresh: 'ok', query: ALL + '&repos=acme/widgets,acme/gadgets' });
     const banner = page.locator('.banner.warn');
-    await expect(banner).toHaveText('acme/gadgets is not in the snapshot. Add a GitHub token in Settings, then Refresh loads it.');
+    await expect(banner).toContainText('acme/gadgets is not in the snapshot. Add a GitHub token in Settings, then Refresh loads it.');
     await expect(rows(page)).toHaveCount(75);
     await page.getByRole('button', { name: 'Refresh', exact: true }).click();
-    await page.locator('#token-input').fill('mock-token');
-    await page.getByRole('button', { name: 'Save and refresh' }).click();
+    await page.getByRole('dialog', { name: 'Add a GitHub token' }).getByLabel('Token').fill('mock-token');
+    await page.getByRole('button', { name: 'Save and load' }).click();
     await expect(page.locator('.source-button')).toHaveText('live, just now');
     await expect(rows(page)).toHaveCount(79);
     await expect(banner).toHaveCount(0);

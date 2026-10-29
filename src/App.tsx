@@ -9,6 +9,7 @@ import {
 } from './board/view.ts';
 import type { SortKey, View } from './board/view.ts';
 import { RefreshControl } from './components/header/RefreshControl.tsx';
+import { TokenDialog } from './components/settings/TokenDialog.tsx';
 import { Tiles } from './components/header/Tiles.tsx';
 import { UpdateInfo } from './components/header/UpdateInfo.tsx';
 import { LegendBar } from './components/legend/LegendBar.tsx';
@@ -80,6 +81,10 @@ export function App() {
     setView((prev) => ({ ...prev, q: toggleLabelFilter(prev.q, name) }));
   }, []);
   const setToken = (value: string) => { storeToken(value); setTokenState(value); };
+  // The token dialog (SET-18). After Not now it does not open by itself again until the page reloads.
+  const [askingToken, setAskingToken] = useState(false);
+  const tokenDismissed = useRef(false);
+  const closeTokenDialog = useCallback(() => { tokenDismissed.current = true; setAskingToken(false); }, []);
 
   const refresh = (withToken: string) => {
     // Refresh reads the repositories the address asks for, or else those on the page; the build's list only counts
@@ -111,6 +116,9 @@ export function App() {
     autoLoaded.current = key;
     refresh(token);
   });
+  useEffect(() => {
+    if (data.noSnapshot && !token && wanted.length && !tokenDismissed.current) setAskingToken(true);
+  }, [data.noSnapshot, token, wanted.length]);
 
   const prs = useMemo(() => {
     const shown = new Set(repos.map((repo) => repo.toLowerCase()));
@@ -153,7 +161,7 @@ export function App() {
         <div className="masthead-side">
           <Tiles base={base} active={view.quick} setQuick={(quick) => patch({ quick })} />
           {report ? <UpdateInfo report={report} live={data.source === 'live'} now={now} /> : null}
-          <RefreshControl token={token} setToken={setToken} refreshing={refreshing} onRefresh={refresh}
+          <RefreshControl token={token} setToken={setToken} refreshing={refreshing} onRefresh={refresh} onAskToken={() => setAskingToken(true)}
             settings={settings} onSettingsChange={setSettings} columns={offeredColumns}
             repositories={{ requested: link.repos, available: dataRepos, onChange: setRepos }}
             canResetWidths={canResetWidths} onResetWidths={resetWidths} />
@@ -167,7 +175,10 @@ export function App() {
         </div>
       ) : null}
       {pending.length && (report || data.noSnapshot) && !refreshing ? (
-        <div className="banner warn">{missingReposMessage(pending, !!token, notLoaded ? 'none' : data.source === 'live' ? 'live' : 'snapshot')}</div>
+        <div className="banner warn">
+          {missingReposMessage(pending, !!token, notLoaded ? 'none' : data.source === 'live' ? 'live' : 'snapshot')}
+          {token ? null : <button type="button" className="btn banner-action" onClick={() => setAskingToken(true)}>Add token</button>}
+        </div>
       ) : null}
       {report && report.warnings.length ? <div className="banner warn">{report.warnings.map((w) => <div key={w}>{w}</div>)}</div> : null}
 
@@ -206,6 +217,10 @@ export function App() {
       </div>
 
       <LegendBar />
+      {askingToken ? (
+        <TokenDialog onClose={closeTokenDialog}
+          onSave={(value) => { setToken(value); setAskingToken(false); refresh(value); }} />
+      ) : null}
     </RulesContext.Provider></ApiContext.Provider>
   );
 }

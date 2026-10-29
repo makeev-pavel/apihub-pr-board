@@ -10,8 +10,8 @@ import {
 } from '../../settings.ts';
 import type { Settings } from '../../settings.ts';
 import type { AreaId } from '../../types.ts';
+import { TOKEN_HELP_URL } from './TokenDialog.tsx';
 
-const TOKEN_HELP_URL = 'https://github.com/settings/personal-access-tokens/new';
 
 // The repositories in the address, the ones the data has, and how to change the address.
 export interface RepositorySettings {
@@ -24,13 +24,12 @@ function joinAreas(modules: Rules['areaModules']) {
   return { be: modules.be.join(', '), fe: modules.fe.join(', ') };
 }
 
-export function SettingsPanel({ settings, onChange, token, setToken, refreshing, askForToken, onRefresh, columns, repositories, canResetWidths, onResetWidths }: {
+export function SettingsPanel({ settings, onChange, token, setToken, refreshing, onRefresh, columns, repositories, canResetWidths, onResetWidths }: {
   settings: Settings;
   onChange: (settings: Settings) => void;
   token: string;
   setToken: (value: string) => void;
   refreshing: boolean;
-  askForToken: boolean;
   onRefresh: (token: string) => void;
   columns: Column[];
   repositories: RepositorySettings;
@@ -170,7 +169,7 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
           <p>Refresh queries GitHub directly with your personal token. It stays in this browser and is sent only to api.github.com.</p>
           <p><a href={TOKEN_HELP_URL} target="_blank" rel="noopener">Create a fine-grained token</a> with public repository read access. No extra permissions are needed.</p>
           <label htmlFor="token-input">Token</label>
-          <input id="token-input" type="password" autoComplete="off" autoFocus={askForToken}
+          <input id="token-input" type="password" autoComplete="off"
             placeholder={token ? 'Saved. Paste a new one to replace it' : 'github_pat_…'}
             value={tokenDraft} onChange={(e) => setTokenDraft(e.target.value)} />
           <div className="actions">

@@ -22,7 +22,7 @@
   missing or invalid falls back to its default, field by field, so an old or edited entry never breaks the page.
 - **SET-12** **Reset to defaults** restores the rules, areas, view, and columns, and removes the repositories and
   extra bots from the address. It keeps the token and the column widths.
-- **SET-13** **Refresh** without a token opens the panel with the token field focused. Opening the panel from the
+- **SET-13** **Refresh** without a token opens the token dialog (**SET-18**). Opening the settings panel from the
   gear does not jump to the token.
 - **SET-14** A number field keeps the last valid value: an invalid entry does not apply and is replaced when the
   field loses focus. Lists apply when their field loses focus or on Enter.
@@ -39,3 +39,9 @@
   link or a bookmark carries them. The panel footer says so. **Reset to defaults** removes both from the address.
   Extra bots that an earlier version saved in this browser move into the address on the first visit. When that
   visit comes through a link with its own bots, the link's bots apply and the saved ones are dropped.
+- **SET-18** When the page needs a token and has none, a dialog explains how to create one: a link to GitHub's page
+  for a new fine-grained token and short steps (any name and expiry; Repository access: Public repositories, read
+  only; no extra permissions; copy the `github_pat_…` value). It has a token field with **Save and load** and **Not
+  now**. Saving stores the token (**SET-9**) and loads the data. The dialog opens by itself on a page without a
+  snapshot whose link names repositories (**DATA-23**), and from **Refresh** without a token. After **Not now** it
+  does not open by itself again until the page reloads; the banner's **Add token** button opens it.
