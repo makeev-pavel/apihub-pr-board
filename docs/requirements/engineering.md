@@ -14,13 +14,13 @@
 ```sh
 npm install
 npm run dev               # Vite on :5173 with mock data and hot reload
-npm run dev:live          # live GitHub data; needs GITHUB_TOKEN and PR_BOARD_REPO
+npm run dev:live          # live GitHub data, like the published page; GITHUB_TOKEN and PR_BOARD_REPO add a snapshot
 npm test                  # unit tests (node --test)
 npm run typecheck         # tsc for the browser code and the Node code
 npm run test:e2e          # browser tests (Playwright) on the mock server, port 5174, pinned clock
 npm run test:requirements # every requirement in docs/requirements/ has a test
 npm run test:coverage     # unit tests with coverage of src/**/*.ts: lines 95%, branches and functions 90%
-npm run build             # vite build into _site/, then prs.json; needs GITHUB_TOKEN and PR_BOARD_REPO
+npm run build             # vite build into _site/, then a prs.json snapshot; needs GITHUB_TOKEN and PR_BOARD_REPO
 npm run test:screenshots  # screenshots against the Windows baselines in e2e/__screenshots__
 npm run test:screenshots:update  # capture new baselines after an intended visual change
 ```

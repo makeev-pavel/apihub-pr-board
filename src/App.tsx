@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { collectAuthors, selectedAuthors } from './board/authors.ts';
 import { boardColumns, isColumnShown } from './board/columns.ts';
 import { repositoriesSummary } from './board/format.ts';
@@ -14,6 +14,7 @@ import { UpdateInfo } from './components/header/UpdateInfo.tsx';
 import { LegendBar } from './components/legend/LegendBar.tsx';
 import { HeaderCell } from './components/table/HeaderCell.tsx';
 import { Row } from './components/table/Row.tsx';
+import { TableMessage } from './components/table/TableMessage.tsx';
 import { AuthorMenu } from './components/toolbar/AuthorMenu.tsx';
 import { CopyLink } from './components/toolbar/CopyLink.tsx';
 import { SearchHelp } from './components/toolbar/SearchHelp.tsx';
@@ -66,7 +67,11 @@ export function App() {
   const dataRepos = useMemo(() => (report ? report.repos : REPOSITORIES.map(repositoryName)), [report]);
   // The address may narrow the board to some repositories, or ask for ones the data does not have.
   const { shown: repos, missing } = useMemo(() => boardRepos(dataRepos, link.repos), [dataRepos, link.repos]);
-  const headerRepos = link.repos.length ? link.repos : dataRepos;
+  // Without a snapshot the repositories come only from the link or Settings, as on the published page (DATA-23).
+  const wanted = link.repos;
+  const notLoaded = data.noSnapshot && !report;
+  const headerRepos = link.repos.length ? link.repos : notLoaded ? [] : dataRepos;
+  const pending = notLoaded ? wanted : missing;
   const offeredColumns = useMemo(() => boardColumns(repos.length), [repos.length]);
   const columns = useMemo(() => offeredColumns.filter((c) => isColumnShown(c, settings.hiddenColumns)), [offeredColumns, settings.hiddenColumns]);
   const { tableWrapRef, widths, tableWidth, resize, canResetWidths, resetWidths } = useColumnWidths(columns);
@@ -77,23 +82,35 @@ export function App() {
   const setToken = (value: string) => { storeToken(value); setTokenState(value); };
 
   const refresh = (withToken: string) => {
+    // Refresh reads the repositories the address asks for, or else those on the page; the build's list only counts
+    // before the data loads.
+    const names = link.repos.length ? link.repos : report && report.repos.length ? report.repos : REPOSITORIES.map(repositoryName);
+    if (!names.length) {
+      setRefreshError('Choose the repositories to show in Settings first.');
+      return;
+    }
     setRefreshing(true);
     setRefreshError(null);
     // Skip the heavy parts of the query that only hidden columns would show.
     const parts = { checks: columns.some((c) => c.id === 'ci'), comments: columns.some((c) => c.id === 'comment') };
-    // Refresh reads the repositories the address asks for, or else those on the page; the build's list only counts
-    // before the data loads.
-    const names = link.repos.length ? link.repos : report && report.repos.length ? report.repos : null;
-    const repositories = names ? names.map(parseRepository) : REPOSITORIES;
-    const options = { token: withToken, repositories, parts };
+    const options = { token: withToken, repositories: names.map(parseRepository), parts };
     fetchOpenPullRequests(DEV ? { ...options, endpoint: DEV.graphqlUrl } : options)
       .then((report) => {
-        setData({ status: 'ready', report, source: 'live', error: null });
+        setData((prev) => ({ ...prev, status: 'ready', report, source: 'live', error: null }));
         setNow(Date.now());
       })
       .catch((error: Error) => setRefreshError(error.message))
       .finally(() => setRefreshing(false));
   };
+
+  // Without a snapshot the page loads live data itself, once for each set of repositories and token (DATA-23).
+  const autoLoaded = useRef('');
+  useEffect(() => {
+    const key = wanted.join(',').toLowerCase() + '|' + token;
+    if (!data.noSnapshot || !token || !wanted.length || refreshing || autoLoaded.current === key) return;
+    autoLoaded.current = key;
+    refresh(token);
+  });
 
   const prs = useMemo(() => {
     const shown = new Set(repos.map((repo) => repo.toLowerCase()));
@@ -146,11 +163,11 @@ export function App() {
       {refreshError ? <div className="banner bad" role="alert">Refresh failed. {refreshError}</div> : null}
       {data.status === 'error' ? (
         <div className="banner bad" role="alert">
-          {data.error} The scheduled workflow may not have published data yet. Use Refresh with a token to load live data.
+          {data.error} Use Refresh with a token to load live data.
         </div>
       ) : null}
-      {missing.length && report ? (
-        <div className="banner warn">{missingReposMessage(missing, !!token, data.source === 'live')}</div>
+      {pending.length && (report || data.noSnapshot) && !refreshing ? (
+        <div className="banner warn">{missingReposMessage(pending, !!token, notLoaded ? 'none' : data.source === 'live' ? 'live' : 'snapshot')}</div>
       ) : null}
       {report && report.warnings.length ? <div className="banner warn">{report.warnings.map((w) => <div key={w}>{w}</div>)}</div> : null}
 
@@ -180,15 +197,10 @@ export function App() {
           <colgroup>{columns.map((col) => <col key={col.id} style={{ width: widths[col.id] + 'px' }} />)}</colgroup>
           <thead><tr>{columns.map((col, index) => <HeaderCell key={col.id} col={col} index={index} view={view} onSort={onSort} width={widths[col.id]} resize={resize} />)}</tr></thead>
           <tbody>
-            {data.status === 'loading' ? <tr><td colSpan={columns.length}><div className="empty">Loading pull requests…</div></td></tr>
-              : rows.length ? rows.map((pr) => <Row key={pullRequestKey(pr)} pr={pr} now={now} columns={columns} repos={repos} activeLabels={activeLabels} onToggleLabel={onToggleLabel} />)
-                : (
-                  <tr><td colSpan={columns.length}><div className="empty">
-                    <strong>No pull requests match this view</strong>
-                    <span>Try clearing the search or selecting more authors.</span>
-                    <button type="button" className="btn" onClick={resetView}>Reset view</button>
-                  </div></td></tr>
-                )}
+            {rows.length ? rows.map((pr) => <Row key={pullRequestKey(pr)} pr={pr} now={now} columns={columns} repos={repos} activeLabels={activeLabels} onToggleLabel={onToggleLabel} />)
+              : <TableMessage colSpan={columns.length} onResetView={resetView}
+                kind={data.status === 'loading' || (!report && refreshing) ? 'loading'
+                  : notLoaded ? (wanted.length ? 'not-loaded' : 'no-repos') : data.status === 'error' ? 'not-loaded' : 'no-match'} />}
           </tbody>
         </table>
       </div>

@@ -1,9 +1,7 @@
 name: Publish board
 
+# The page holds no data: viewers load it with their own token (DATA-3), so there is nothing to refresh on a schedule.
 on:
-  schedule:
-    # Hourly, 06:00-17:00 UTC, Monday to Friday.
-    - cron: '0 6-17 * * 1-5'
   push:
     branches: [main]
   workflow_dispatch: {}
@@ -17,14 +15,12 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Scheduled runs only refresh the data of code that was tested when it was pushed, so they skip both test jobs.
   test:
-    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
         with:
-          # The job token would otherwise stay in the git config, readable by every later step (SEC-5).
+          # No step needs the job token, so it is not left in the git config either (SEC-5).
           persist-credentials: false
 
       - uses: actions/setup-node@v6
@@ -45,12 +41,11 @@ jobs:
 
   # Browser tests on the mock server. The screenshot project stays local: its baselines are Windows-only.
   e2e:
-    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
         with:
-          # The job token would otherwise stay in the git config, readable by every later step (SEC-5).
+          # No step needs the job token, so it is not left in the git config either (SEC-5).
           persist-credentials: false
 
       - uses: actions/setup-node@v6
@@ -79,15 +74,14 @@ jobs:
           path: playwright-report
           retention-days: 7
 
+  # A failed test blocks the deploy.
   build:
     needs: [test, e2e]
-    # Runs when both test jobs passed, or were skipped on a schedule; a failed or cancelled test blocks the deploy.
-    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
         with:
-          # The job token would otherwise stay in the git config, readable by every later step (SEC-5).
+          # No step needs the job token, so it is not left in the git config either (SEC-5).
           persist-credentials: false
 
       - uses: actions/setup-node@v6
@@ -97,18 +91,9 @@ jobs:
 
       - run: npm ci
 
-      # The target repositories are a repository variable (owner/name, comma-separated), so the code never names them.
+      # Only the page: no prs.json and no repositories. The link names them (FILTER-14).
       - name: Build page
-        env:
-          PR_BOARD_REPO: ${{ vars.PR_BOARD_REPO }}
         run: npx vite build
-
-      # Only this step sees the token.
-      - name: Fetch pull requests
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_BOARD_REPO: ${{ vars.PR_BOARD_REPO }}
-        run: node scripts/build-site.ts _site
 
       - uses: actions/upload-pages-artifact@v4
         with:

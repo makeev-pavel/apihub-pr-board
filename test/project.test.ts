@@ -13,19 +13,17 @@ function job(name: string): string {
   return next < 0 ? workflow.slice(start) : workflow.slice(start, start + 1 + next);
 }
 
-test('DATA-3: the board is built hourly 06:00–17:00 UTC on weekdays, on pushes to main, and on demand', () => {
-  assert.match(workflow, /cron: '0 6-17 \* \* 1-5'/);
+test('DATA-3: the page is built on pushes to main and on demand, without a schedule and without data', () => {
+  assert.doesNotMatch(workflow, /schedule:|cron:/);
   assert.match(workflow, /push:\n\s+branches: \[main\]/);
   assert.match(workflow, /workflow_dispatch:/);
+  assert.doesNotMatch(workflow, /build-site|PR_BOARD_REPO/);
 });
 
-test('SEC-5: the build reads contents only, and only the fetch step sees the token', () => {
+test('SEC-5: the workflow reads contents only, and no step reads the token', () => {
   // The top-level block holds this one line; jobs that need more ask for it themselves.
   assert.match(workflow, /^permissions:\n {2}contents: read\n\n/m);
-  const steps = job('build').split('\n      - ');
-  const withToken = steps.filter((step) => step.includes('GITHUB_TOKEN'));
-  assert.equal(withToken.length, 1);
-  assert.match(withToken[0], /node scripts\/build-site\.ts/);
+  assert.doesNotMatch(workflow, /GITHUB_TOKEN|secrets\./);
   // A checkout that keeps its credentials would leave the token in the git config for every later step.
   const checkouts = workflow.split('\n      - ').filter((step) => step.startsWith('uses: actions/checkout@'));
   assert.equal(checkouts.length, 3);
@@ -38,7 +36,7 @@ test('SEC-6: only the deploy job may write to Pages, and a running deploy is nev
   assert.match(workflow, /cancel-in-progress: false/);
 });
 
-test('a failed unit or browser test blocks the deploy, scheduled runs skip the tests, and screenshots stay local', () => {
+test('a failed unit or browser test blocks the deploy, and screenshots stay local', () => {
   const unit = job('test');
   assert.match(unit, /npm run typecheck/);
   assert.match(unit, /npm run test:coverage/);
@@ -47,11 +45,10 @@ test('a failed unit or browser test blocks the deploy, scheduled runs skip the t
   assert.match(browser, /npm run test:e2e/);
   assert.doesNotMatch(workflow, /test:screenshots|--project=screenshots/);
   assert.match(pkg.scripts['test:e2e'], /--project=e2e$/);
-  for (const name of ['test', 'e2e']) assert.match(job(name), /if: github\.event_name != 'schedule'/);
   const build = job('build');
   assert.match(build, /needs: \[test, e2e\]/);
-  assert.match(build, /!contains\(needs\.\*\.result, 'failure'\)/);
-  assert.match(build, /!contains\(needs\.\*\.result, 'cancelled'\)/);
+  // A condition such as always() would let the deploy run after a failed test.
+  assert.doesNotMatch(build, /\n {4}if:/);
 });
 
 test('SEC-7: packages that touch untrusted content and DOM test tooling are pinned to exact versions', () => {

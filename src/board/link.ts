@@ -61,9 +61,12 @@ export function moveStoredBots(settings: Settings, link: LinkSettings): { settin
   };
 }
 
-// The banner for requested repositories that the data on the page does not cover; only Refresh can load them.
-export function missingReposMessage(missing: string[], hasToken: boolean, live: boolean): string {
+const WHERE = { snapshot: 'not in the snapshot', live: 'not in the live data', none: 'not loaded yet' };
+
+// The banner for requested repositories that the page has no data for; only Refresh can load them. 'none' is a page
+// without a snapshot before its first load (DATA-23).
+export function missingReposMessage(missing: string[], hasToken: boolean, source: keyof typeof WHERE): string {
   const one = missing.length === 1;
   const action = (hasToken ? 'Refresh' : 'Add a GitHub token in Settings, then Refresh') + ' loads ' + (one ? 'it' : 'them') + '.';
-  return missing.join(', ') + (one ? ' is' : ' are') + ' not in the ' + (live ? 'live data' : 'hourly snapshot') + '. ' + action;
+  return missing.join(', ') + (one ? ' is ' : ' are ') + WHERE[source] + '. ' + action;
 }

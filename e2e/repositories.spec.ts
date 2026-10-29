@@ -112,7 +112,7 @@ test.describe('several repositories', () => {
   test('DATA-22: repositories missing from the snapshot get a banner, and Refresh with a token loads them', async ({ page }) => {
     await openBoard(page, { report: 'mixed', refresh: 'ok', query: ALL + '&repos=acme/widgets,acme/gadgets' });
     const banner = page.locator('.banner.warn');
-    await expect(banner).toHaveText('acme/gadgets is not in the hourly snapshot. Add a GitHub token in Settings, then Refresh loads it.');
+    await expect(banner).toHaveText('acme/gadgets is not in the snapshot. Add a GitHub token in Settings, then Refresh loads it.');
     await expect(rows(page)).toHaveCount(75);
     await page.getByRole('button', { name: 'Refresh', exact: true }).click();
     await page.locator('#token-input').fill('mock-token');
@@ -130,7 +130,7 @@ test.describe('several repositories', () => {
     await field.fill('acme/gadgets');
     await field.press('Enter');
     const banner = page.locator('.banner.warn');
-    await expect(banner).toHaveText('acme/gadgets is not in the hourly snapshot. Refresh loads it.');
+    await expect(banner).toHaveText('acme/gadgets is not in the snapshot. Refresh loads it.');
     await expect(page.getByText('No pull requests match this view')).toBeVisible();
     await page.keyboard.press('Escape');
     await page.getByRole('button', { name: 'Refresh', exact: true }).click();

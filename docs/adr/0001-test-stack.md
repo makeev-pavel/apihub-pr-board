@@ -60,8 +60,7 @@ has no test. A new test must be seen failing once, by breaking the code it check
 
 - Positive: few dependencies (Playwright and jsdom for Markdown sanitizing tests), fast unit tests, and one tool for
   browser flows and screenshots. Every requirement has a test or an explicit manual-check note.
-- Positive: CI blocks a deploy when a unit or browser test fails; scheduled runs that only refresh the data skip the
-  tests.
+- Positive: CI blocks a deploy when a unit or browser test fails.
 - Negative: screenshots are not checked in CI. A visual regression shows only when someone runs
   `npm run test:screenshots` on Windows. Linux baselines from a Playwright container (Podman works) would add CI
   coverage if this becomes a problem; that would be a new ADR.

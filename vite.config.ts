@@ -5,10 +5,11 @@ import { devMocks, LIVE_MODE } from './dev/mock-plugin.ts';
 import { parseRepositories, REPO_VARIABLE, repositoryName } from './src/repository.ts';
 
 export default defineConfig(({ command, mode }) => {
-  // Builds and live mode show real repositories, named by PR_BOARD_REPO. Mock data is fictional, so the dev server
-  // shows the fictional repository whatever the variable says.
-  const real = command === 'build' || mode === LIVE_MODE;
-  const repositories = parseRepositories(real ? process.env[REPO_VARIABLE] : DEV_REPOSITORY);
+  // Builds and live mode may name real repositories in PR_BOARD_REPO, as defaults; without it the page takes them from
+  // the link or Settings, like the published page (DATA-1). Mock data is fictional, so the dev server shows the
+  // fictional repository whatever the variable says.
+  const value = command === 'build' || mode === LIVE_MODE ? process.env[REPO_VARIABLE] : DEV_REPOSITORY;
+  const repositories = value ? parseRepositories(value) : [];
   return {
     // Relative asset paths, so the site works under any GitHub Pages path.
     base: './',

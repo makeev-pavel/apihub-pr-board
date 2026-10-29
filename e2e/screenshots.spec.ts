@@ -103,10 +103,16 @@ test.describe('screenshots', () => {
     await expect(page).toHaveScreenshot('state-empty.png');
   });
 
-  test('DATA-16: prs.json is missing', async ({ page }) => {
+  test('DATA-16 DATA-23: no snapshot and no repositories, as the published page opens without a link', async ({ page }) => {
     await openBoard(page, { report: 'missing' });
     await settle(page);
-    await expect(page).toHaveScreenshot('state-missing.png');
+    await expect(page).toHaveScreenshot('state-no-repos.png');
+  });
+
+  test('DATA-16: prs.json is broken', async ({ page }) => {
+    await openBoard(page, { report: 'broken' });
+    await settle(page);
+    await expect(page).toHaveScreenshot('state-broken.png');
   });
 
   test('TABLE-21: a narrow window scrolls the whole page', async ({ page }) => {

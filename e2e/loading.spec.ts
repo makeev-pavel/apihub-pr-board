@@ -1,4 +1,6 @@
-import { ALL, expect, openBoard, test } from './helpers.ts';
+import { ALL, expect, openBoard, rows, test } from './helpers.ts';
+
+const TOKEN_KEY = 'apihub-pr-board.token';
 
 test.describe('loading prs.json', () => {
   test('DATA-4 TABLE-2: the snapshot opens with a gray dot and its age', async ({ page }) => {
@@ -46,7 +48,6 @@ test.describe('loading prs.json', () => {
   });
 
   for (const [report, reason] of [
-    ['missing', 'HTTP 404'],
     ['broken', 'JSON'],
     ['wrong-shape', 'the file has no list of pull requests'],
   ]) {
@@ -58,4 +59,47 @@ test.describe('loading prs.json', () => {
       await expect(banner).toContainText('Use Refresh with a token to load live data.');
     });
   }
+
+  test('DATA-16 DATA-23: without prs.json and without repositories, the table says how to choose them', async ({ page }) => {
+    await openBoard(page, { report: 'missing' });
+    await expect(page.locator('.banner.bad')).toHaveCount(0);
+    await expect(page.getByText('Choose the repositories to show')).toBeVisible();
+    await expect(page.locator('.board > tbody')).toContainText('Add them in Settings, or open a link with ?repos=owner/name.');
+  });
+
+  test('DATA-23: without prs.json and without a token, a banner names the repositories and asks for a token', async ({ page }) => {
+    await openBoard(page, { report: 'missing', query: 'repos=acme/gadgets' });
+    await expect(page.locator('.banner.bad')).toHaveCount(0);
+    await expect(page.locator('.banner.warn')).toHaveText('acme/gadgets is not loaded yet. Add a GitHub token in Settings, then Refresh loads it.');
+    await expect(page.getByText('No pull requests loaded yet')).toBeVisible();
+  });
+
+  test('DATA-23: without prs.json, a saved token and a link load the board by themselves, and new repositories load too', async ({ page }) => {
+    let graphqlCalls = 0;
+    page.on('request', (request) => { if (request.url().endsWith('/__dev/graphql')) graphqlCalls += 1; });
+    await page.addInitScript((key) => localStorage.setItem(key, 'mock-token'), TOKEN_KEY);
+    await openBoard(page, { report: 'missing', refresh: 'ok', query: ALL + '&repos=acme/gadgets' });
+    await expect(page.locator('.source-button')).toHaveText('live, just now');
+    await expect(rows(page)).toHaveCount(4);
+    await expect(page.locator('.banner')).toHaveCount(0);
+    await page.getByRole('button', { name: /^Settings/ }).click();
+    const field = page.getByRole('dialog', { name: 'Settings' }).getByRole('textbox', { name: 'Repositories' });
+    await field.fill('acme/gadgets acme/widgets');
+    await field.press('Enter');
+    await expect(rows(page)).toHaveCount(79);
+    // One query a page and repository: gadgets, then widgets (two pages of 50) and gadgets. Nothing after that.
+    expect(graphqlCalls).toBe(4);
+    await page.waitForTimeout(1000);
+    expect(graphqlCalls).toBe(4);
+  });
+
+  test('DATA-23: a repository that cannot be read is loaded once, not again and again', async ({ page }) => {
+    let graphqlCalls = 0;
+    page.on('request', (request) => { if (request.url().endsWith('/__dev/graphql')) graphqlCalls += 1; });
+    await page.addInitScript((key) => localStorage.setItem(key, 'mock-token'), TOKEN_KEY);
+    await openBoard(page, { report: 'missing', refresh: 'ok', query: 'repos=acme/nowhere' });
+    await expect(page.locator('.banner.bad')).toContainText('Refresh failed.');
+    await page.waitForTimeout(1000);
+    expect(graphqlCalls).toBe(1);
+  });
 });
