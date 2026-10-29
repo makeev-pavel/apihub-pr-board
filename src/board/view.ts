@@ -1,6 +1,7 @@
 // The view (search, filters, quick filters, and sort), its URL query, and the rows it lets through.
 
 import { AREAS } from '../model/areas.ts';
+import { MAX_GROUPS } from './groups.ts';
 import { matchesQuery } from '../model/search.ts';
 import type { ParsedQuery } from '../model/search.ts';
 import type { AreaId, DerivedPullRequest } from '../types.ts';
@@ -59,6 +60,8 @@ export interface View {
   quick: string[];
   // Priority names from GitHub Projects, and 'none' for PRs without one (FILTER-16); empty shows every PR.
   priority: string[];
+  // Checked repository groups (FILTER-17); null keeps the default groups, and an empty list checks none.
+  groups: string[] | null;
   sort: SortKey;
   dir: SortDir;
 }
@@ -66,7 +69,18 @@ export interface View {
 export const NO_PRIORITY = 'none';
 const MAX_PRIORITIES = 20;
 
-export const DEFAULT_VIEW: View = { q: '', authors: null, draft: 'ready', area: 'all', quick: [], priority: [], sort: 'attention', dir: 'desc' };
+export const DEFAULT_VIEW: View = { q: '', authors: null, draft: 'ready', area: 'all', quick: [], priority: [], groups: null, sort: 'attention', dir: 'desc' };
+
+// The names of a comma-separated list, trimmed, without blanks or repeats in any case.
+function uniqueValues(list: string): string[] {
+  const seen = new Set<string>();
+  return list.split(',').map((name) => name.trim()).filter((name) => {
+    const key = name.toLowerCase();
+    if (!name || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
 
 // The view a URL query describes; unknown or missing values fall back to the defaults.
 export function parseView(search: string): View {
@@ -87,15 +101,9 @@ export function parseView(search: string): View {
     view.quick = quick.split(',').filter((id) => QUICK.some((f) => f.id === id));
   }
   const priority = params.get('priority');
-  if (priority !== null) {
-    const seen = new Set<string>();
-    view.priority = priority.split(',').map((name) => name.trim()).filter((name) => {
-      const key = name.toLowerCase();
-      if (!name || seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    }).slice(0, MAX_PRIORITIES);
-  }
+  if (priority !== null) view.priority = uniqueValues(priority).slice(0, MAX_PRIORITIES);
+  const groups = params.get('groups');
+  if (groups !== null) view.groups = uniqueValues(groups).slice(0, MAX_GROUPS + 1);
   const sort = params.get('sort');
   if (isSortKey(sort)) view.sort = sort;
   const dir = params.get('dir');
@@ -111,6 +119,7 @@ export function viewQuery(view: View): string {
   if (view.area !== DEFAULT_VIEW.area) params.set('area', view.area);
   if (view.quick.length) params.set('quick', view.quick.join(','));
   if (view.priority.length) params.set('priority', view.priority.join(','));
+  if (view.groups) params.set('groups', view.groups.join(','));
   if (view.sort !== DEFAULT_VIEW.sort || view.dir !== DEFAULT_VIEW.dir) {
     params.set('sort', view.sort);
     params.set('dir', view.dir);

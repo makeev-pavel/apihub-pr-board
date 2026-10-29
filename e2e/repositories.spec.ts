@@ -143,7 +143,7 @@ test.describe('several repositories', () => {
     await expect(banner).toHaveText('acme/widgets is not in the live data. Refresh loads it.');
   });
 
-  test('SET-19 FILTER-17: groups from Settings fill a Repositories menu that edits repos in the address', async ({ page }) => {
+  test('SET-19 FILTER-17: groups from Settings fill a Repositories menu that filters the rows', async ({ page }) => {
     await openBoard(page, { report: 'two-repos', query: ALL });
     await expect(page.getByRole('button', { name: /^Repositories:/ })).toHaveCount(0);
     await page.getByRole('button', { name: /^Settings/ }).click();
@@ -151,56 +151,51 @@ test.describe('several repositories', () => {
     await field.fill('Widgets: acme/widgets\nacme/gadgets');
     await field.blur();
     await expect(page.getByRole('alert')).toHaveText('Line 2: start with the group name and a colon, such as "Backend: acme/widgets".');
-    await field.fill('Widgets: acme/widgets\nGadgets: acme/gadgets');
+    await field.fill('Widgets: acme/widgets\n*Gadgets & Co: acme/gadgets');
     await field.press('Control+Enter');
     await expect(page.getByRole('alert')).toHaveCount(0);
     await page.keyboard.press('Escape');
 
+    // The default group is checked; the data and the repos in the address stay as they are.
     const button = page.getByRole('button', { name: /^Repositories:/ });
-    await expect(button).toHaveText(/Repositories:\s*All/);
+    await expect(button).toHaveText(/Repositories:\s*Gadgets & Co/);
+    await expect(rows(page)).toHaveCount(4);
+    expect(page.url()).not.toContain('groups=');
+    expect(page.url()).not.toContain('repos=');
     await button.click();
     const menu = page.getByRole('group', { name: 'Repositories' });
-    await menu.getByRole('checkbox', { name: 'Gadgets' }).check();
-    await expect(page).toHaveURL(/[?&]repos=acme\/gadgets(&|$)/);
-    await expect(rows(page)).toHaveCount(4);
-    await expect(button).toHaveText(/Repositories:\s*Gadgets/);
+    await expect(menu.locator('label')).toHaveText([/Widgets\s*36/, /Gadgets & Co\s*4/]);
     await menu.getByRole('checkbox', { name: 'Widgets' }).check();
-    await expect(page).toHaveURL(/[?&]repos=acme\/gadgets,acme\/widgets(&|$)/);
     await expect(rows(page)).toHaveCount(40);
-    await menu.getByRole('button', { name: 'All repositories' }).click();
-    expect(page.url()).not.toContain('repos=');
+    await expect(button).toHaveText(/Repositories:\s*All/);
+    await expect(page).toHaveURL(/[?&]groups=Widgets%2CGadgets\+%26\+Co(&|$)/);
+    await menu.getByRole('button', { name: 'None' }).click();
+    await expect(page.getByText('No pull requests match this view')).toBeVisible();
+    await expect(page).toHaveURL(/[?&]groups=(&|$)/);
+    // Checking the default group again leaves the address clean.
+    await menu.getByRole('checkbox', { name: 'Gadgets & Co' }).check();
+    await expect(rows(page)).toHaveCount(4);
+    expect(page.url()).not.toContain('groups=');
     // The groups stay in this browser.
     const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('apihub-pr-board.settings')!).repoGroups);
-    expect(stored).toEqual([{ name: 'Widgets', repos: ['acme/widgets'] }, { name: 'Gadgets', repos: ['acme/gadgets'] }]);
+    expect(stored).toEqual([{ name: 'Widgets', repos: ['acme/widgets'] }, { name: 'Gadgets & Co', repos: ['acme/gadgets'], isDefault: true }]);
   });
 
-  test('FILTER-17: a group inside a checked one is locked until that one goes, and a refused choice is forgotten on reopening', async ({ page }) => {
-    const many = (prefix: string) => Array.from({ length: 21 }, (_, i) => 'acme/' + prefix + i).join(', ');
+  test('FILTER-17: repositories in no group are under Ungrouped, and a link checks the groups it names', async ({ page }) => {
     await page.addInitScript((groups) => localStorage.setItem('apihub-pr-board.settings', JSON.stringify({ repoGroups: groups })), [
-      { name: 'All', repos: ['acme/widgets', 'acme/gadgets'] },
-      { name: 'Widgets', repos: ['acme/widgets'] },
-      { name: 'Left', repos: many('l').split(', ') },
-      { name: 'Right', repos: many('r').split(', ') },
+      { name: 'Gadgets', repos: ['acme/gadgets'] },
     ]);
-    await openBoard(page, { report: 'two-repos', query: ALL });
+    await openBoard(page, { report: 'two-repos', query: ALL + '&groups=ungrouped' });
     const button = page.getByRole('button', { name: /^Repositories:/ });
+    await expect(button).toHaveText(/Repositories:\s*Ungrouped/);
+    await expect(rows(page)).toHaveCount(36);
+    // The tiles count only what the groups show.
+    await expect(page.getByRole('button', { name: /Open PRs/ })).toContainText('36');
     await button.click();
     const menu = page.getByRole('group', { name: 'Repositories' });
-    await menu.getByRole('checkbox', { name: 'All' }).check();
-    const widgets = menu.getByRole('checkbox', { name: 'Widgets' });
-    await expect(widgets).toBeChecked();
-    await expect(widgets).toBeDisabled();
-    await expect(menu.locator('label').filter({ hasText: 'Widgets' })).toHaveAttribute('title', 'Included in All. Uncheck All to remove it.');
-    // Unchecking All takes Widgets with it.
-    await menu.getByRole('checkbox', { name: 'All' }).uncheck();
-    await expect(widgets).not.toBeChecked();
-    expect(page.url()).not.toContain('repos=');
-
-    await menu.getByRole('checkbox', { name: 'Left' }).check();
-    await menu.getByRole('checkbox', { name: 'Right' }).click();
-    await expect(menu.getByRole('alert')).toHaveText('Adding Right would make 42 repositories; the board reads at most 40. Uncheck a group first.');
-    await button.click();
-    await button.click();
-    await expect(menu.getByRole('alert')).toHaveCount(0);
+    await menu.getByRole('checkbox', { name: 'Ungrouped' }).uncheck();
+    await menu.getByRole('checkbox', { name: 'Gadgets' }).check();
+    await expect(rows(page)).toHaveCount(4);
+    await expect(page).toHaveURL(/[?&]groups=Gadgets(&|$)/);
   });
 });

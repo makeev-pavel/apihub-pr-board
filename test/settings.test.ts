@@ -106,6 +106,13 @@ test('SET-19: stored groups are checked; a broken group is dropped and the rest 
   ] });
   assert.deepEqual(settings.repoGroups, [{ name: 'Core', repos: ['acme/widgets'] }]);
   assert.deepEqual(parseSettings({}).repoGroups, []);
+  const marked = parseSettings({ repoGroups: [
+    { name: 'Core', repos: ['acme/widgets'], isDefault: true },
+    { name: 'Tools', repos: ['acme/tools'], isDefault: 'yes' },
+    { name: 'A, B', repos: ['acme/a'] },
+    { name: 'Ungrouped', repos: ['acme/b'] },
+  ] });
+  assert.deepEqual(marked.repoGroups, [{ name: 'Core', repos: ['acme/widgets'], isDefault: true }, { name: 'Tools', repos: ['acme/tools'] }]);
 });
 
 test('SET-8 SET-11: saved column ids no column has any more are dropped, so they never come back into the address', () => {

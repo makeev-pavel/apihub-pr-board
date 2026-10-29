@@ -1,87 +1,112 @@
-// Repository groups (SET-19, FILTER-17): named lists of repositories defined in Settings. Checking a group in the
-// Repositories menu fills the repos in the address, so a link never depends on the groups themselves.
+// Repository groups (SET-19, FILTER-17): named lists of repositories defined in Settings. The Repositories menu checks
+// groups to show only the rows of their repositories; the data itself does not change.
 
-import { checkRepositoryList, MAX_REPOSITORIES, uniqueNames } from '../repository.ts';
+import { checkRepositoryList } from '../repository.ts';
 
 export interface RepoGroup {
   name: string;
   repos: string[];
+  // Checked when the address names no groups; marked with a leading * in Settings.
+  isDefault?: boolean;
 }
 
 export const MAX_GROUPS = 20;
 
-// One group per line, "<name>: owner/name, owner/name". The first line that is wrong is named with the reason.
+// The menu entry for repositories of the data that are in no group. No group may take its name.
+export const UNGROUPED = 'Ungrouped';
+
+// A group name goes into the address as part of a comma-separated list, so it holds no comma.
+export function groupNameError(name: string): string | null {
+  if (name.includes(',')) return 'the group name "' + name + '" has a comma.';
+  if (name.toLowerCase() === UNGROUPED.toLowerCase()) return '"' + UNGROUPED + '" names the repositories in no group; choose another name.';
+  return null;
+}
+
+// One group per line, "<name>: owner/name, owner/name", and a leading * for a group checked by default. The first
+// line that is wrong is named with the reason.
 export function parseGroupLines(text: string): { groups: RepoGroup[] } | { error: string } {
   const groups: RepoGroup[] = [];
   const lines = text.split('\n');
   for (let i = 0; i < lines.length; i += 1) {
-    const line = lines[i].trim();
+    let line = lines[i].trim();
     if (!line) continue;
     const where = 'Line ' + (i + 1) + ': ';
+    const isDefault = line.startsWith('*');
+    if (isDefault) line = line.slice(1).trim();
     const colon = line.indexOf(':');
     const name = colon > 0 ? line.slice(0, colon).trim() : '';
     if (!name) return { error: where + 'start with the group name and a colon, such as "Backend: acme/widgets".' };
+    const nameError = groupNameError(name);
+    if (nameError) return { error: where + nameError };
     if (groups.some((group) => group.name.toLowerCase() === name.toLowerCase())) return { error: where + 'the group "' + name + '" is already defined.' };
     const list = checkRepositoryList(line.slice(colon + 1));
     if ('error' in list) return { error: where + list.error };
     if (!list.repos.length) return { error: where + 'the group "' + name + '" lists no repositories.' };
-    groups.push({ name, repos: list.repos });
+    groups.push(isDefault ? { name, repos: list.repos, isDefault } : { name, repos: list.repos });
   }
   if (groups.length > MAX_GROUPS) return { error: 'Up to ' + MAX_GROUPS + ' groups; this list has ' + groups.length + '.' };
   return { groups };
 }
 
 export function groupsToText(groups: RepoGroup[]): string {
-  return groups.map((group) => group.name + ': ' + group.repos.join(', ')).join('\n');
+  return groups.map((group) => (group.isDefault ? '*' : '') + group.name + ': ' + group.repos.join(', ')).join('\n');
 }
 
-const lower = (names: string[]) => names.map((name) => name.toLowerCase());
+const inAnyGroup = (groups: RepoGroup[]) => new Set(groups.flatMap((group) => group.repos.map((repo) => repo.toLowerCase())));
 
-// A group counts as checked when every one of its repositories is in the address.
-export function isGroupChecked(group: RepoGroup, repos: string[]): boolean {
-  const present = lower(repos);
-  return group.repos.every((repo) => present.includes(repo.toLowerCase()));
+// The menu entries: every group, then Ungrouped when some repository of the data is in no group.
+export function groupOptions(groups: RepoGroup[], dataRepos: string[]): string[] {
+  const grouped = inAnyGroup(groups);
+  const names = groups.map((group) => group.name);
+  return dataRepos.some((repo) => !grouped.has(repo.toLowerCase())) ? [...names, UNGROUPED] : names;
 }
 
-const within = (inner: RepoGroup, outer: RepoGroup) => {
-  const outerRepos = lower(outer.repos);
-  return inner.repos.every((repo) => outerRepos.includes(repo.toLowerCase()));
-};
-const checkedOthers = (group: RepoGroup, groups: RepoGroup[], repos: string[]) =>
-  groups.filter((other) => other !== group && isGroupChecked(other, repos));
-
-// The checked groups that hold all of this one and more. Equal groups are not wider than each other.
-const widerGroups = (group: RepoGroup, groups: RepoGroup[], repos: string[]) =>
-  checkedOthers(group, groups, repos).filter((other) => within(group, other) && !within(other, group));
-
-// A checked group inside a wider checked group cannot be unchecked alone: the wider one keeps all its repositories.
-// Returns why and what to do, for the tooltip, or null. Only the outermost groups are named, since the ones between
-// are locked too.
-export function groupLock(group: RepoGroup, groups: RepoGroup[], repos: string[]): string | null {
-  if (!isGroupChecked(group, repos)) return null;
-  const wider = widerGroups(group, groups, repos);
-  if (!wider.length) return null;
-  const outermost = wider.filter((other) => !widerGroups(other, groups, repos).length);
-  const names = outermost.map((other) => other.name).join(', ');
-  return 'Included in ' + names + '. Uncheck ' + names + ' to remove it.';
+// The groups marked as default, or every entry when none is marked.
+export function defaultGroups(groups: RepoGroup[], options: string[]): string[] {
+  const marked = groups.filter((group) => group.isDefault).map((group) => group.name);
+  return marked.length ? marked : options;
 }
 
-// Checking adds the group's repositories, unless that would pass the limit. Unchecking removes them, and the groups
-// inside it, but keeps the repositories other checked groups share. When every repository is shared, they all go,
-// so unchecking always unchecks; the groups that shared them lose theirs too.
-export function toggleGroup(group: RepoGroup, groups: RepoGroup[], repos: string[]): string[] | { error: string } {
-  if (!isGroupChecked(group, repos)) {
-    const next = uniqueNames([...repos, ...group.repos]);
-    if (next.length > MAX_REPOSITORIES) {
-      return {
-        error: 'Adding ' + group.name + ' would make ' + next.length + ' repositories; the board reads at most ' + MAX_REPOSITORIES
-          + '. Uncheck a group first.',
-      };
-    }
-    return next;
+// The checked entries for the groups named in the address, in menu order. Without the parameter, or when it names
+// only unknown groups, the default groups apply; an empty parameter checks nothing.
+export function checkedGroups(selection: string[] | null, groups: RepoGroup[], options: string[]): string[] {
+  if (selection === null) return defaultGroups(groups, options);
+  const wanted = selection.map((name) => name.toLowerCase());
+  const known = options.filter((name) => wanted.includes(name.toLowerCase()));
+  return known.length || !selection.length ? known : defaultGroups(groups, options);
+}
+
+// What the address keeps for the checked entries: null when they are the default ones.
+export function groupsSelection(checked: string[], groups: RepoGroup[], options: string[]): string[] | null {
+  const defaults = defaultGroups(groups, options);
+  const same = checked.length === defaults.length && defaults.every((name) => checked.includes(name));
+  return same ? null : options.filter((name) => checked.includes(name));
+}
+
+// Whether a repository's rows show: it is in a checked group, or in no group while Ungrouped is checked.
+export function groupFilter(groups: RepoGroup[], checked: string[]): (repo: string) => boolean {
+  const grouped = inAnyGroup(groups);
+  const shown = inAnyGroup(groups.filter((group) => checked.includes(group.name)));
+  const ungrouped = checked.includes(UNGROUPED);
+  return (repo) => {
+    const key = repo.toLowerCase();
+    return shown.has(key) || (ungrouped && !grouped.has(key));
+  };
+}
+
+// The number of PRs of each entry; a repository in two groups counts in both.
+export function groupCounts(groups: RepoGroup[], options: string[], prRepos: string[]): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const name of options) {
+    const test = groupFilter(groups, [name]);
+    counts.set(name, prRepos.filter(test).length);
   }
-  const own = lower(group.repos);
-  const shared = lower(checkedOthers(group, groups, repos).filter((other) => !within(other, group)).flatMap((other) => other.repos));
-  const next = repos.filter((repo) => !own.includes(repo.toLowerCase()) || shared.includes(repo.toLowerCase()));
-  return next.length < repos.length ? next : repos.filter((repo) => !own.includes(repo.toLowerCase()));
+  return counts;
+}
+
+// The button text: All, None, up to two names, or how many are checked.
+export function groupsSummary(checked: string[], options: string[]): string {
+  if (checked.length === options.length) return 'All';
+  if (!checked.length) return 'None';
+  return checked.length <= 2 ? checked.join(', ') : checked.length + ' selected';
 }

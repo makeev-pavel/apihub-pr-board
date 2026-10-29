@@ -561,6 +561,12 @@ filter menu. Spec: SET-19, FILTER-17, and up to 40 repositories read four at a t
 - [x] **G1. Groups in Settings:** parse and validate the group lines, keep them in this browser. About 45 min.
 - [x] **G2. Repositories menu:** check groups to fill `repos`; unit and browser tests, screenshots. About 1 hour.
 
+Changed on October 29, 2026, at the user's request, to match the PR report of the CI repository: the Repositories
+menu filters the rows of the loaded data instead of filling `repos`, with Ungrouped and default groups.
+
+- [x] **G3. Groups filter rows:** a `*` marks default groups (SET-19); checked groups live in `groups` and narrow
+  the rows before the other filters (FILTER-17); unit and browser tests. About 1.5 hours.
+
 ## Backlog: your reviews
 
 Requested on October 29, 2026, for developers: the PRs that wait for your review, and those where it is asked

@@ -1,6 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { groupLock, groupsToText, isGroupChecked, parseGroupLines, toggleGroup } from '../../src/board/groups.ts';
+import {
+  checkedGroups, groupCounts, groupFilter, groupOptions, groupsSelection, groupsSummary, groupsToText, parseGroupLines, UNGROUPED,
+} from '../../src/board/groups.ts';
+import type { RepoGroup } from '../../src/board/groups.ts';
 
 const GROUPS = [
   { name: 'Core', repos: ['acme/widgets', 'acme/gadgets'] },
@@ -24,66 +27,58 @@ test('SET-19: a wrong line is named with the reason', () => {
   assert.deepEqual(parseGroupLines(many), { error: 'Up to 20 groups; this list has 21.' });
 });
 
-test('FILTER-17: checking a group adds its repositories; unchecking keeps those another checked group needs', () => {
-  assert.equal(isGroupChecked(GROUPS[0], ['ACME/Widgets', 'acme/gadgets']), true);
-  assert.equal(isGroupChecked(GROUPS[0], ['acme/widgets']), false);
-  let repos = toggleGroup(GROUPS[0], GROUPS, []) as string[];
-  assert.deepEqual(repos, ['acme/widgets', 'acme/gadgets']);
-  repos = toggleGroup(GROUPS[1], GROUPS, repos) as string[];
-  assert.deepEqual(repos, ['acme/widgets', 'acme/gadgets', 'acme/tools']);
-  // Core goes; gadgets stays for Tools.
-  assert.deepEqual(toggleGroup(GROUPS[0], GROUPS, repos), ['acme/gadgets', 'acme/tools']);
-  // A repository added by hand stays when a group is unchecked.
-  assert.deepEqual(toggleGroup(GROUPS[0], GROUPS, ['acme/widgets', 'acme/gadgets', 'acme/other']), ['acme/other']);
+test('SET-19: a leading * marks a default group; a name with a comma or named Ungrouped is refused', () => {
+  const parsed = parseGroupLines('* Core: acme/widgets\nTools: acme/tools');
+  assert.deepEqual(parsed, { groups: [{ name: 'Core', repos: ['acme/widgets'], isDefault: true }, { name: 'Tools', repos: ['acme/tools'] }] });
+  assert.equal(groupsToText((parsed as { groups: RepoGroup[] }).groups), '*Core: acme/widgets\nTools: acme/tools');
+  assert.deepEqual(parseGroupLines('Core, old: acme/widgets'), { error: 'Line 1: the group name "Core, old" has a comma.' });
+  assert.deepEqual(parseGroupLines('ungrouped: acme/widgets'),
+    { error: 'Line 1: "Ungrouped" names the repositories in no group; choose another name.' });
 });
 
-test('FILTER-17: a group inside another checked group cannot be unchecked alone, and a choice over 40 repositories is refused', () => {
-  const inner = { name: 'Widgets', repos: ['acme/widgets'] };
-  const outer = { name: 'Everything', repos: ['acme/widgets', 'acme/gadgets'] };
-  const repos = ['acme/widgets', 'acme/gadgets'];
-  assert.equal(groupLock(inner, [inner, outer], repos), 'Included in Everything. Uncheck Everything to remove it.');
-  assert.equal(groupLock(outer, [inner, outer], repos), null);
-  assert.equal(groupLock(inner, [inner, outer], ['acme/widgets']), null, 'nothing else covers it');
-  const big = { name: 'Big', repos: Array.from({ length: 30 }, (_, i) => 'acme/a' + i) };
-  const more = { name: 'More', repos: Array.from({ length: 20 }, (_, i) => 'acme/b' + i) };
-  assert.deepEqual(toggleGroup(more, [big, more], big.repos), { error: 'Adding More would make 50 repositories; the board reads at most 40. Uncheck a group first.' });
+const DATA = ['acme/widgets', 'acme/gadgets', 'acme/tools', 'acme/misc'];
+
+test('FILTER-17: the menu lists every group, and Ungrouped when the data has a repository in no group', () => {
+  assert.deepEqual(groupOptions(GROUPS, DATA), ['Core', 'Tools', UNGROUPED]);
+  assert.deepEqual(groupOptions(GROUPS, ['ACME/Widgets', 'acme/tools']), ['Core', 'Tools']);
 });
 
-test('FILTER-17: unchecking a group also unchecks the groups inside it, so two equal groups never lock each other', () => {
-  const inner = { name: 'Widgets', repos: ['acme/widgets'] };
-  const outer = { name: 'Everything', repos: ['acme/widgets', 'acme/gadgets'] };
-  const repos = ['acme/widgets', 'acme/gadgets'];
-  assert.deepEqual(toggleGroup(outer, [inner, outer], repos), [], 'Widgets goes with Everything');
-  const twin = { name: 'Same', repos: ['ACME/gadgets', 'acme/widgets'] };
-  assert.equal(groupLock(outer, [outer, twin], repos), null);
-  assert.equal(groupLock(twin, [outer, twin], repos), null);
-  assert.deepEqual(toggleGroup(twin, [outer, twin], repos), []);
-  // A repository another, wider group needs stays.
-  const tools = { name: 'Tools', repos: ['acme/gadgets', 'acme/tools'] };
-  assert.deepEqual(toggleGroup(outer, [inner, outer, tools], [...repos, 'acme/tools']), ['acme/gadgets', 'acme/tools']);
+test('FILTER-17: without groups in the address the default ones are checked, or all when none is marked', () => {
+  const options = groupOptions(GROUPS, DATA);
+  assert.deepEqual(checkedGroups(null, GROUPS, options), options);
+  const marked = [{ ...GROUPS[0], isDefault: true }, GROUPS[1]];
+  assert.deepEqual(checkedGroups(null, marked, options), ['Core']);
+  // Names are matched without regard to case and come back in menu order; unknown ones are dropped.
+  assert.deepEqual(checkedGroups(['ungrouped', 'tools', 'Gone'], marked, options), ['Tools', UNGROUPED]);
+  // A link that names only unknown groups falls back to the default; an empty one checks nothing.
+  assert.deepEqual(checkedGroups(['Gone'], marked, options), ['Core']);
+  assert.deepEqual(checkedGroups([], marked, options), []);
 });
 
-test('FILTER-17: groups that overlap without nesting never lock each other, and unchecking one always unchecks it', () => {
-  const a = { name: 'A', repos: ['acme/x', 'acme/y'] };
-  const b = { name: 'B', repos: ['acme/y', 'acme/z'] };
-  const c = { name: 'C', repos: ['acme/x', 'acme/z'] };
-  const triangle = [a, b, c];
-  const all = ['acme/x', 'acme/y', 'acme/z'];
-  assert.deepEqual(triangle.map((g) => groupLock(g, triangle, all)), [null, null, null]);
-  // Every repository of A is in B or C, so A's own go, and the groups that shared them with it too.
-  assert.deepEqual(toggleGroup(a, triangle, all), ['acme/z']);
+test('FILTER-17: the address keeps the checked groups only when they differ from the default', () => {
+  const marked = [{ ...GROUPS[0], isDefault: true }, GROUPS[1]];
+  const options = groupOptions(marked, DATA);
+  assert.equal(groupsSelection(['Core'], marked, options), null);
+  assert.deepEqual(groupsSelection([UNGROUPED, 'Core'], marked, options), ['Core', UNGROUPED]);
+  assert.deepEqual(groupsSelection([], marked, options), []);
+  assert.equal(groupsSelection(options, GROUPS, options), null, 'all checked is the default without marks');
 });
 
-test('FILTER-17: a group inside two others names only the outermost one, which is the one that can be unchecked', () => {
-  const p = { name: 'P', repos: ['acme/x', 'acme/y'] };
-  const q = { name: 'Q', repos: ['acme/y', 'acme/z'] };
-  const w = { name: 'W', repos: ['acme/x', 'acme/y', 'acme/z'] };
-  const groups = [p, q, w];
-  const all = ['acme/x', 'acme/y', 'acme/z'];
-  assert.equal(groupLock(p, groups, all), 'Included in W. Uncheck W to remove it.');
-  assert.equal(groupLock(q, groups, all), 'Included in W. Uncheck W to remove it.');
-  assert.equal(groupLock(w, groups, all), null);
-  assert.deepEqual(toggleGroup(w, groups, all), []);
-  const outer = { name: 'Outer', repos: [...w.repos, 'acme/v'] };
-  assert.equal(groupLock(p, [p, w, outer], [...all, 'acme/v']), 'Included in Outer. Uncheck Outer to remove it.');
+test('FILTER-17: rows show when their repository is in a checked group, or in none while Ungrouped is checked', () => {
+  const core = groupFilter(GROUPS, ['Core']);
+  assert.deepEqual(DATA.filter(core), ['acme/widgets', 'acme/gadgets']);
+  assert.equal(core('ACME/Widgets'), true);
+  assert.deepEqual(DATA.filter(groupFilter(GROUPS, [UNGROUPED])), ['acme/misc']);
+  assert.deepEqual(DATA.filter(groupFilter(GROUPS, [])), []);
+  // A repository in two groups counts in both.
+  const counts = groupCounts(GROUPS, groupOptions(GROUPS, DATA), ['acme/gadgets', 'acme/gadgets', 'acme/widgets', 'acme/misc']);
+  assert.deepEqual([...counts], [['Core', 3], ['Tools', 2], [UNGROUPED, 1]]);
+});
+
+test('FILTER-17: the button names all, none, up to two groups, or how many', () => {
+  const options = ['A', 'B', 'C', UNGROUPED];
+  assert.equal(groupsSummary(options, options), 'All');
+  assert.equal(groupsSummary([], options), 'None');
+  assert.equal(groupsSummary(['A', UNGROUPED], options), 'A, Ungrouped');
+  assert.equal(groupsSummary(['A', 'B', 'C'], options), '3 selected');
 });

@@ -115,7 +115,7 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); commitRepos(); } }} />
         {reposError ? <p id="repos-error" className="field-error" role="alert">{reposError}</p> : null}
         <label className="stacked-field" htmlFor="groups-input">Repository groups</label>
-        <p className="hint">One per line: <code>Name: owner/name, owner/name</code>. They fill the Repositories menu on the board and stay in this browser.</p>
+        <p className="hint">One per line: <code>Name: owner/name, owner/name</code>. A leading <code>*</code> checks the group when the board opens. They fill the Repositories menu on the board and stay in this browser.</p>
         <textarea id="groups-input" className="text-field" rows={3} value={groupsDraft} autoComplete="off"
           placeholder="Backend: acme/widgets, acme/gadgets" aria-invalid={!!groupsError}
           aria-describedby={groupsError ? 'groups-error' : undefined}

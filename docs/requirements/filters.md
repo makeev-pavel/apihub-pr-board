@@ -25,16 +25,15 @@
   (**DATA-25**), each with its number of PRs, and No priority. Checked values show the PRs with an issue of one of
   them, or without any for No priority; nothing checked shows all. The choice lives in the address
   (`priority=High,Medium`).
-- **FILTER-17** Repositories, shown when Settings has repository groups (**SET-19**): a menu with a checkbox per group.
-  Checking a group adds its repositories to `repos` in the address, unchecking removes the ones no other checked group
-  has, and **All repositories** clears `repos`. A group shows as checked when all its repositories are in `repos`.
-  The link itself names the repositories, so it works without the groups. Unchecking a group also unchecks the groups
-  inside it. When every one of its repositories is shared with other checked groups, they all go, so unchecking always
-  unchecks, and the groups that shared them lose theirs too. Only a checked group inside a wider checked group cannot
-  be unchecked alone; its checkbox is disabled and names the outermost group that includes it and to uncheck that one.
-  Equal groups are not wider than each other, so they never lock each other. Checking a group that would pass 40
-  repositories changes nothing, and the menu says why and to uncheck a group first; the message goes when the menu
-  opens again. The button names up to two checked groups, with `+N` for repositories added by hand.
+- **FILTER-17** Repositories, shown when Settings has repository groups (**SET-19**): a menu with a checkbox per group,
+  each with its number of open PRs, and **Ungrouped** for the repositories of the data that are in no group. It
+  shows only the rows of the repositories in a checked group, or in no group while Ungrouped is checked; a
+  repository in two groups shows when either is checked. The data and `repos` stay as they are. The other menus and
+  the tiles count only the rows the groups let through. **All** checks every entry, and **None** checks none, which
+  shows no rows. Without a choice the groups marked as default are checked, or every entry when none is marked. A
+  different choice lives in the address (`groups=Backend,Ungrouped`; an empty `groups=` checks none); names match
+  without regard to case, unknown ones are dropped, and a link that names only unknown groups gets the default. The
+  button reads All, None, up to two names, or "N selected".
 - **FILTER-7** **Reset view** shows when the view differs from the default and restores it. **Copy link to this
   view** copies the page address, says "Link copied", and asks to copy the address bar when the clipboard is blocked.
 
@@ -71,9 +70,10 @@
 
 ## View in the URL
 
-- **FILTER-13** Search, authors, draft status, area, quick filters, and sort live in the URL query (`q`, `authors`,
-  `draft`, `area`, `quick`, `sort`, `dir`). Defaults are left out, so the default view has a clean address. Opening
-  a link restores the view; unknown values fall back to the defaults.
+- **FILTER-13** Search, authors, draft status, area, priority, repository groups, quick filters, and sort live in the
+  URL query (`q`, `authors`, `draft`, `area`, `priority`, `groups`, `quick`, `sort`, `dir`). Defaults are left out,
+  so the default view has a clean address. Opening a link restores the view; unknown values fall back to the
+  defaults.
 - **FILTER-14** The address also carries three settings: `repos`, the repositories to show
   (`repos=acme/widgets,acme/gadgets`), `bots`, the extra bot logins (**SET-5**), and `hide`, the hidden columns
   (`hide=ci,assignee`, **SET-8**). Copy link keeps them, and **Reset view** leaves them alone. Without `repos` the

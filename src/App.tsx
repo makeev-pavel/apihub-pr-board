@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { collectAuthors, selectedAuthors } from './board/authors.ts';
 import { boardColumns, DEFAULT_WIDTHS, isColumnShown, REVIEWERS_LIST_WIDTHS } from './board/columns.ts';
 import { repositoriesSummary } from './board/format.ts';
+import { checkedGroups, groupCounts, groupFilter, groupOptions, groupsSelection } from './board/groups.ts';
 import { boardRepos, linkSettingsQuery, missingReposMessage } from './board/link.ts';
 import { readToken, readWizardDone, storeToken, storeWizardDone } from './board/storage.ts';
 import {
@@ -144,7 +145,18 @@ export function App() {
     const inView = (report ? report.prs : []).filter((pr) => !link.repos.length || shown.has(pr.repo.toLowerCase()));
     return inView.map((pr) => derive(pr, now, rules, viewer));
   }, [report, repos, link.repos, now, rules, viewer]);
-  const prs = useNoteText(derived, notesApi.notes);
+  const allPrs = useNoteText(derived, notesApi.notes);
+
+  // Repository groups narrow the rows before every other filter, so the menus count only what the groups show.
+  const groups = settings.repoGroups;
+  const groupNames = useMemo(() => groupOptions(groups, repos), [groups, repos]);
+  const checked = useMemo(() => checkedGroups(view.groups, groups, groupNames), [view.groups, groups, groupNames]);
+  const perGroup = useMemo(() => groupCounts(groups, groupNames, allPrs.map((pr) => pr.repo)), [groups, groupNames, allPrs]);
+  const prs = useMemo(() => {
+    if (!groups.length) return allPrs;
+    const shows = groupFilter(groups, checked);
+    return allPrs.filter((pr) => shows(pr.repo));
+  }, [allPrs, groups, checked]);
 
   const authors = useMemo(() => collectAuthors(prs), [prs]);
   const priorities = useMemo(() => collectPriorities(prs), [prs]);
@@ -214,7 +226,10 @@ export function App() {
             value={view.q} onChange={(e) => patch({ q: e.target.value })} />
           <SearchHelp onExample={(q) => patch({ q })} />
         </div>
-        {settings.repoGroups.length ? <RepositoriesMenu groups={settings.repoGroups} repos={link.repos} setRepos={setRepos} /> : null}
+        {groups.length ? (
+          <RepositoriesMenu groups={groups} options={groupNames} checked={checked} counts={perGroup}
+            setChecked={(next) => patch({ groups: groupsSelection(next, groups, groupNames) })} />
+        ) : null}
         <AuthorMenu authors={authors} selected={selected} mode={view.authors} setAuthors={(value) => patch({ authors: value })} />
         <div className="segmented" role="group" aria-label="Draft status">
           {DRAFT_OPTIONS.map(([value, label]) =>

@@ -17,7 +17,7 @@ function pr(number: number, fields: Partial<DerivedPullRequest> = {}): DerivedPu
 test('FILTER-13: a URL query restores the view, and unknown values fall back to the defaults', () => {
   assert.deepEqual(parseView(''), DEFAULT_VIEW);
   assert.deepEqual(parseView('?q=fix&authors=anna-dev,,boris-k&draft=draft&area=fe&quick=ci,nope&sort=title&dir=asc'), {
-    q: 'fix', authors: ['anna-dev', 'boris-k'], draft: 'draft', area: 'fe', quick: ['ci'], priority: [], sort: 'title', dir: 'asc',
+    q: 'fix', authors: ['anna-dev', 'boris-k'], draft: 'draft', area: 'fe', quick: ['ci'], priority: [], groups: null, sort: 'title', dir: 'asc',
   });
   assert.equal(parseView('?authors=bots').authors, 'bots');
   assert.equal(parseView('?q=%20label:bug%20').q, ' label:bug ', 'the search is kept as typed');
@@ -128,4 +128,13 @@ test('FILTER-16: the Priority filter keeps PRs whose issues have a chosen priori
   assert.deepEqual(collectPriorities([high, low, none]), [{ name: 'High', count: 2 }, { name: 'Low', count: 1 }]);
   assert.deepEqual(parseView('?priority=High,,high,none').priority, ['High', 'none']);
   assert.equal(viewQuery({ ...DEFAULT_VIEW, priority: ['High', 'none'] }), 'priority=High%2Cnone');
+});
+
+test('FILTER-17: checked groups live in the address; an empty list checks none, and no parameter keeps the default', () => {
+  assert.equal(parseView('').groups, null);
+  assert.deepEqual(parseView('?groups=').groups, []);
+  assert.deepEqual(parseView('?groups=' + encodeURIComponent('Monorepo & Co,Old,old')).groups, ['Monorepo & Co', 'Old']);
+  assert.equal(viewQuery({ ...DEFAULT_VIEW, groups: ['Monorepo & Co', 'Ungrouped'] }), 'groups=Monorepo+%26+Co%2CUngrouped');
+  assert.equal(viewQuery({ ...DEFAULT_VIEW, groups: [] }), 'groups=');
+  assert.equal(viewQuery(DEFAULT_VIEW), '');
 });

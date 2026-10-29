@@ -1,7 +1,7 @@
 // Personal settings, kept in this browser's localStorage. Stored values are untrusted: anything missing or invalid
 // falls back to the default, so an old or hand-edited entry never breaks the page.
 
-import { MAX_GROUPS } from './board/groups.ts';
+import { groupNameError, MAX_GROUPS } from './board/groups.ts';
 import type { RepoGroup } from './board/groups.ts';
 import { AREAS } from './model/areas.ts';
 import { COLUMNS } from './board/columns.ts';
@@ -67,9 +67,9 @@ function parseGroups(value: unknown): RepoGroup[] {
     if (!group || typeof group !== 'object' || typeof group.name !== 'string' || !group.name.trim() || !Array.isArray(group.repos)) return [];
     const name = group.name.trim();
     const repos = uniqueNames(group.repos.filter(isRepositoryName)).slice(0, MAX_REPOSITORIES);
-    if (!repos.length || names.has(name.toLowerCase())) return [];
+    if (!repos.length || names.has(name.toLowerCase()) || groupNameError(name)) return [];
     names.add(name.toLowerCase());
-    return [{ name, repos }];
+    return [group.isDefault === true ? { name, repos, isDefault: true } : { name, repos }];
   }).slice(0, MAX_GROUPS);
 }
 
