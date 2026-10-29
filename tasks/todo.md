@@ -388,7 +388,9 @@ panel, the settings panel, empty and error states, a narrow window, and hidden c
 the screenshot project, with the HTML report as an artifact when it fails, and the coverage gate in the unit job.
 
 **Acceptance criteria:**
-- [ ] A failing unit or browser test blocks the deploy; screenshots stay local.
+- [x] A failing unit or browser test blocks the deploy; screenshots stay local. Scheduled runs skip the tests.
+  Checked by a unit test of the workflow and a Linux run of the browser tests in the Playwright container; a run
+  on GitHub needs a push.
 
 **Verification:** a workflow run on a branch. **Dependencies:** Tasks 20 and 10.
 **Files:** `.github/workflows/pages.yml`. **Scope:** S.
@@ -399,8 +401,8 @@ the screenshot project, with the HTML report as an artifact when it fails, and t
 `README.md` and `docs/requirements.md`, and record the test-stack decision as an ADR.
 
 **Acceptance criteria:**
-- [ ] Every file and command named in the docs exists; the conventions say where new fixtures, tests, and
-  screenshots go.
+- [x] Every file and command named in the docs exists; the conventions say where new fixtures, tests, and
+  screenshots go. The ADR is `docs/adr/0001-test-stack.md` (Proposed).
 
 **Verification:** a grep of every path named in the docs. **Dependencies:** Task 23.
 **Files:** `CLAUDE.md`, `README.md`, `docs/requirements.md`, `docs/adr/0001-test-stack.md`. **Scope:** S.

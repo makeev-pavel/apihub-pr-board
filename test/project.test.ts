@@ -34,6 +34,22 @@ test('SEC-6: only the deploy job may write to Pages, and a running deploy is nev
   assert.match(workflow, /cancel-in-progress: false/);
 });
 
+test('a failed unit or browser test blocks the deploy, scheduled runs skip the tests, and screenshots stay local', () => {
+  const unit = job('test');
+  assert.match(unit, /npm run typecheck/);
+  assert.match(unit, /npm run test:coverage/);
+  assert.match(unit, /npm run test:requirements/);
+  const browser = job('e2e');
+  assert.match(browser, /npm run test:e2e/);
+  assert.doesNotMatch(workflow, /test:screenshots|--project=screenshots/);
+  assert.match(pkg.scripts['test:e2e'], /--project=e2e$/);
+  for (const name of ['test', 'e2e']) assert.match(job(name), /if: github\.event_name != 'schedule'/);
+  const build = job('build');
+  assert.match(build, /needs: \[test, e2e\]/);
+  assert.match(build, /!contains\(needs\.\*\.result, 'failure'\)/);
+  assert.match(build, /!contains\(needs\.\*\.result, 'cancelled'\)/);
+});
+
 test('SEC-7: packages that touch untrusted content and DOM test tooling are pinned to exact versions', () => {
   const versions = { ...pkg.dependencies, ...pkg.devDependencies };
   for (const name of ['marked', 'dompurify', 'jsdom', '@playwright/test']) {

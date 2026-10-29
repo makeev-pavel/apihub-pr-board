@@ -17,7 +17,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  # Scheduled runs only refresh the data of code that was tested when it was pushed, so they skip both test jobs.
+  test:
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -32,8 +34,59 @@ jobs:
       - name: Check types
         run: npm run typecheck
 
-      - name: Run tests
-        run: npm test
+      - name: Run unit tests with the coverage gate
+        run: npm run test:coverage
+
+      - name: Check that every requirement has a test
+        run: npm run test:requirements
+
+  # Browser tests on the mock server. The screenshot project stays local: its baselines are Windows-only.
+  e2e:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+
+      - run: npm ci
+
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      # Downloads Chromium unless the cache has it, and installs its system libraries either way.
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser tests
+        run: npm run test:e2e
+
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7
+
+  build:
+    needs: [test, e2e]
+    # Runs when both test jobs passed, or were skipped on a schedule; a failed or cancelled test blocks the deploy.
+    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+
+      - run: npm ci
 
       # The target repositories are a repository variable (owner/name, comma-separated), so the code never names them.
       - name: Build page
