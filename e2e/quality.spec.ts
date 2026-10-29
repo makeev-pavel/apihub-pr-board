@@ -71,6 +71,24 @@ test.describe('quality', () => {
     expect(external).toEqual([]);
   });
 
+  test('QUAL-11: codes that open a popover show an outline and a ▾ at rest; codes that open nothing stay flat', async ({ page }) => {
+    await openBoard(page, { report: 'typical', query: ALL });
+    const failing = page.locator('.ci-wrap > button.pill').first();
+    const passing = page.locator('td.c-state span.pill', { hasText: /^P$/ }).first();
+    const style = (locator: typeof failing) => locator.evaluate((el) => {
+      const own = getComputedStyle(el);
+      return { shadow: own.boxShadow, after: getComputedStyle(el, '::after').content, cursor: own.cursor };
+    });
+    const clickable = await style(failing);
+    expect(clickable.shadow).not.toBe('none');
+    expect(clickable.after).toBe('"▾"');
+    expect(clickable.cursor).toBe('pointer');
+    const flat = await style(passing);
+    expect(flat.shadow).toBe('none');
+    expect(flat.after).toBe('none');
+    expect(await page.locator('.attn-icon').first().evaluate((el) => getComputedStyle(el).boxShadow)).not.toBe('none');
+  });
+
   test('QUAL-10: relative times move on every minute without a reload', async ({ page }) => {
     await openBoard(page, { report: 'typical' });
     const source = page.locator('.source-age');

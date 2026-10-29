@@ -8,6 +8,9 @@
   Toggle buttons (tiles, segmented controls, label chips) report whether they are pressed.
 - **QUAL-3** Everything works from the keyboard: popovers close on Escape, column edges take focus and resize with
   the arrow keys, and focus is always visible.
+- **QUAL-11** Codes that open a popover look clickable before the pointer reaches them: the CI and Review codes that are
+  buttons have a thin outline and a small ▾, and the attention icon a thin ring. Codes that open nothing, such as P or
+  OK, stay flat. Hovering a clickable code strengthens its outline, and the pointer becomes a hand.
 - **QUAL-4** Status is never shown by color alone: every colored code has a letter or symbol, and the stripe colors
   repeat the CI code in the same row.
 - **QUAL-5** Animations stop when the system asks for reduced motion.
