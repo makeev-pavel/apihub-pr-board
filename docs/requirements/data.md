@@ -82,6 +82,8 @@
   spinner and a clock in tenths of a second run beside it. In an empty table the status takes the table's place
   (**TABLE-19**); over a table with rows it sits in a corner, so the rows stay where they are. When the load ends,
   the corner shows how many pull requests came from how many repositories and how long it took, for 5 seconds.
+  A screen reader hears when a load starts and how it ended, not each step. When a new load starts before the last
+  one ends, only the new one's results and status count.
 
 ## Several repositories
 

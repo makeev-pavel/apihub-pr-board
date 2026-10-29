@@ -15,7 +15,7 @@ const STATUS: Record<ReviewerStatus, { icon: OcticonName; label: string }> = {
   changes: { icon: 'fileDiff', label: 'requested changes' },
   approved: { icon: 'check', label: 'approved' },
   commented: { icon: 'comment', label: 'left review comments' },
-  dismissed: { icon: 'dot', label: 'review dismissed' },
+  dismissed: { icon: 'x', label: 'review dismissed' },
 };
 
 // A long list shows this many lines and puts the rest behind a "+N more" button.
@@ -33,14 +33,14 @@ export function ReviewersList({ pr }: { pr: DerivedPullRequest }) {
     const name = team ? '@' + actor.login : displayLogin(actor);
     const mine = !team && !!viewer && actor.login.toLowerCase() === viewer.toLowerCase();
     const due = mine && (status === 'pending' || status === 'again');
-    const label = name + (mine ? ' (you)' : '') + ': ' + STATUS[status].label;
+    const label = STATUS[status].label;
     // The index keeps keys unique for a team and a person with the same name.
     return (
       <li key={index + ':' + actor.login} className={'reviewer ' + status + (due ? ' due' : '')}
         title={due ? 'Your review is requested' : undefined}>
         <Avatar actor={actor} small />
-        <span className={'who' + (mine ? ' me' : '')}>{name}</span>
-        <span className="state" role="img" aria-label={label} title={label}><Octicon name={STATUS[status].icon} /></span>
+        <span className={'who' + (mine ? ' me' : '')}>{name}{mine ? <span className="sr-only"> (you)</span> : null}</span>
+        <span className="state" role="img" aria-label={label} title={name + ': ' + label}><Octicon name={STATUS[status].icon} /></span>
       </li>
     );
   };

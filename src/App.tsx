@@ -9,7 +9,7 @@ import {
 } from './board/view.ts';
 import type { SortKey, View } from './board/view.ts';
 import { RefreshControl } from './components/header/RefreshControl.tsx';
-import { LoadStatus } from './components/common/LoadStatus.tsx';
+import { LoadAnnouncer, LoadStatus } from './components/common/LoadStatus.tsx';
 import type { LoadState } from './components/common/LoadStatus.tsx';
 import { applyProgress, startProgress } from './board/progress.ts';
 import { ViewerBadge } from './components/header/ViewerBadge.tsx';
@@ -61,6 +61,7 @@ export function App() {
   const [refreshing, setRefreshing] = useState(false);
   // The live load under way, or the one that just finished (DATA-27).
   const [load, setLoad] = useState<LoadState | null>(null);
+  const loadId = useRef(0);
   const [refreshError, setRefreshError] = useState<string | null>(null);
   const [lastAttempt, setLastAttempt] = useState(0);
   const [now, setNow] = useState(Date.now);
@@ -96,6 +97,11 @@ export function App() {
     setView((prev) => ({ ...prev, q: toggleLabelFilter(prev.q, name) }));
   }, []);
   const setToken = (value: string) => { storeToken(value); setTokenState(value); };
+  // Each Review layout starts at its own default width (SET-20), so a width dragged for one does not squeeze the other.
+  const changeSettings = (next: typeof settings) => {
+    if (next.reviewColumn !== settings.reviewColumn) resize.onReset('review');
+    setSettings(next);
+  };
   // The token dialog (SET-18). After Not now it does not open by itself again until the page reloads.
   const [askingToken, setAskingToken] = useState(false);
   const tokenDismissed = useRef(false);
@@ -113,8 +119,11 @@ export function App() {
     setRefreshError(null);
     const startedAt = Date.now();
     setLastAttempt(startedAt);
-    setLoad({ startedAt, repos: startProgress(names) });
-    const ours = (change: (prev: LoadState) => LoadState | null) => setLoad((prev) => (prev && prev.startedAt === startedAt ? change(prev) : prev));
+    // A newer load, such as one after a token is saved mid-load, takes over: this one's results are then dropped.
+    const id = ++loadId.current;
+    const current = () => loadId.current === id;
+    setLoad({ id, startedAt, repos: startProgress(names) });
+    const ours = (change: (prev: LoadState) => LoadState | null) => setLoad((prev) => (prev && prev.id === id ? change(prev) : prev));
     // Skip the heavy parts of the query that only hidden columns would show.
     const parts = { checks: columns.some((c) => c.id === 'ci'), comments: columns.some((c) => c.id === 'comment') };
     const options = {
@@ -123,15 +132,17 @@ export function App() {
     };
     fetchOpenPullRequests(DEV ? { ...options, endpoint: DEV.graphqlUrl } : options)
       .then((report) => {
+        if (!current()) return;
         setData((prev) => ({ ...prev, status: 'ready', report, source: 'live', error: null }));
         setNow(Date.now());
         ours((prev) => ({ ...prev, finished: { at: Date.now(), prs: report.prs.length, repos: report.repos.length } }));
       })
       .catch((error: Error) => {
+        if (!current()) return;
         setRefreshError(error.message);
         ours(() => null);
       })
-      .finally(() => setRefreshing(false));
+      .finally(() => { if (current()) setRefreshing(false); });
   };
 
   // The summary of a finished load stays a few seconds, then goes.
@@ -206,7 +217,7 @@ export function App() {
             setQuick={(quick) => patch({ quick: !viewer && view.quick.includes('mine') ? [...quick, 'mine'] : quick })} />
           {report ? <UpdateInfo report={report} live={data.source === 'live'} now={now} /> : null}
           <RefreshControl token={token} setToken={setToken} refreshing={refreshing} onRefresh={refresh} onAskToken={() => setAskingToken(true)}
-            settings={settings} onSettingsChange={setSettings} columns={offeredColumns}
+            settings={settings} onSettingsChange={changeSettings} columns={offeredColumns}
             repositories={{ requested: link.repos, available: dataRepos, onChange: setRepos }}
             canResetWidths={canResetWidths} onResetWidths={resetWidths} />
           {viewerActor ? <ViewerBadge viewer={viewerActor} /> : null}
@@ -266,6 +277,7 @@ export function App() {
       </div>
 
       {load && (rows.length || load.finished) ? <LoadStatus load={load} floating /> : null}
+      <LoadAnnouncer load={load} />
       <LegendBar />
       {askingToken ? (
         <TokenDialog onClose={closeTokenDialog}

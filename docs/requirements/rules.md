@@ -46,5 +46,6 @@
 
 - **RULE-12** With a known viewer (**DATA-26**), a PR the viewer did not open waits for the viewer's review when the
   viewer, as a person, is among its requested reviewers. It is re-requested when the viewer has also reviewed it
-  before (approved, requested changes, or a dismissed review): the author asks the viewer to look again. Requests to
+  before (approved, requested changes, left review comments, or a dismissed review): the author asks the viewer to
+  look again. Requests to
   the viewer's teams do not count, because a public-read token often cannot see them.

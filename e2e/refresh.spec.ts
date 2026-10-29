@@ -141,15 +141,22 @@ test.describe('Refresh', () => {
 test.describe('reviewers list', () => {
   test('SET-20 TABLE-30: the Review column lists the reviewers, a long list folds, and the viewer whose review is due stands out', async ({ page }) => {
     await withToken(page);
+    // A Review width dragged for the code layout does not carry over to the list.
+    await page.addInitScript(() => {
+      if (!sessionStorage.getItem('seeded')) localStorage.setItem('apihub-pr-board.columns', JSON.stringify({ review: 90 }));
+      sessionStorage.setItem('seeded', '1');
+    });
     await openBoard(page, { report: 'mixed', refresh: 'ok', query: ALL + '&q=' + encodeURIComponent('publish packages in batches') });
     await page.getByRole('button', { name: /^Settings/ }).click();
     await page.getByRole('group', { name: 'Review column' }).getByRole('button', { name: 'Reviewers' }).click();
     await page.keyboard.press('Escape');
     const row = page.locator('.board > tbody > tr').first();
     const list = row.getByRole('list', { name: 'Reviewers of PR #9408' });
+    const reviewHeader = page.locator('.board > thead th').filter({ hasText: /^Review/ });
+    expect(Math.round((await reviewHeader.boundingBox())!.width)).toBe(180);
     // Ten lines: the first three show, the rest wait behind a button.
     await expect(list.getByRole('listitem')).toHaveCount(3);
-    await expect(list.getByRole('img', { name: 'farah-ui: awaiting review' })).toBeVisible();
+    await expect(list.getByRole('listitem').filter({ hasText: 'farah-ui' }).getByRole('img', { name: 'awaiting review' })).toBeVisible();
     await expect(row.getByRole('button', { name: 'Show all 10 reviewers of PR #9408' })).toHaveText('+7 more');
     await expect(row.locator('.reviewer.due')).toHaveCount(0);
 
@@ -157,12 +164,13 @@ test.describe('reviewers list', () => {
     await expect(page.locator('.source-button')).toHaveText('live, just now');
     // The viewer's own request leads the list and stands out.
     await expect(list.getByRole('listitem').first()).toHaveClass(/\bdue\b/);
-    await expect(list.getByRole('img', { name: 'boris-k (you): awaiting review' })).toBeVisible();
+    await expect(list.getByRole('listitem').first()).toHaveText('boris-k (you)');
+    await expect(list.getByRole('listitem').first().getByRole('img', { name: 'awaiting review' })).toBeVisible();
     await row.getByRole('button', { name: 'Show all 10 reviewers of PR #9408' }).click();
     const all = page.getByRole('dialog', { name: 'All reviewers of PR #9408' });
     await expect(all.getByRole('listitem')).toHaveCount(10);
-    for (const name of ['dara-ops: requested changes', 'chen-li: approved', 'gleb-be: review dismissed', '@widgets-backend: awaiting review']) {
-      await expect(all.getByRole('img', { name })).toBeVisible();
+    for (const [who, state] of [['dara-ops', 'requested changes'], ['chen-li', 'approved'], ['gleb-be', 'review dismissed'], ['@widgets-backend', 'awaiting review']]) {
+      await expect(all.getByRole('listitem').filter({ hasText: who }).getByRole('img', { name: state })).toBeVisible();
     }
     await page.keyboard.press('Escape');
     await expect(all).toHaveCount(0);

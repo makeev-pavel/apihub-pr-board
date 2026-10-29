@@ -1,6 +1,7 @@
 // What a live load is doing, repository by repository, in words for the loading status (DATA-27).
 
 import type { RepositoryProgress } from '../github/graphql.ts';
+import { plural } from './format.ts';
 
 export interface RepoProgress {
   repo: string;
@@ -23,22 +24,24 @@ export function applyProgress(progress: RepoProgress[], event: Partial<Repositor
   return progress.map((p) => (p.repo.toLowerCase() === key ? { ...p, ...event, repo: p.repo, note: event.note ?? p.note } : p));
 }
 
-const plural = (n: number) => n + (n === 1 ? ' pull request' : ' pull requests');
-
 function repoLine(p: RepoProgress): string {
-  const count = p.total === null ? 'starting' : p.read + ' of ' + plural(p.total);
+  const count = p.total === null ? 'starting' : p.read + ' of ' + plural(p.total, 'pull request');
   return p.repo + ': ' + count + (p.note ? '. ' + p.note : '');
 }
 
-export function describeProgress(progress: RepoProgress[]): { headline: string; lines: string[] } {
+export function describeProgress(progress: RepoProgress[]): { headline: string; lines: { repo: string; text: string }[] } {
   if (progress.every((p) => p.status === 'waiting')) return { headline: 'Connecting to GitHub', lines: [] };
   if (progress.length === 1) return { headline: 'Reading ' + repoLine(progress[0]), lines: [] };
   const done = progress.filter((p) => p.status === 'done' || p.status === 'unreadable').length;
   const read = progress.reduce((sum, p) => sum + p.read, 0);
   return {
     headline: 'Reading repositories: ' + done + ' of ' + progress.length + ' done, ' + read + ' pull requests so far',
-    lines: progress.filter((p) => p.status === 'reading').map(repoLine),
+    lines: progress.filter((p) => p.status === 'reading').map((p) => ({ repo: p.repo, text: repoLine(p) })),
   };
+}
+
+export function describeFinished(prs: number, repos: number): string {
+  return 'Loaded ' + plural(prs, 'pull request') + (repos > 1 ? ' from ' + repos + ' repositories' : '');
 }
 
 export function formatElapsed(ms: number): string {

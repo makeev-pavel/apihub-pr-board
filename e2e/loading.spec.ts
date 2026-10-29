@@ -37,7 +37,7 @@ test.describe('loading prs.json', () => {
   test('TABLE-19: a slow prs.json shows the loading row with a spinner first', async ({ page }) => {
     await page.request.post('/__dev/state', { data: { report: 'slow', refresh: 'ok' } });
     await page.goto('/');
-    await expect(page.getByRole('status')).toHaveText('Loading pull requests…');
+    await expect(page.locator('.board').getByRole('status')).toHaveText('Loading pull requests…');
     await expect(page.locator('.board .spinner')).toBeVisible();
     await expect(page.getByText('Loading pull requests…')).toHaveCount(0, { timeout: 10_000 });
     await expect(page.locator('.board > tbody > tr').first()).toBeVisible();
@@ -148,7 +148,7 @@ test.describe('loading prs.json', () => {
     await page.request.post('/__dev/state', { data: { report: 'missing', refresh: 'slow' } });
     await page.goto('/?repos=acme/gadgets');
     const spinner = page.locator('.board .spinner');
-    await expect(page.getByRole('status')).toHaveText('Reading acme/gadgets: starting');
+    await expect(page.locator('.board .load-headline')).toHaveText('Reading acme/gadgets: starting');
     await expect(spinner).toHaveCSS('animation-name', 'spin');
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await expect(spinner).toHaveCSS('animation-name', 'none');
@@ -202,13 +202,16 @@ test.describe('loading prs.json', () => {
     // In the empty table: the spinner, the step, each repository being read, and the clock.
     const inTable = page.locator('.board .load-status');
     await expect(inTable.locator('.spinner')).toBeVisible();
-    await expect(inTable.getByRole('status')).toHaveText(/^Reading repositories: \d of 2 done, \d+ pull requests so far$/);
+    // A screen reader hears that the load started, not each step.
+    await expect(page.getByRole('status')).toHaveText('Loading pull requests from GitHub');
+    await expect(inTable.locator('.load-headline')).toHaveText(/^Reading repositories: \d of 2 done, \d+ pull requests so far$/);
     await expect(inTable.locator('.load-lines li').first()).toHaveText(/^acme\/(widgets|gadgets): (starting|\d+ of \d+ pull requests)$/);
     await page.clock.setFixedTime(Date.parse(MOCK_NOW) + 2500);
     await expect(inTable.locator('.elapsed')).toHaveText('2.5 s');
     // Then a summary in the corner over the rows, gone after a few seconds.
     const summary = page.locator('.load-status.floating.finished');
     await expect(summary).toHaveText(/^✓Loaded 84 pull requests from 2 repositories\s*in 2\.5 s$/, { timeout: 10_000 });
+    await expect(page.getByRole('status')).toHaveText('Loaded 84 pull requests from 2 repositories in 2.5 s');
     await expect(rows(page)).toHaveCount(84);
     await expect(summary).toHaveCount(0, { timeout: 8000 });
   });
@@ -218,7 +221,7 @@ test.describe('loading prs.json', () => {
     await openBoard(page, { report: 'typical', refresh: 'paced', query: ALL });
     await page.getByRole('button', { name: 'Refresh', exact: true }).click();
     const corner = page.locator('.load-status.floating');
-    await expect(corner.getByRole('status')).toHaveText(/^Reading acme\/widgets: (starting|\d+ of \d+ pull requests)$/);
+    await expect(corner.locator('.load-headline')).toHaveText(/^Reading acme\/widgets: (starting|\d+ of \d+ pull requests)$/);
     await expect(rows(page)).toHaveCount(36);
     await expect(corner).toHaveClass(/(^| )finished( |$)/, { timeout: 10_000 });
   });
