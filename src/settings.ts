@@ -4,7 +4,8 @@
 import { MAX_GROUPS } from './board/groups.ts';
 import type { RepoGroup } from './board/groups.ts';
 import { AREAS } from './model/areas.ts';
-import { isRepositoryName, uniqueNames } from './repository.ts';
+import { COLUMNS } from './board/columns.ts';
+import { isRepositoryName, MAX_REPOSITORIES, uniqueNames } from './repository.ts';
 import { DEFAULT_RULES } from './model/rules.ts';
 import type { Rules } from './model/rules.ts';
 
@@ -56,11 +57,15 @@ function parseAreaModules(value: unknown): Rules['areaModules'] {
 // Stored groups are checked like the field checks them; a broken group is dropped and the rest load.
 function parseGroups(value: unknown): RepoGroup[] {
   if (!Array.isArray(value)) return [];
+  const names = new Set<string>();
   return value.flatMap((entry): RepoGroup[] => {
     const group = entry as Partial<RepoGroup> | null;
     if (!group || typeof group !== 'object' || typeof group.name !== 'string' || !group.name.trim() || !Array.isArray(group.repos)) return [];
-    const repos = uniqueNames(group.repos.filter(isRepositoryName));
-    return repos.length ? [{ name: group.name.trim(), repos }] : [];
+    const name = group.name.trim();
+    const repos = uniqueNames(group.repos.filter(isRepositoryName)).slice(0, MAX_REPOSITORIES);
+    if (!repos.length || names.has(name.toLowerCase())) return [];
+    names.add(name.toLowerCase());
+    return [{ name, repos }];
   }).slice(0, MAX_GROUPS);
 }
 
@@ -77,7 +82,10 @@ export function parseSettings(value: unknown): Settings {
     },
     theme: pick(stored.theme, THEMES, DEFAULT_SETTINGS.theme),
     density: pick(stored.density, DENSITIES, DEFAULT_SETTINGS.density),
-    hiddenColumns: Array.isArray(stored.hiddenColumns) ? stored.hiddenColumns.filter((id) => typeof id === 'string') : [],
+    // An id no column has any more, such as one from an older version, is dropped (SET-8).
+    hiddenColumns: Array.isArray(stored.hiddenColumns)
+      ? [...new Set(stored.hiddenColumns.filter((id): id is string => typeof id === 'string' && COLUMNS.some((column) => column.id === id)))]
+      : [],
     repoGroups: parseGroups(stored.repoGroups),
   };
 }

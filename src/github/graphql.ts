@@ -143,11 +143,18 @@ export async function fetchOpenPullRequests({
   // Four at a time, so 40 repositories load in seconds; results keep the order of the list.
   const results: Awaited<ReturnType<typeof readRepository>>[] = [];
   let next = 0;
+  // After one read fails the whole load fails, so the other workers stop instead of reading the rest for nothing.
+  let failed = false;
   await Promise.all(Array.from({ length: Math.min(PARALLEL_READS, repositories.length) }, async () => {
-    while (next < repositories.length) {
+    while (!failed && next < repositories.length) {
       const index = next++;
-      // With one repository there is nothing else to show, so a missing one fails as before.
-      results[index] = await readRepository(repositories[index], several, { token, parts, fetchImpl, endpoint });
+      try {
+        // With one repository there is nothing else to show, so a missing one fails as before.
+        results[index] = await readRepository(repositories[index], several, { token, parts, fetchImpl, endpoint });
+      } catch (error) {
+        failed = true;
+        throw error;
+      }
     }
   }));
   for (const result of results) {

@@ -9,13 +9,20 @@ export function useNotes() {
   const current = useRef(notes);
   useEffect(() => { current.current = notes; });
   useEffect(() => {
-    const onStorage = (event: StorageEvent) => { if (event.key === NOTES_KEY || event.key === null) setNotes(loadNotes()); };
+    const onStorage = (event: StorageEvent) => {
+      if (event.storageArea === localStorage && (event.key === NOTES_KEY || event.key === null)) setNotes(loadNotes());
+    };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
   }, []);
+  // While saving fails, the notes in memory hold changes storage lacks, so they are kept over what is stored.
+  const unsaved = useRef(false);
   const update = useCallback((key: string, text: string) => {
-    const next = setNote(readStoredNotes() || current.current, key, text, Date.now());
-    setSaveFailed(!saveNotes(next));
+    const stored = readStoredNotes();
+    const base = !stored ? current.current : unsaved.current ? { ...stored, ...current.current } : stored;
+    const next = setNote(base, key, text, Date.now());
+    unsaved.current = !saveNotes(next);
+    setSaveFailed(unsaved.current);
     current.current = next;
     setNotes(next);
   }, []);

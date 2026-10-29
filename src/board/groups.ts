@@ -43,9 +43,30 @@ export function isGroupChecked(group: RepoGroup, repos: string[]): boolean {
   return group.repos.every((repo) => present.includes(repo.toLowerCase()));
 }
 
-// Checking adds the group's repositories; unchecking removes those no other checked group still needs.
-export function toggleGroup(group: RepoGroup, groups: RepoGroup[], repos: string[]): string[] {
-  if (!isGroupChecked(group, repos)) return uniqueNames([...repos, ...group.repos]).slice(0, MAX_REPOSITORIES);
-  const kept = lower(groups.filter((other) => other !== group && isGroupChecked(other, repos)).flatMap((other) => other.repos));
+const otherChecked = (group: RepoGroup, groups: RepoGroup[], repos: string[]) =>
+  groups.filter((other) => other !== group && isGroupChecked(other, repos));
+
+// A checked group whose repositories other checked groups all need cannot be unchecked alone: unchecking would change
+// nothing. Returns why, for the tooltip, or null.
+export function groupLock(group: RepoGroup, groups: RepoGroup[], repos: string[]): string | null {
+  if (!isGroupChecked(group, repos)) return null;
+  const others = otherChecked(group, groups, repos);
+  const kept = lower(others.flatMap((other) => other.repos));
+  if (!group.repos.every((repo) => kept.includes(repo.toLowerCase()))) return null;
+  const covering = others.filter((other) => lower(other.repos).some((repo) => lower(group.repos).includes(repo)));
+  return 'Included in ' + covering.map((other) => other.name).join(', ');
+}
+
+// Checking adds the group's repositories, unless that would pass the limit; unchecking removes those no other checked
+// group still needs.
+export function toggleGroup(group: RepoGroup, groups: RepoGroup[], repos: string[]): string[] | { error: string } {
+  if (!isGroupChecked(group, repos)) {
+    const next = uniqueNames([...repos, ...group.repos]);
+    if (next.length > MAX_REPOSITORIES) {
+      return { error: 'Adding ' + group.name + ' would make ' + next.length + ' repositories; the board reads at most ' + MAX_REPOSITORIES + '.' };
+    }
+    return next;
+  }
+  const kept = lower(otherChecked(group, groups, repos).flatMap((other) => other.repos));
   return repos.filter((repo) => !lower(group.repos).includes(repo.toLowerCase()) || kept.includes(repo.toLowerCase()));
 }

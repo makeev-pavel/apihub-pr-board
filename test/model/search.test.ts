@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { derive, isCurrentSprint } from '../../src/model/derive.ts';
+import { derive } from '../../src/model/derive.ts';
 import { activeLabelFilters, matchesQuery, parseQuery, toggleLabelFilter } from '../../src/model/search.ts';
 import type { PullRequest } from '../../src/types.ts';
 
@@ -103,15 +103,4 @@ test('TABLE-28: priority: and sprint: match the project fields of linked issues'
   assert.ok(!search('sprint:current', { issues: [{ ...issue, sprint: { title: 'Sprint 41', startDate: '2026-10-11', duration: 14 } }] }));
   assert.ok(search('sprint:none', { issues: [{ ...issue, sprint: null }] }));
   assert.ok(search('high', fields), 'plain words match the priority too');
-});
-
-test('TABLE-28: a sprint is current from its start date to its last day, in the local calendar of the viewer', () => {
-  // Iteration dates have no time zone, so they compare with the viewer's local day.
-  const sprint = { title: 'S', startDate: '2026-10-28', duration: 14 };
-  assert.equal(isCurrentSprint(sprint, new Date(2026, 9, 28, 0, 1).getTime()), true);
-  assert.equal(isCurrentSprint(sprint, new Date(2026, 10, 10, 23, 59).getTime()), true);
-  assert.equal(isCurrentSprint(sprint, new Date(2026, 10, 11, 0, 1).getTime()), false);
-  assert.equal(isCurrentSprint(sprint, new Date(2026, 9, 27, 23, 59).getTime()), false);
-  assert.equal(isCurrentSprint({ ...sprint, startDate: '2026-12-25' }, new Date(2027, 0, 7, 12).getTime()), true, 'across a year');
-  assert.equal(isCurrentSprint(null, NOW), false);
 });

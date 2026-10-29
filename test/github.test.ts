@@ -384,17 +384,35 @@ test('DATA-18: repositories are read four at a time, and the report keeps their 
   const scenario = REFRESH_SCENARIOS.find((s) => s.id === 'ok')!;
   let inFlight = 0;
   let most = 0;
+  const missing = Array.from({ length: 6 }, (_, i) => ({ owner: 'acme', name: 'missing-' + i }));
   const fetchImpl = async (_url: string, init: RequestInit) => {
+    const variables = JSON.parse(String(init.body)).variables;
     inFlight += 1;
     most = Math.max(most, inFlight);
-    await new Promise((resolve) => setTimeout(resolve, 5));
+    // Earlier repositories answer later, so a report built in the order answers arrive would come out reversed.
+    const index = missing.findIndex((m) => m.name === variables.repo);
+    await new Promise((resolve) => setTimeout(resolve, index < 0 ? 1 : (missing.length - index) * 4));
     inFlight -= 1;
-    const result = scenario.respond(JSON.parse(String(init.body)).variables, Date.parse('2026-10-28T12:00:00Z'));
+    const result = scenario.respond(variables, Date.parse('2026-10-28T12:00:00Z'));
     return new Response((result as { body: string }).body, { status: 200 });
   };
-  const missing = Array.from({ length: 6 }, (_, i) => ({ owner: 'acme', name: 'missing-' + i }));
   const report = await fetchOpenPullRequests({ token: 't', repositories: [...missing, gadgets, repository], fetchImpl });
   assert.equal(most, 4);
   assert.deepEqual(report.repos, ['acme/gadgets', 'acme/widgets']);
   assert.deepEqual(report.warnings.map((w) => w.match(/missing-\d/)?.[0]), missing.map((m) => m.name));
+});
+
+test('DATA-18 DATA-13: when one repository fails, the other reads stop instead of going through the whole list', async () => {
+  let fetches = 0;
+  const fetchImpl = async (_url: string, init: RequestInit) => {
+    fetches += 1;
+    const variables = JSON.parse(String(init.body)).variables;
+    await new Promise((resolve) => setTimeout(resolve, 2));
+    if (variables.repo === 'broken') return new Response(JSON.stringify({ errors: [{ message: 'Something went wrong', path: ['repository', 'pullRequests'] }], data: { repository: null } }), { status: 200 });
+    return new Response(JSON.stringify({ data: { repository: null }, errors: [{ type: 'NOT_FOUND', path: ['repository'], message: 'missing' }] }), { status: 200 });
+  };
+  const many = Array.from({ length: 30 }, (_, i) => ({ owner: 'acme', name: 'missing-' + i }));
+  await assert.rejects(fetchOpenPullRequests({ token: 't', repositories: [{ owner: 'acme', name: 'broken' }, ...many], fetchImpl }), /Something went wrong/);
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  assert.ok(fetches <= 8, 'only the reads already started finish; got ' + fetches);
 });

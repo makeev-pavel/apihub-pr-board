@@ -24,7 +24,10 @@
 - **FILTER-17** Repositories, shown when Settings has repository groups (**SET-19**): a menu with a checkbox per group.
   Checking a group adds its repositories to `repos` in the address, unchecking removes the ones no other checked group
   has, and **All repositories** clears `repos`. A group shows as checked when all its repositories are in `repos`.
-  The link itself names the repositories, so it works without the groups.
+  The link itself names the repositories, so it works without the groups. A checked group whose repositories other
+  checked groups all include cannot be unchecked alone; its checkbox is disabled and says which group includes it.
+  Checking a group that would pass 40 repositories changes nothing, and the menu says why. The button names up to two
+  checked groups, with `+N` for repositories added by hand.
 - **FILTER-7** **Reset view** shows when the view differs from the default and restores it. **Copy link to this
   view** copies the page address, says "Link copied", and asks to copy the address bar when the clipboard is blocked.
 

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { groupsToText, isGroupChecked, parseGroupLines, toggleGroup } from '../../src/board/groups.ts';
+import { groupLock, groupsToText, isGroupChecked, parseGroupLines, toggleGroup } from '../../src/board/groups.ts';
 
 const GROUPS = [
   { name: 'Core', repos: ['acme/widgets', 'acme/gadgets'] },
@@ -27,12 +27,24 @@ test('SET-19: a wrong line is named with the reason', () => {
 test('FILTER-17: checking a group adds its repositories; unchecking keeps those another checked group needs', () => {
   assert.equal(isGroupChecked(GROUPS[0], ['ACME/Widgets', 'acme/gadgets']), true);
   assert.equal(isGroupChecked(GROUPS[0], ['acme/widgets']), false);
-  let repos = toggleGroup(GROUPS[0], GROUPS, []);
+  let repos = toggleGroup(GROUPS[0], GROUPS, []) as string[];
   assert.deepEqual(repos, ['acme/widgets', 'acme/gadgets']);
-  repos = toggleGroup(GROUPS[1], GROUPS, repos);
+  repos = toggleGroup(GROUPS[1], GROUPS, repos) as string[];
   assert.deepEqual(repos, ['acme/widgets', 'acme/gadgets', 'acme/tools']);
   // Core goes; gadgets stays for Tools.
   assert.deepEqual(toggleGroup(GROUPS[0], GROUPS, repos), ['acme/gadgets', 'acme/tools']);
   // A repository added by hand stays when a group is unchecked.
   assert.deepEqual(toggleGroup(GROUPS[0], GROUPS, ['acme/widgets', 'acme/gadgets', 'acme/other']), ['acme/other']);
+});
+
+test('FILTER-17: a group inside another checked group cannot be unchecked alone, and a choice over 40 repositories is refused', () => {
+  const inner = { name: 'Widgets', repos: ['acme/widgets'] };
+  const outer = { name: 'Everything', repos: ['acme/widgets', 'acme/gadgets'] };
+  const repos = ['acme/widgets', 'acme/gadgets'];
+  assert.equal(groupLock(inner, [inner, outer], repos), 'Included in Everything');
+  assert.equal(groupLock(outer, [inner, outer], repos), null);
+  assert.equal(groupLock(inner, [inner, outer], ['acme/widgets']), null, 'nothing else covers it');
+  const big = { name: 'Big', repos: Array.from({ length: 30 }, (_, i) => 'acme/a' + i) };
+  const more = { name: 'More', repos: Array.from({ length: 20 }, (_, i) => 'acme/b' + i) };
+  assert.deepEqual(toggleGroup(more, [big, more], big.repos), { error: 'Adding More would make 50 repositories; the board reads at most 40.' });
 });
