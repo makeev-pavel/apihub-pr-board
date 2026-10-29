@@ -45,6 +45,13 @@ function withLists(pr: PullRequest): PullRequest {
 }
 
 // prs.json comes from the network: check the parts the page cannot render without.
+// What a prs.json snapshot holds: the report without the viewer, whose token did not write it (DATA-26), and the
+// workflow run that did.
+export function snapshotReport(report: Report, runUrl: string | null): Omit<Report, 'viewer'> {
+  const { viewer: _viewer, ...rest } = report;
+  return { ...rest, runUrl };
+}
+
 export function parseReport(value: unknown): Report {
   const report = value as (Partial<Report> & { repo?: unknown }) | null;
   if (!report || typeof report !== 'object' || !Array.isArray(report.prs)) {

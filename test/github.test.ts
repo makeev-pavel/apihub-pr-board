@@ -440,3 +440,28 @@ test('DATA-27: a live load reports each repository page by page, ending in done'
     assert.ok(mine.slice(1, -1).every((e) => e.status === 'reading' && e.read < last.read), repo + ' pages grow');
   }
 });
+
+test('DATA-26: a load for a snapshot does not ask GitHub for the viewer', async () => {
+  const asked: unknown[] = [];
+  const { fetchImpl } = mockFetch('ok');
+  const spy: typeof fetchImpl = (url, init) => { asked.push(JSON.parse(String(init!.body)).variables.withViewer); return fetchImpl(url, init); };
+  const report = await fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl: spy, withViewer: false });
+  assert.equal(report.viewer, undefined);
+  assert.ok(asked.length > 0 && asked.every((value) => value === false));
+});
+
+test('DATA-18 DATA-13: a repository being read stops at its next page once another one fails', async () => {
+  const scenario = REFRESH_SCENARIOS.find((s) => s.id === 'paginated')!;
+  let widgetPages = 0;
+  const fetchImpl = async (_url: string, init: RequestInit) => {
+    const variables = JSON.parse(String(init.body)).variables;
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    if (variables.repo === 'broken') return new Response(JSON.stringify({ errors: [{ message: 'Something went wrong', path: ['repository', 'pullRequests'] }], data: { repository: null } }), { status: 200 });
+    widgetPages += 1;
+    const result = scenario.respond(variables, Date.parse('2026-10-28T12:00:00Z'));
+    return new Response((result as { body: string }).body, { status: 200 });
+  };
+  await assert.rejects(fetchOpenPullRequests({ token: 't', repositories: [{ owner: 'acme', name: 'broken' }, repository], fetchImpl }), /Something went wrong/);
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  assert.ok(widgetPages <= 2, 'the other repository stops after the page under way; got ' + widgetPages);
+});

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseReport, pullRequestKey } from '../../src/model/report.ts';
+import { parseReport, pullRequestKey, snapshotReport } from '../../src/model/report.ts';
 import type { PullRequest } from '../../src/types.ts';
 
 test('DATA-5: prs.json without a PR list is rejected, and missing optional fields get defaults', () => {
@@ -79,4 +79,12 @@ test('DATA-5 DATA-25: issues in a prs.json written before the project fields get
   ] }] }).prs;
   assert.equal(pr.issues.length, 1);
   assert.deepEqual([pr.issues[0].priority, pr.issues[0].estimate, pr.issues[0].sprint], [{ name: 'High', color: null }, null, null]);
+});
+
+test('DATA-26: a snapshot leaves the viewer out and names the run that wrote it', () => {
+  const report = { viewer: { login: 'boris-k', avatarUrl: null, bot: false }, repos: ['acme/widgets'], generatedAt: 'g', warnings: [], prs: [] };
+  const snapshot = snapshotReport(report, 'https://example.test/run/1');
+  assert.equal('viewer' in snapshot, false);
+  assert.deepEqual(snapshot, { repos: ['acme/widgets'], generatedAt: 'g', warnings: [], prs: [], runUrl: 'https://example.test/run/1' });
+  assert.equal(report.viewer.login, 'boris-k', 'the live report keeps its viewer');
 });

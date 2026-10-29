@@ -4,6 +4,7 @@
 import { existsSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fetchOpenPullRequests } from '../src/github/graphql.ts';
+import { snapshotReport } from '../src/model/report.ts';
 import { parseRepositories, REPO_VARIABLE } from '../src/repository.ts';
 
 const outDir = path.resolve(process.argv[2] || '_site');
@@ -30,14 +31,13 @@ const runUrl = GITHUB_RUN_ID ? GITHUB_SERVER_URL + '/' + GITHUB_REPOSITORY + '/a
 
 let report;
 try {
-  report = await fetchOpenPullRequests({ token, repositories });
+  report = await fetchOpenPullRequests({ token, repositories, withViewer: false });
 } catch (error) {
   console.error((error as Error).message);
   process.exit(1);
 }
 
-// The workflow's token is not the viewer's, so the snapshot names no viewer (DATA-26).
-writeFileSync(path.join(outDir, 'prs.json'), JSON.stringify({ ...report, viewer: undefined, runUrl }));
+writeFileSync(path.join(outDir, 'prs.json'), JSON.stringify(snapshotReport(report, runUrl)));
 
 console.log('Wrote ' + report.prs.length + ' open PRs to ' + path.join(outDir, 'prs.json'));
 for (const warning of report.warnings) console.warn('Warning: ' + warning);

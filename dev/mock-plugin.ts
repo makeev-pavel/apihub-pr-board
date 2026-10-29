@@ -4,6 +4,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Plugin } from 'vite';
 import { fetchOpenPullRequests } from '../src/github/graphql.ts';
+import { snapshotReport } from '../src/model/report.ts';
 import { repositoryName } from '../src/repository.ts';
 import type { Repository } from '../src/repository.ts';
 import type { DevConfig } from '../src/types.ts';
@@ -43,8 +44,8 @@ export function devMocks({ repositories }: { repositories: Repository[] }): Plug
       return;
     }
     if (!liveCache || Date.now() - liveCache.at > LIVE_CACHE_MS) {
-      const report = await fetchOpenPullRequests({ token, repositories });
-      liveCache = { at: Date.now(), body: JSON.stringify({ ...report, viewer: undefined, runUrl: null }) };
+      const report = await fetchOpenPullRequests({ token, repositories, withViewer: false });
+      liveCache = { at: Date.now(), body: JSON.stringify(snapshotReport(report, null)) };
       console.log('Fetched ' + report.prs.length + ' open PRs from GitHub');
     }
     send(res, 200, liveCache.body, JSON_TYPE);

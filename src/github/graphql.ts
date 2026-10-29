@@ -31,6 +31,8 @@ export interface FetchOptions {
   fetchImpl?: Fetch;
   endpoint?: string;
   onProgress?: (event: RepositoryProgress) => void;
+  // Reads the token owner (DATA-26). A snapshot leaves it out: the workflow's token is not the viewer's.
+  withViewer?: boolean;
 }
 
 async function postQuery(fetchImpl: Fetch, endpoint: string, token: string, variables: Record<string, unknown>): Promise<RawResponse> {
@@ -87,8 +89,9 @@ function graphqlError(error: NonNullable<RawResponse['errors']>[number]): GitHub
 
 // Partial GraphQL errors on optional fields (projects need extra token scopes) become warnings, not a failed report.
 // With several repositories, one that cannot be read gives its warning instead of failing.
-async function readRepository(repository: Repository, several: boolean, options: ReadOptions): Promise<RepositoryPullRequests | { unreadable: string }> {
-  const { token, parts, fetchImpl, endpoint, onProgress } = options;
+// stopped says another read failed, so the whole load fails anyway and the next page is not worth asking for.
+async function readRepository(repository: Repository, several: boolean, options: ReadOptions, stopped: () => boolean): Promise<RepositoryPullRequests | { unreadable: string }> {
+  const { token, parts, fetchImpl, endpoint, onProgress, withViewer } = options;
   const repo = repositoryName(repository);
   const rawNodes: RawPullRequest[] = [];
   const warnings = new Set<string>();
@@ -101,11 +104,12 @@ async function readRepository(repository: Repository, several: boolean, options:
   let viewer: Actor | null = null;
   onProgress({ repo, status: 'reading', read: 0, total: null });
   for (;;) {
+    if (stopped()) throw new GitHubError('Stopped reading ' + repo + ': another repository failed.', 0);
     let body: RawResponse;
     try {
       body = await postQuery(fetchImpl, endpoint, token, {
         owner: repository.owner, repo: repository.name, first, after, avatarSize: AVATAR_SIZE, checksPageSize: CHECKS_PAGE_SIZE, commentsFetched: COMMENTS_FETCHED,
-        withChecks: parts.checks, withComments: parts.comments, withProjectFields, projectItems: PROJECT_ITEMS,
+        withChecks: parts.checks, withComments: parts.comments, withProjectFields, projectItems: PROJECT_ITEMS, withViewer,
         priorityField: PROJECT_FIELDS.priority, estimateField: PROJECT_FIELDS.estimate, sprintField: PROJECT_FIELDS.sprint,
       });
     } catch (error) {
@@ -153,7 +157,7 @@ async function readRepository(repository: Repository, several: boolean, options:
 
 // A missing repository only costs a warning, and four reads at a time keep GitHub from seeing a burst.
 export async function fetchOpenPullRequests({
-  token, repositories, parts = ALL_PARTS, fetchImpl = fetch, endpoint = GRAPHQL_URL, onProgress = () => {},
+  token, repositories, parts = ALL_PARTS, fetchImpl = fetch, endpoint = GRAPHQL_URL, onProgress = () => {}, withViewer = true,
 }: FetchOptions): Promise<Report> {
   if (!token) throw new GitHubError('A GitHub token is required to query the GraphQL API.', 0);
   const several = repositories.length > 1;
@@ -169,7 +173,7 @@ export async function fetchOpenPullRequests({
       const index = next++;
       try {
         // With one repository there is nothing else to show, so a missing one fails as before.
-        results[index] = await readRepository(repositories[index], several, { token, parts, fetchImpl, endpoint, onProgress });
+        results[index] = await readRepository(repositories[index], several, { token, parts, fetchImpl, endpoint, onProgress, withViewer }, () => failed);
       } catch (error) {
         failed = true;
         throw error;

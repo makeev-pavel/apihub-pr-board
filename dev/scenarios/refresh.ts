@@ -24,7 +24,7 @@ function graphqlPage(entries: FixtureEntry[], variables: GraphqlVariables, { pag
   const next = offset + slice.length;
   const body: RawResponse = {
     data: {
-      viewer: { login: DEV_VIEWER, avatarUrl: null },
+      ...(variables.withViewer === false ? {} : { viewer: { login: DEV_VIEWER, avatarUrl: null } }),
       repository: {
         pullRequests: {
           totalCount: entries.length + totalExtra,
