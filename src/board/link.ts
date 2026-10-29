@@ -1,7 +1,7 @@
 // Settings that travel in the page address, so a link or a bookmark carries them: the repositories to show, the extra
 // bot logins, and the hidden columns. They sit beside the view in the query, but Reset view leaves them alone.
 
-import { isRepositoryName, MAX_REPOSITORIES, splitList, uniqueNames, sameName } from '../repository.ts';
+import { isRepositoryName, MAX_REPOSITORIES, sameName, splitList, uniqueNames } from '../repository.ts';
 import { COLUMNS } from './columns.ts';
 import { parseList } from '../settings.ts';
 import type { Settings } from '../settings.ts';

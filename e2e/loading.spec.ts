@@ -132,6 +132,10 @@ test.describe('loading prs.json', () => {
     await expect(dialog.getByLabel('Token')).toBeFocused();
     for (let i = 0; i < 5; i++) await page.keyboard.press('Tab');
     expect(await dialog.evaluate((node) => node.contains(document.activeElement))).toBe(true);
+    // Shift+Tab from the first stop, the link, wraps to the last.
+    await dialog.getByRole('link', { name: 'Create a fine-grained token' }).focus();
+    await page.keyboard.press('Shift+Tab');
+    await expect(dialog.getByRole('button', { name: 'Not now' })).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(dialog).toHaveCount(0);
     await expect(addToken).toBeFocused();
@@ -145,6 +149,8 @@ test.describe('loading prs.json', () => {
     await dialog.getByLabel('Token').fill('mock-token');
     await dialog.getByLabel('Token').press('Enter');
     await expect(dialog).toHaveCount(0);
+    // It opened by itself, so focus goes to the Settings button.
+    await expect(page.getByRole('button', { name: /^Settings/ })).toBeFocused();
     await expect(rows(page)).toHaveCount(4);
     expect(await page.evaluate((key) => localStorage.getItem(key), TOKEN_KEY)).toBe('mock-token');
   });

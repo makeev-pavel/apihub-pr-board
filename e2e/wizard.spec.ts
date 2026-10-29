@@ -69,5 +69,10 @@ test.describe('setup wizard', () => {
     await expect(page.getByRole('dialog', { name: 'Add a GitHub token' })).toHaveCount(0);
     await wizard.getByRole('button', { name: 'Skip' }).click();
     await expect(page.getByRole('dialog', { name: 'Add a GitHub token' })).toBeVisible();
+    // Focus lands in the token field and stays there: the closed wizard does not take it back to Settings.
+    const field = page.getByRole('dialog', { name: 'Add a GitHub token' }).getByLabel('Token');
+    await expect(field).toBeFocused();
+    await page.waitForTimeout(100);
+    await expect(field).toBeFocused();
   });
 });

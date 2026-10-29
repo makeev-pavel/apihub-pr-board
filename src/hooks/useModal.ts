@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 
-const FOCUSABLE = 'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), a[href]';
+const FOCUSABLE = 'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], '
+  + 'summary, [tabindex]:not([tabindex="-1"])';
 
 // A modal dialog: Escape closes it, Tab stays inside it, as aria-modal promises, and on close focus returns where it
 // was, or to the element with fallbackId when that is gone (a panel that closed when the dialog opened).
@@ -13,19 +14,21 @@ export function useModal(onClose: () => void, fallbackId: string) {
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
   // Read while rendering, before an autoFocus inside the dialog takes focus.
-  const opener = useRef(document.activeElement as HTMLElement | null);
+  const [opener] = useState(() => document.activeElement as HTMLElement | null);
   useEffect(() => {
-    const before = opener.current;
+    const before = opener;
     const dialog = ref.current;
     return () => {
-      // Only once the dialog has left the page: React's development double run also calls this, with it still there.
+      // Only once the dialog has left the page (React's development double run also calls this, with it still there),
+      // and only when focus went with it: a dialog that opened right after this one keeps the focus it took.
       window.setTimeout(() => {
         if (dialog && dialog.isConnected) return;
+        if (document.activeElement && document.activeElement !== document.body) return;
         const target = before && before.isConnected && before !== document.body ? before : document.getElementById(fallbackId);
         if (target) target.focus();
       });
     };
-  }, [fallbackId]);
+  }, [fallbackId, opener]);
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key !== 'Tab' || !ref.current) return;
     const items = [...ref.current.querySelectorAll<HTMLElement>(FOCUSABLE)];
