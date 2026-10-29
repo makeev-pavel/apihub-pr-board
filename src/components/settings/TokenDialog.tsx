@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useModal } from '../../hooks/useModal.ts';
+import { SETTINGS_BUTTON_ID } from '../header/RefreshControl.tsx';
 
 export const TOKEN_HELP_URL = 'https://github.com/settings/personal-access-tokens/new';
 
@@ -6,16 +8,12 @@ export const TOKEN_HELP_URL = 'https://github.com/settings/personal-access-token
 // as a password and sync it outside this browser.
 export function TokenDialog({ onSave, onClose }: { onSave: (token: string) => void; onClose: () => void }) {
   const [draft, setDraft] = useState('');
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  const { ref, onKeyDown } = useModal(onClose, SETTINGS_BUTTON_ID);
   const save = () => { if (draft.trim()) onSave(draft.trim()); };
 
   return (
     <div className="dialog-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <div className="token-dialog" role="dialog" aria-modal="true" aria-labelledby="token-dialog-title">
+      <div className="token-dialog" role="dialog" aria-modal="true" aria-labelledby="token-dialog-title" ref={ref} onKeyDown={onKeyDown}>
         <h2 id="token-dialog-title">Add a GitHub token</h2>
         <p>The board reads pull requests from GitHub with your own token. It stays in this browser and is sent only to
           api.github.com.</p>

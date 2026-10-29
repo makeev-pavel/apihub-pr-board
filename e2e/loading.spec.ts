@@ -125,10 +125,16 @@ test.describe('loading prs.json', () => {
     await expect(page).toHaveURL(/repos=acme\/widgets,acme\/gadgets/);
     await expect(dialog).toHaveCount(0);
     await page.keyboard.press('Escape');
-    await page.locator('.banner.warn').getByRole('button', { name: 'Add token' }).click();
+    const addToken = page.locator('.banner.warn').getByRole('button', { name: 'Add token' });
+    await addToken.click();
     await expect(dialog).toBeVisible();
+    // Focus starts in the token field, stays in the dialog, and comes back to the button that opened it.
+    await expect(dialog.getByLabel('Token')).toBeFocused();
+    for (let i = 0; i < 5; i++) await page.keyboard.press('Tab');
+    expect(await dialog.evaluate((node) => node.contains(document.activeElement))).toBe(true);
     await page.keyboard.press('Escape');
     await expect(dialog).toHaveCount(0);
+    await expect(addToken).toBeFocused();
   });
 
   test('SET-18 DATA-23: Save and load in the dialog stores the token and loads the board', async ({ page }) => {

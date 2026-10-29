@@ -29,9 +29,8 @@ export function ReviewersList({ pr }: { pr: DerivedPullRequest }) {
   const entries = reviewerEntries(pr, viewer);
   if (!entries.length) return <div className="reviewers-wrap"><span className="dash">No reviewers</span></div>;
   const cut = entries.length > VISIBLE_REVIEWERS ? VISIBLE_REVIEWERS - 1 : entries.length;
-  const line = ({ actor, team, status }: ReviewerEntry, index: number) => {
+  const line = ({ actor, team, status, mine }: ReviewerEntry, index: number) => {
     const name = team ? '@' + actor.login : displayLogin(actor);
-    const mine = !team && !!viewer && actor.login.toLowerCase() === viewer.toLowerCase();
     const due = mine && (status === 'pending' || status === 'again');
     const label = STATUS[status].label;
     // The index keeps keys unique for a team and a person with the same name.

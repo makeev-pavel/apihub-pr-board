@@ -39,6 +39,11 @@ export function splitList(text: string): string[] {
   return text.split(/[\s,]+/).filter(Boolean);
 }
 
+// GitHub logins and repository names ignore case.
+export function sameName(a: string, b: string): boolean {
+  return a.toLowerCase() === b.toLowerCase();
+}
+
 // Keeps the first of names that differ only in case, as GitHub treats them as one repository.
 export function uniqueNames(names: string[]): string[] {
   const seen = new Set<string>();

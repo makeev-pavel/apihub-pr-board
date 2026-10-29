@@ -25,3 +25,12 @@ test('TABLE-30: the viewer asked for a review leads the list, so a long list nev
   const pr = { reviewers: [], requestedReviewers: [person('anna-dev'), person('chen-li'), person('Boris-K')] } as unknown as PullRequest;
   assert.deepEqual(reviewerEntries(pr, 'boris-k').map((e) => e.actor.login), ['Boris-K', 'anna-dev', 'chen-li']);
 });
+
+test('TABLE-30: only the viewer\'s own line is marked as theirs, never a team of the same name', () => {
+  const pr = {
+    reviewers: [review('boris-k', 'APPROVED')],
+    requestedReviewers: [{ ...person('boris-k'), team: true }, person('anna-dev')],
+  } as unknown as PullRequest;
+  assert.deepEqual(reviewerEntries(pr, 'Boris-K').map((e) => e.actor.login + ':' + e.mine), ['boris-k:false', 'anna-dev:false', 'boris-k:true']);
+  assert.ok(reviewerEntries(pr).every((e) => !e.mine), 'no viewer, no line of theirs');
+});

@@ -1,5 +1,6 @@
 // Adds the fields the board computes for each PR: age, areas, attention, bot authorship, and the search text.
 
+import { sameName } from '../repository.ts';
 import type { DerivedPullRequest, PullRequest, Sprint } from '../types.ts';
 import { areasOf } from './areas.ts';
 import { cleanCommentText } from './comments.ts';
@@ -34,13 +35,12 @@ export function isCurrentSprint(sprint: Sprint | null, now: number): boolean {
   return today >= sprint.startDate && today <= addDays(sprint.startDate, sprint.duration - 1);
 }
 
-const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
 
 // RULE-12: on a PR the viewer did not open, a personal review request is new, or again after an earlier review.
 export function myReview(pr: PullRequest, viewer: string): DerivedPullRequest['myReview'] {
-  if (!viewer || (pr.author && same(pr.author.login, viewer))) return null;
-  if (!(pr.requestedReviewers || []).some((r) => !r.team && same(r.login, viewer))) return null;
-  return (pr.reviewers || []).some((r) => same(r.login, viewer)) ? 'again' : 'requested';
+  if (!viewer || (pr.author && sameName(pr.author.login, viewer))) return null;
+  if (!(pr.requestedReviewers || []).some((r) => !r.team && sameName(r.login, viewer))) return null;
+  return (pr.reviewers || []).some((r) => sameName(r.login, viewer)) ? 'again' : 'requested';
 }
 
 export function derive(pr: PullRequest, now: number, rules: Rules = DEFAULT_RULES, viewer = ''): DerivedPullRequest {

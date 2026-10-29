@@ -25,7 +25,7 @@ A board of the open pull requests of one or more GitHub repositories, published 
 - `src/hooks/`: `usePopover` (and `useDismiss`), `useReportData` (loads `prs.json`), `useLiveLoad` (a live load
   from GitHub, its status, and its error), `useAllComments` (the comments panel's REST load, cached per PR version),
   `useColumnWidths` (saved, dragged, and fitted widths), `useBoardSettings` (stored settings plus the extra bots
-  from the address), `useNotes` (notes, with changes storage refused).
+  from the address), `useNotes` (notes, with changes storage refused), `useModal` (Escape, focus kept in a dialog and given back).
   `src/context.ts`: the viewer's rules, the comments API, notes, and how the Review column shows reviews.
 - `src/settings.ts`: personal settings in `localStorage`, validated on load. Extra bots are not stored there; they
   live in the address (`bots`).

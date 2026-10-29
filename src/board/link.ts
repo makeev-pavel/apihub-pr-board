@@ -1,7 +1,7 @@
 // Settings that travel in the page address, so a link or a bookmark carries them: the repositories to show, the extra
 // bot logins, and the hidden columns. They sit beside the view in the query, but Reset view leaves them alone.
 
-import { isRepositoryName, MAX_REPOSITORIES, splitList, uniqueNames } from '../repository.ts';
+import { isRepositoryName, MAX_REPOSITORIES, splitList, uniqueNames, sameName } from '../repository.ts';
 import { COLUMNS } from './columns.ts';
 import { parseList } from '../settings.ts';
 import type { Settings } from '../settings.ts';
@@ -44,8 +44,6 @@ export function linkSettingsQuery(link: LinkSettings): string {
 export function readLinkSettings(): LinkSettings {
   return parseLinkSettings(window.location.search);
 }
-
-const sameName = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
 
 // The repositories the board shows, spelled as the data spells them, and the requested ones the data lacks.
 export function boardRepos(dataRepos: string[], requested: string[]): { shown: string[]; missing: string[] } {

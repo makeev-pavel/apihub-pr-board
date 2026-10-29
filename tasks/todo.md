@@ -314,7 +314,7 @@ imported in order from `main.tsx`.
 
 ### Checkpoint: structure
 - [x] No source file over about 300 lines; all suites and the build pass.
-- [ ] Code-simplification pass over the new modules; review with the user.
+- [x] Code-simplification pass over the new modules; review with the user.
 
 ## Phase 4: Unit coverage
 
