@@ -12,6 +12,8 @@ export interface GraphqlVariables {
   after: string | null;
   // The @include switch of the project fields; only false leaves them out.
   withProjectFields?: boolean;
+  // The @include switch of the viewer; only false leaves it out.
+  withViewer?: boolean;
 }
 
 export interface ReportScenario {
