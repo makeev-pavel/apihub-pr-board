@@ -20,11 +20,13 @@ A board of the open pull requests of one or more GitHub repositories, published 
   A PR is identified by repository and number (`pullRequestKey` in `src/model/report.ts`), never by number alone.
 - `src/board/`: board logic without React: state codes (`states.ts`), columns and widths, the view and its URL,
   filtering and sorting rows (`view.ts`), the repositories and extra bots in the address (`link.ts`), authors,
-  failed-check grouping, text formatting, and `localStorage`.
-- `src/hooks/`: `usePopover` (and `useDismiss`), `useReportData` (loads `prs.json`), `useAllComments` (the comments
-  panel's REST load, cached per PR version), `useColumnWidths` (saved, dragged, and fitted widths),
-  `useBoardSettings` (stored settings plus the extra bots from the address).
-  `src/context.ts`: the viewer's rules and the comments API.
+  failed-check grouping, text formatting, and `localStorage`. Also notes (`notes.ts`), repository groups
+  (`groups.ts`), the Reviewers list (`reviewers.ts`), and the live load's status in words (`progress.ts`).
+- `src/hooks/`: `usePopover` (and `useDismiss`), `useReportData` (loads `prs.json`), `useLiveLoad` (a live load
+  from GitHub, its status, and its error), `useAllComments` (the comments panel's REST load, cached per PR version),
+  `useColumnWidths` (saved, dragged, and fitted widths), `useBoardSettings` (stored settings plus the extra bots
+  from the address), `useNotes` (notes, with changes storage refused).
+  `src/context.ts`: the viewer's rules, the comments API, notes, and how the Review column shows reviews.
 - `src/settings.ts`: personal settings in `localStorage`, validated on load. Extra bots are not stored there; they
   live in the address (`bots`).
 - `src/markdown.ts`: comment Markdown through `marked` and DOMPurify; browser only.

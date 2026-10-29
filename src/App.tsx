@@ -10,8 +10,6 @@ import {
 import type { SortKey, View } from './board/view.ts';
 import { RefreshControl } from './components/header/RefreshControl.tsx';
 import { LoadAnnouncer, LoadStatus } from './components/common/LoadStatus.tsx';
-import type { LoadState } from './components/common/LoadStatus.tsx';
-import { applyProgress, startProgress } from './board/progress.ts';
 import { ViewerBadge } from './components/header/ViewerBadge.tsx';
 import { TokenDialog } from './components/settings/TokenDialog.tsx';
 import { Tiles } from './components/header/Tiles.tsx';
@@ -27,13 +25,12 @@ import { CopyLink } from './components/toolbar/CopyLink.tsx';
 import { SearchHelp } from './components/toolbar/SearchHelp.tsx';
 import { REPOSITORIES } from './config.ts';
 import { ApiContext, NotesContext, RulesContext, ReviewViewContext } from './context.ts';
-import { fetchOpenPullRequests } from './github/graphql.ts';
-import type { RepositoryProgress } from './github/graphql.ts';
 import { REST_URL } from './github/rest.ts';
 import { useBoardSettings } from './hooks/useBoardSettings.ts';
-import { AUTO_REFRESH_MS, LOAD_SUMMARY_MS } from './board/format.ts';
+import { AUTO_REFRESH_MS } from './board/format.ts';
 import { useAutoRefresh } from './hooks/useAutoRefresh.ts';
 import { useColumnWidths } from './hooks/useColumnWidths.ts';
+import { useLiveLoad } from './hooks/useLiveLoad.ts';
 import { useNotes } from './hooks/useNotes.ts';
 import { useNoteText } from './hooks/useNoteText.ts';
 import { useReportData } from './hooks/useReportData.ts';
@@ -58,12 +55,7 @@ export function App() {
   const report = data.report;
   const [view, setView] = useState(readView);
   const [token, setTokenState] = useState(readToken);
-  const [refreshing, setRefreshing] = useState(false);
-  // The live load under way, or the one that just finished (DATA-27).
-  const [load, setLoad] = useState<LoadState | null>(null);
-  const loadId = useRef(0);
-  const [refreshError, setRefreshError] = useState<string | null>(null);
-  const [lastAttempt, setLastAttempt] = useState(0);
+  const { start, refreshing, load, error: refreshError, setError: setRefreshError, lastAttempt } = useLiveLoad();
   const [now, setNow] = useState(Date.now);
   const { settings, setSettings, link, setRepos } = useBoardSettings();
   const notesApi = useNotes();
@@ -115,42 +107,14 @@ export function App() {
       setRefreshError('Choose the repositories to show in Settings first.');
       return;
     }
-    setRefreshing(true);
-    setRefreshError(null);
-    const startedAt = Date.now();
-    setLastAttempt(startedAt);
-    // A newer load, such as one after a token is saved mid-load, takes over: this one's results are then dropped.
-    const id = ++loadId.current;
-    const current = () => loadId.current === id;
-    setLoad({ id, startedAt, repos: startProgress(names) });
-    const ours = (change: (prev: LoadState) => LoadState | null) => setLoad((prev) => (prev && prev.id === id ? change(prev) : prev));
     // Skip the heavy parts of the query that only hidden columns would show.
     const parts = { checks: columns.some((c) => c.id === 'ci'), comments: columns.some((c) => c.id === 'comment') };
-    const options = {
-      token: withToken, repositories: names.map(parseRepository), parts,
-      onProgress: (event: RepositoryProgress) => ours((prev) => ({ ...prev, repos: applyProgress(prev.repos, event) })),
-    };
-    fetchOpenPullRequests(DEV ? { ...options, endpoint: DEV.graphqlUrl } : options)
-      .then((report) => {
-        if (!current()) return;
-        setData((prev) => ({ ...prev, status: 'ready', report, source: 'live', error: null }));
-        setNow(Date.now());
-        ours((prev) => ({ ...prev, finished: { at: Date.now(), prs: report.prs.length, repos: report.repos.length } }));
-      })
-      .catch((error: Error) => {
-        if (!current()) return;
-        setRefreshError(error.message);
-        ours(() => null);
-      })
-      .finally(() => { if (current()) setRefreshing(false); });
+    const options = { token: withToken, repositories: names.map(parseRepository), parts };
+    start(DEV ? { ...options, endpoint: DEV.graphqlUrl } : options, (loaded) => {
+      setData((prev) => ({ ...prev, status: 'ready', report: loaded, source: 'live', error: null }));
+      setNow(Date.now());
+    });
   };
-
-  // The summary of a finished load stays a few seconds, then goes.
-  useEffect(() => {
-    if (!load || !load.finished) return undefined;
-    const timer = window.setTimeout(() => setLoad((prev) => (prev === load ? null : prev)), LOAD_SUMMARY_MS);
-    return () => window.clearTimeout(timer);
-  }, [load]);
 
   // Without a snapshot the page loads live data itself, once for each set of repositories and token (DATA-23).
   const autoLoaded = useRef('');

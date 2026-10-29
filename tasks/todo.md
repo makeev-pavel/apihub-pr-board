@@ -313,7 +313,7 @@ imported in order from `main.tsx`.
 **Files:** `dev/mock-plugin.ts`, `dev/scenarios/*.ts`. **Scope:** S.
 
 ### Checkpoint: structure
-- [ ] No source file over about 300 lines; all suites and the build pass.
+- [x] No source file over about 300 lines; all suites and the build pass.
 - [ ] Code-simplification pass over the new modules; review with the user.
 
 ## Phase 4: Unit coverage
