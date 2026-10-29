@@ -9,8 +9,9 @@ These files are the spec. A change in behavior updates the matching requirement 
 ## Users and goals
 
 - **Team lead at a daily or planning meeting:** sees every open PR, finds the stuck and problematic ones, and
-  checks that PRs follow the team rules.
-- **Developer:** finds their own PRs and sees what blocks them.
+  checks that PRs follow the team rules. At the standup, notes for each PR whether its status was asked and what
+  was promised, and reads that history the next day (**NOTE-1**).
+- **Developer:** finds their own PRs and sees what blocks them, and can keep the same notes for them.
 
 ## Scope
 
@@ -29,6 +30,7 @@ These files are the spec. A change in behavior updates the matching requirement 
 | [panels.md](panels.md) | `PANEL` | Popovers and the comments panel |
 | [filters.md](filters.md) | `FILTER` | Quick filters, toolbar, search, and the view in the URL |
 | [settings.md](settings.md) | `SET` | The settings panel and where settings are stored |
+| [notes.md](notes.md) | `NOTE` | Standup notes per PR and day, kept in this browser |
 | [security.md](security.md) | `SEC` | Token handling, untrusted content, CI permissions, and dependencies |
 | [quality.md](quality.md) | `QUAL` | Accessibility, browsers, size, themes, and responsiveness |
 | [engineering.md](engineering.md) | — | Stack, commands, structure, style, testing, boundaries, success criteria |

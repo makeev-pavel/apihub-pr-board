@@ -520,4 +520,18 @@ banner. **Dependencies:** R3. **Files:** `src/board/view.ts`, `src/settings.ts`,
 **Verification:** the commands above. **Dependencies:** R4, R5. **Files:** docs. **Scope:** S.
 
 ### Checkpoint: several repositories
-- [ ] Review with the user, then the screenshot phase (tasks 21–22) captures the new layout once.
+- [x] Review with the user, then the screenshot phase (tasks 21–22) captures the new layout once.
+
+## Backlog: standup notes
+
+Requested on October 29, 2026. Decisions: notes belong to a PR, one person writes them (a lead, or a developer for
+their own PRs), and they stay in this browser's `localStorage`. Spec: `docs/requirements/notes.md`. Branch:
+`feat/standup-notes`.
+
+- [x] **N1. Spec** (NOTE-1 to NOTE-7). About 20 min.
+- [ ] **N2. Notes model and storage:** `src/board/notes.ts` (per PR and local day, validated on load, capped at 100
+  days) with unit tests. About 45 min.
+- [ ] **N3. Standup column and popover:** checkbox, today's text, the latest earlier note faded, history newest first,
+  the day change at midnight; browser tests. About 1.5 hours.
+- [ ] **N4. Quick filter and search:** the Not asked today tile and `note:`; unit and browser tests. About 30 min.
+- [ ] **N5. Docs, screenshots, and all checks.** About 30 min.
