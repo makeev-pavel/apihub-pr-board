@@ -40,7 +40,7 @@ dev/            the Vite plugin with the mocks, the DEV panel, scenarios/ (mock 
 scripts/        build-site.ts writes prs.json after vite build
 test/           unit tests, one file per module
 e2e/            browser tests (Playwright) and their helpers
-docs/           requirements and decisions
+docs/           requirements/ (this spec) and adr/ (decision records)
 tasks/          the current plan and task list
 ```
 

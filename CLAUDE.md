@@ -36,10 +36,16 @@ A board of the open pull requests of one or more GitHub repositories, published 
   `dev/panel.ts`, the DEV panel. `dev/scenarios/`: what `/prs.json`, the GraphQL mock, and the REST mock answer.
   `dev/fixtures/`: the fictional cast, the generated typical board, the second repository (`gadgets.ts`), and the
   corner cases by topic (`cases/`; add a case to the matching topic file).
-- `scripts/build-site.ts` and `.github/workflows/pages.yml`: the hourly build and the Pages deploy.
+- `scripts/build-site.ts` and `.github/workflows/pages.yml`: the hourly build and the Pages deploy. The workflow runs
+  the unit and browser tests before it builds, except on the hourly schedule.
+- `test/`: unit tests, one file per module, mirroring `src/`. `e2e/`: browser tests, one spec per area of the page,
+  `helpers.ts`, and `screenshots.spec.ts` with its baselines in `e2e/__screenshots__`.
+- `docs/adr/`: decision records; `0001-test-stack.md` explains the three test layers.
 
 ## Working rules
 
+- New tests go where their code lives: a unit test in the `test/` file that mirrors the module, a browser test in
+  the `e2e/` spec of its area, a visual state in `e2e/screenshots.spec.ts`, and a display rule's data in a corner case.
 - When a field is added to the query (`src/github/query.ts`), update `raw.ts`, `normalizePullRequest`, `src/types.ts`,
   the fixtures, a corner case, and the tests.
 - UI text, code comments, and docs are in English. Talk to the user in Russian.
