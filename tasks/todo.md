@@ -508,7 +508,9 @@ banner. **Dependencies:** R3. **Files:** `src/board/view.ts`, `src/settings.ts`,
 **Description:** README, `CLAUDE.md`, and the workflow note for a list in `PR_BOARD_REPO`; a fresh review; all checks.
 
 **Acceptance criteria:**
-- [ ] `npm run test:requirements`, `npm run test:coverage`, the browser suite, and the build pass.
+- [x] `npm run test:requirements`, `npm run test:coverage`, the browser suite, and the build pass.
+- [x] A fresh review: one required finding (a forbidden repository failed the whole read) and the optional ones
+  that harden input are fixed.
 
 **Verification:** the commands above. **Dependencies:** R4, R5. **Files:** docs. **Scope:** S.
 

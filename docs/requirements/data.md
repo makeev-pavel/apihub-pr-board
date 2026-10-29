@@ -14,8 +14,8 @@
   and on demand. It builds the page and publishes `prs.json` next to it on GitHub Pages.
 - **DATA-4** The page opens with `prs.json`, so it works for everyone without a token.
 - **DATA-5** `prs.json` holds the repository name, the generation time, the workflow run link, warnings, and the
-  normalized PRs. The page checks its shape: a file without a PR list counts as broken, and missing optional fields
-  get defaults.
+  normalized PRs. The page checks its shape: a file without a PR list counts as broken, missing optional fields
+  get defaults, and an entry without a positive whole PR number is skipped.
 
 ## Refresh
 
@@ -57,16 +57,18 @@
   An entry that is not `owner/name` stops the build with a message naming the variable and the entry.
 - **DATA-18** The snapshot reads every repository of `PR_BOARD_REPO`, and Refresh every repository on the page,
   one after another with the query of **DATA-9**. The PRs of all repositories come newest first. A repository that
-  does not exist or that the token cannot read is named in a warning, and the others load; with one repository, or
-  when none can be read, it fails as in **DATA-13**. With several repositories, the **DATA-15** warning names the
-  repository.
+  does not exist or that the token cannot read, such as one behind SAML enforcement, is named in a warning with the
+  reason GitHub gives, and the others load; with one repository, or when none can be read, it fails as in
+  **DATA-13**. With several repositories, the **DATA-15** warning names the repository.
 - **DATA-19** `prs.json` lists the repositories it covers, and each PR names its repository. A file written before
   this change, with one repository and PRs without one, still loads: its PRs belong to that repository. A PR
-  whose repository is missing or not `owner/name` gets the file's only repository, or none when there are several.
+  whose repository is missing, not `owner/name`, or not in the file's list gets the file's only repository, or none
+  when there are several.
 - **DATA-20** A PR is identified by its repository and number. Two PRs with the same number in different
   repositories are two rows with their own comments, and the comments panel reads each PR from its own repository.
 - **DATA-21** With mock data the dev server shows `acme/widgets` alone by default. A DEV panel scenario adds the
   fictional `acme/gadgets`, with PR numbers that repeat those of `acme/widgets`.
-- **DATA-22** When the address asks for repositories (**FILTER-14**) that the snapshot does not cover, the page
-  shows the PRs of the requested repositories it has and a banner naming the missing ones. **Refresh** with a token
-  then loads every requested repository. Without a token, the banner suggests adding one.
+- **DATA-22** When the address asks for repositories (**FILTER-14**) that the data on the page does not cover, the
+  page shows the PRs of the requested repositories it has and a banner naming the missing ones and whether the data
+  is the hourly snapshot or live. **Refresh** with a token then loads every requested repository. Without a token,
+  the banner suggests adding one.

@@ -45,3 +45,13 @@ test('DATA-20: equal numbers in different repositories are different PRs', () =>
   assert.equal(pullRequestKey(pr('acme/widgets', 7)), pullRequestKey(pr('acme/widgets', 7)));
   assert.notEqual(pullRequestKey(pr('acme/widgets', 7)), pullRequestKey(pr('acme/widgets', 70)));
 });
+
+test('DATA-19: a PR naming a repository the file does not list gets the file repository', () => {
+  const report = parseReport({ repos: ['acme/widgets'], prs: [{ number: 1, repo: 'other/x' }, { number: 2, repo: 'ACME/Widgets' }] });
+  assert.deepEqual(report.prs.map((pr) => pr.repo), ['acme/widgets', 'ACME/Widgets']);
+});
+
+test('DATA-5: entries that are not PRs with a positive whole number are skipped', () => {
+  const report = parseReport({ repo: 'acme/widgets', prs: [null, 'x', { number: '7' }, { number: 0 }, { number: 1.5 }, { number: '../7' }, { number: 7 }] });
+  assert.deepEqual(report.prs.map((pr) => pr.number), [7]);
+});

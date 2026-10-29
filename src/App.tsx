@@ -149,8 +149,8 @@ export function App() {
           {data.error} The scheduled workflow may not have published data yet. Use Refresh with a token to load live data.
         </div>
       ) : null}
-      {missing.length && data.source === 'scheduled' ? (
-        <div className="banner warn">{missingReposMessage(missing, !!token)}</div>
+      {missing.length && report ? (
+        <div className="banner warn">{missingReposMessage(missing, !!token, data.source === 'live')}</div>
       ) : null}
       {report && report.warnings.length ? <div className="banner warn">{report.warnings.map((w) => <div key={w}>{w}</div>)}</div> : null}
 

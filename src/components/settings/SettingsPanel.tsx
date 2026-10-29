@@ -64,7 +64,8 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
     }
     setReposError(null);
     setReposDraft(result.repos.join(', '));
-    repositories.onChange(result.repos);
+    // Applying the same list again would rebuild the whole board for nothing.
+    if (result.repos.join(',').toLowerCase() !== repositories.requested.join(',').toLowerCase()) repositories.onChange(result.repos);
   };
   const resetAll = () => {
     onChange({ ...DEFAULT_SETTINGS });

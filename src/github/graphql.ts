@@ -55,11 +55,14 @@ interface RepositoryPullRequests {
 
 type ReadOptions = Required<Omit<FetchOptions, 'repositories'>>;
 
-// GitHub answers a repository that does not exist, or that the token cannot see, with null and NOT_FOUND.
-function isMissingRepository(body: RawResponse): boolean {
+// GitHub answers a repository it cannot give with null and errors at "repository": NOT_FOUND when it does not exist or
+// the token cannot see it, FORBIDDEN when the organization blocks the token (SAML, for one). Returns the warning.
+function unreadableRepository(body: RawResponse, repo: string): string | null {
   const errors = body.errors || [];
-  return !(body.data && body.data.repository) && errors.length > 0
-    && errors.every((error) => error.type === 'NOT_FOUND' && (error.path || []).join('.') === 'repository');
+  const atRepository = errors.length > 0 && errors.every((error) => (error.path || []).join('.') === 'repository');
+  if ((body.data && body.data.repository) || !atRepository) return null;
+  if (errors.every((error) => error.type === 'NOT_FOUND')) return 'Repository ' + repo + ' was not found, or the token cannot read it.';
+  return 'Repository ' + repo + ' cannot be read with this token: ' + errors[0].message;
 }
 
 function graphqlError(error: NonNullable<RawResponse['errors']>[number]): GitHubError {
@@ -68,8 +71,8 @@ function graphqlError(error: NonNullable<RawResponse['errors']>[number]): GitHub
 }
 
 // Partial GraphQL errors on optional fields (projects need extra token scopes) become warnings, not a failed report.
-// Returns null for a repository that cannot be read.
-async function readRepository(repository: Repository, several: boolean, options: ReadOptions): Promise<RepositoryPullRequests | null> {
+// With several repositories, one that cannot be read gives its warning instead of failing.
+async function readRepository(repository: Repository, several: boolean, options: ReadOptions): Promise<RepositoryPullRequests | { unreadable: string }> {
   const { token, parts, fetchImpl, endpoint } = options;
   const repo = repositoryName(repository);
   const rawNodes: RawPullRequest[] = [];
@@ -82,8 +85,9 @@ async function readRepository(repository: Repository, several: boolean, options:
       owner: repository.owner, repo: repository.name, first: PAGE_SIZE, after, avatarSize: AVATAR_SIZE, checksPageSize: CHECKS_PAGE_SIZE, commentsFetched: COMMENTS_FETCHED,
       withChecks: parts.checks, withComments: parts.comments,
     });
-    if (!after && isMissingRepository(body)) {
-      if (several) return null;
+    const unreadable = after ? null : unreadableRepository(body, repo);
+    if (unreadable) {
+      if (several) return { unreadable };
       throw graphqlError(body.errors![0]);
     }
     const connection = body.data && body.data.repository && body.data.repository.pullRequests;
@@ -114,8 +118,8 @@ export async function fetchOpenPullRequests({
   for (const repository of repositories) {
     // With one repository there is nothing else to show, so a missing one fails as before.
     const result = await readRepository(repository, several, { token, parts, fetchImpl, endpoint });
-    if (result) read.push(result);
-    else warnings.add('Repository ' + repositoryName(repository) + ' was not found, or the token cannot read it.');
+    if ('unreadable' in result) warnings.add(result.unreadable);
+    else read.push(result);
   }
   if (!read.length) throw new GitHubError('None of the repositories ' + repositories.map(repositoryName).join(', ') + ' was found.', 404);
   for (const result of read) for (const warning of result.warnings) warnings.add(warning);

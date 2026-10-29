@@ -121,4 +121,25 @@ test.describe('several repositories', () => {
     await expect(rows(page)).toHaveCount(79);
     await expect(banner).toHaveCount(0);
   });
+
+  test('DATA-22 SET-16: Refresh reads the repositories set in Settings, and live data names what it lacks', async ({ page }) => {
+    await page.addInitScript((key) => localStorage.setItem(key, 'mock-token'), TOKEN_KEY);
+    await openBoard(page, { report: 'mixed', refresh: 'ok', query: ALL });
+    await page.getByRole('button', { name: /^Settings/ }).click();
+    const field = page.getByRole('dialog', { name: 'Settings' }).getByRole('textbox', { name: 'Repositories' });
+    await field.fill('acme/gadgets');
+    await field.press('Enter');
+    const banner = page.locator('.banner.warn');
+    await expect(banner).toHaveText('acme/gadgets is not in the hourly snapshot. Refresh loads it.');
+    await expect(page.getByText('No pull requests match this view')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+    await expect(page.locator('.source-button')).toHaveText('live, just now');
+    await expect(rows(page)).toHaveCount(4);
+    await expect(banner).toHaveCount(0);
+    await page.getByRole('button', { name: /^Settings/ }).click();
+    await field.fill('acme/gadgets acme/widgets');
+    await field.press('Enter');
+    await expect(banner).toHaveText('acme/widgets is not in the live data. Refresh loads it.');
+  });
 });

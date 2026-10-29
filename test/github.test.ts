@@ -249,9 +249,7 @@ test('DATA-19: the client names the repository on the report and on every PR', a
 test('DATA-18: every repository is read, and the PRs come newest first across them', async () => {
   const report = await fetchOpenPullRequests({ token: 't', repositories: [repository, gadgets], fetchImpl: mockFetch('ok').fetchImpl });
   assert.deepEqual(report.repos, ['acme/widgets', 'acme/gadgets']);
-  const repos = new Set(report.prs.map((pr) => pr.repo));
-  assert.deepEqual([...repos], ['acme/widgets', 'acme/gadgets'].filter((r) => repos.has(r)));
-  assert.equal(repos.size, 2);
+  assert.equal(new Set(report.prs.map((pr) => pr.repo)).size, 2);
   const times = report.prs.map((pr) => pr.createdAt);
   assert.deepEqual(times, [...times].sort().reverse());
   assert.deepEqual(report.warnings, []);
@@ -263,6 +261,16 @@ test('DATA-18: a repository that cannot be read is a warning, and the others loa
   assert.ok(report.prs.length > 0);
   assert.deepEqual(report.warnings, ['Repository acme/missing was not found, or the token cannot read it.']);
   await assert.rejects(fetchOpenPullRequests({ token: 't', repositories: [missing], fetchImpl: mockFetch('ok').fetchImpl }), /at repository/);
+});
+
+test('DATA-18: a repository the organization blocks is a warning with the reason GitHub gives, and the others load', async () => {
+  const blocked = { owner: 'acme', name: 'private' };
+  const report = await fetchOpenPullRequests({ token: 't', repositories: [repository, blocked], fetchImpl: mockFetch('ok').fetchImpl });
+  assert.deepEqual(report.repos, ['acme/widgets']);
+  assert.deepEqual(report.warnings, ['Repository acme/private cannot be read with this token: Resource protected by organization SAML enforcement.']);
+  await assert.rejects(fetchOpenPullRequests({ token: 't', repositories: [blocked], fetchImpl: mockFetch('ok').fetchImpl }), /at repository: Resource protected/);
+  const upper = await fetchOpenPullRequests({ token: 't', repositories: [{ owner: 'ACME', name: 'Gadgets' }], fetchImpl: mockFetch('ok').fetchImpl });
+  assert.ok(upper.prs.length > 0, 'names compare without case, as on GitHub');
 });
 
 test('DATA-15 DATA-18: with several repositories, a short page names its repository', async () => {

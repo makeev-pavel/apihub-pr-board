@@ -2,7 +2,7 @@
 // the extra bots. Components see one Settings object whose extra bots come from the address.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { moveStoredBots, readLinkSettings } from '../board/link.ts';
+import { cleanBots, moveStoredBots, readLinkSettings } from '../board/link.ts';
 import { loadSettings, saveSettings } from '../settings.ts';
 import type { Settings } from '../settings.ts';
 
@@ -17,7 +17,7 @@ export function useBoardSettings() {
     const kept = { ...next, rules: { ...next.rules, extraBots: [] } };
     saveSettings(kept);
     setStored(kept);
-    setLink((prev) => ({ ...prev, bots: next.rules.extraBots }));
+    setLink((prev) => ({ ...prev, bots: cleanBots(next.rules.extraBots) }));
   }, []);
   const setRepos = useCallback((repos: string[]) => setLink((prev) => ({ ...prev, repos })), []);
   return { settings, setSettings, link, setRepos };

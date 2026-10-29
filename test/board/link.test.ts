@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  boardRepos, linkSettingsQuery, missingReposMessage, moveStoredBots, parseLinkSettings,
+  boardRepos, cleanBots, linkSettingsQuery, MAX_BOTS, missingReposMessage, moveStoredBots, parseLinkSettings,
 } from '../../src/board/link.ts';
 import { DEFAULT_SETTINGS } from '../../src/settings.ts';
 
@@ -15,11 +15,19 @@ test('FILTER-14: repos and bots come from the address, and invalid entries are d
   assert.equal(parseLinkSettings('?repos=' + eleven).repos.length, 10);
 });
 
+test('FILTER-14: bots in the address must be GitHub logins, and their number is capped', () => {
+  const bots = parseLinkSettings('?bots=' + encodeURIComponent('ci-bot renovate[bot] -lead trail- a--b <x> ' + 'x'.repeat(40))).bots;
+  assert.deepEqual(bots, ['ci-bot', 'renovate[bot]', 'a--b']);
+  assert.deepEqual(cleanBots(['ci-bot', 'bad login', 'ok']), ['ci-bot', 'ok']);
+  const many = Array.from({ length: 60 }, (_, i) => 'bot-' + i).join(',');
+  assert.equal(parseLinkSettings('?bots=' + many).bots.length, MAX_BOTS);
+});
+
 test('FILTER-14: the address keeps repos and bots readable, leaves them out when empty, and survives the round trip', () => {
   assert.equal(linkSettingsQuery({ repos: [], bots: [] }), '');
   const link = { repos: ['acme/widgets', 'acme/gadgets'], bots: ['ci-bot', 'odd login&x'] };
   assert.equal(linkSettingsQuery(link), 'repos=acme/widgets,acme/gadgets&bots=ci-bot,odd%20login%26x');
-  assert.deepEqual(parseLinkSettings('?' + linkSettingsQuery(link)), { repos: link.repos, bots: ['ci-bot', 'odd', 'login&x'] });
+  assert.deepEqual(parseLinkSettings('?' + linkSettingsQuery(link)), { repos: link.repos, bots: ['ci-bot', 'odd'] });
   const ten = Array.from({ length: 10 }, (_, i) => 'acme-labs/repository-number-' + i);
   assert.ok(linkSettingsQuery({ repos: ten, bots: [] }).length < 400, 'ten repositories still make a usable link');
 });
@@ -46,7 +54,8 @@ test('SET-17: extra bots saved in this browser move into the address once', () =
 });
 
 test('DATA-22: the banner names the missing repositories and says how to load them', () => {
-  assert.equal(missingReposMessage(['acme/gizmos'], true), 'acme/gizmos is not in the hourly snapshot. Refresh loads it.');
-  assert.equal(missingReposMessage(['acme/gizmos', 'acme/tools'], false),
+  assert.equal(missingReposMessage(['acme/gizmos'], true, false), 'acme/gizmos is not in the hourly snapshot. Refresh loads it.');
+  assert.equal(missingReposMessage(['acme/gizmos', 'acme/tools'], false, false),
     'acme/gizmos, acme/tools are not in the hourly snapshot. Add a GitHub token in Settings, then Refresh loads them.');
+  assert.equal(missingReposMessage(['acme/gizmos'], true, true), 'acme/gizmos is not in the live data. Refresh loads it.');
 });

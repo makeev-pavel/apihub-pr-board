@@ -3,7 +3,7 @@
 import type { RawResponse } from '../../src/github/raw.ts';
 import type { FixtureEntry } from '../fixtures/builders.ts';
 import { gadgetsEntries } from '../fixtures/gadgets.ts';
-import { DEV_REPOSITORY, GADGETS_REPOSITORY } from '../fixtures/people.ts';
+import { DEV_REPOSITORY, FORBIDDEN_REPOSITORY, GADGETS_REPOSITORY } from '../fixtures/people.ts';
 import { typicalNodes } from '../fixtures/typical.ts';
 import { mixedEntries } from './entries.ts';
 import type { GraphqlVariables, MockResponse, RefreshScenario } from './types.ts';
@@ -48,12 +48,24 @@ function notFound(variables: GraphqlVariables): MockResponse {
   };
 }
 
-// The scenario's PRs for the mock repository, the gadgets PRs for the second one, and NOT_FOUND for any other.
+function forbidden(): MockResponse {
+  return {
+    status: 200,
+    body: JSON.stringify({
+      data: { repository: null },
+      errors: [{ type: 'FORBIDDEN', path: ['repository'], message: 'Resource protected by organization SAML enforcement.' }],
+    }),
+  };
+}
+
+// The scenario's PRs for the mock repository, the gadgets PRs for the second one, FORBIDDEN for the private one, and
+// NOT_FOUND for any other. Names compare without case, as on GitHub.
 function board(widgets: (now: number) => FixtureEntry[], options: Parameters<typeof graphqlPage>[2] = {}) {
   return (variables: GraphqlVariables, now: number): MockResponse => {
-    const name = variables.owner + '/' + variables.repo;
+    const name = (variables.owner + '/' + variables.repo).toLowerCase();
     if (name === DEV_REPOSITORY) return graphqlPage(widgets(now), variables, options);
-    return name === GADGETS_REPOSITORY ? graphqlPage(gadgetsEntries(now), variables, options) : notFound(variables);
+    if (name === GADGETS_REPOSITORY) return graphqlPage(gadgetsEntries(now), variables, options);
+    return name === FORBIDDEN_REPOSITORY ? forbidden() : notFound(variables);
   };
 }
 

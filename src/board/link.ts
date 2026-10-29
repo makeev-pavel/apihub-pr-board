@@ -5,6 +5,15 @@ import { isRepositoryName, MAX_REPOSITORIES, splitList, uniqueNames } from '../r
 import { parseList } from '../settings.ts';
 import type { Settings } from '../settings.ts';
 
+export const MAX_BOTS = 50;
+
+// A GitHub login: letters, digits, and inner dashes, up to 39 characters; an app adds [bot].
+const LOGIN = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?(?:\[bot\])?$/;
+
+export function cleanBots(logins: string[]): string[] {
+  return logins.filter((login) => LOGIN.test(login)).slice(0, MAX_BOTS);
+}
+
 export interface LinkSettings {
   // owner/name; empty shows every repository of the data.
   repos: string[];
@@ -14,7 +23,7 @@ export interface LinkSettings {
 export function parseLinkSettings(search: string): LinkSettings {
   const params = new URLSearchParams(search);
   const repos = uniqueNames(splitList(params.get('repos') || '').filter(isRepositoryName)).slice(0, MAX_REPOSITORIES);
-  return { repos, bots: parseList(params.get('bots') || '') };
+  return { repos, bots: cleanBots(parseList(params.get('bots') || '')) };
 }
 
 // Repository names are only letters, digits, and . _ - /, so they stay readable in the link; logins are encoded.
@@ -51,9 +60,9 @@ export function moveStoredBots(settings: Settings, link: LinkSettings): { settin
   };
 }
 
-// The banner for requested repositories that the hourly snapshot does not cover; only Refresh can load them.
-export function missingReposMessage(missing: string[], hasToken: boolean): string {
+// The banner for requested repositories that the data on the page does not cover; only Refresh can load them.
+export function missingReposMessage(missing: string[], hasToken: boolean, live: boolean): string {
   const one = missing.length === 1;
   const action = (hasToken ? 'Refresh' : 'Add a GitHub token in Settings, then Refresh') + ' loads ' + (one ? 'it' : 'them') + '.';
-  return missing.join(', ') + (one ? ' is' : ' are') + ' not in the hourly snapshot. ' + action;
+  return missing.join(', ') + (one ? ' is' : ' are') + ' not in the ' + (live ? 'live data' : 'hourly snapshot') + '. ' + action;
 }

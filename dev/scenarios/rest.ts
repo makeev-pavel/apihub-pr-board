@@ -12,7 +12,8 @@ function restUser(actor: RawActor | null | undefined) {
 
 // The REST answers behind the comments panel: every comment and review of a mock PR, or null when it does not exist.
 export function restComments(repo: string, number: number, now: number): { comments: RestComment[]; reviews: RestReview[] } | null {
-  const entries = repo === DEV_REPOSITORY ? mixedEntries(now) : repo === GADGETS_REPOSITORY ? gadgetsEntries(now) : [];
+  const name = repo.toLowerCase();
+  const entries = name === DEV_REPOSITORY ? mixedEntries(now) : name === GADGETS_REPOSITORY ? gadgetsEntries(now) : [];
   const entry = entries.find(({ node }) => node.number === number);
   if (!entry) return null;
   return {
