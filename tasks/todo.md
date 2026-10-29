@@ -599,3 +599,17 @@ again. Decisions taken without an answer: the tile shows for anyone with a token
   the DEV panel. About 1.5 hours.
 - [x] **V4. Setup wizard:** theme, density, and Review column as cards with pictures (SET-21); opens on the first
   visit before the token dialog and from Settings; browser tests and a screenshot. About 1.5 hours.
+
+## Backlog: full review
+
+Requested on October 29, 2026: doubt every line and make the code as good as it can be, the structure included.
+Five fresh reviewers, one per layer, looked for faults against the spec; every finding was checked in the code, and
+the real ones were fixed with a test that fails without the fix.
+
+- [x] **F1. Data:** the GitHub reads and the `prs.json` reader (`7723153`).
+- [x] **F2. Board:** the view, the address, and settings; list helpers in `src/names.ts` (`d2d0e8d`).
+- [x] **F3. App and hooks:** loads, aborts, intervals, Escape, popovers; `board/repositories.ts` (`fa73856`).
+- [x] **F4. Components:** settings drafts, accessible names, shared menu button (`f0e4ae9`).
+- [x] **F5. Styles and mocks:** muted text, the dark backdrop, mocks in step with the client (`7a50d12`).
+- [x] **F6. Structure:** tests mirror `src/names.ts`; CLAUDE.md describes the new modules and layer rules.
+

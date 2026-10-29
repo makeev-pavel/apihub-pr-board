@@ -14,24 +14,32 @@ A board of the open pull requests of one or more GitHub repositories, published 
   `graphql.ts` (open PRs, page by page), `rest.ts` (all comments of one PR), `http.ts` (shared error and fetch type).
 - `src/types.ts`: the shape of `prs.json` and of derived rows. Raw GraphQL types live in `src/github/raw.ts`.
 - `src/model/`: rules without UI, one concern each: `rules.ts` (attention, bots, titles), `areas.ts`, `search.ts`,
-  `derive.ts` (per-PR fields), `comments.ts`, `report.ts` (`prs.json` shape). Tests mirror it in `test/model/`.
+  `derive.ts` (per-PR fields), `comments.ts`, `fields.ts` (issue types and project fields), `report.ts` (reading
+  `prs.json`, every field checked). Tests mirror it in `test/model/`.
 - `src/repository.ts` and `src/config.ts`: optional default repositories from `PR_BOARD_REPO` (a list), passed to the
   page by Vite `define`. `vite.config.ts` parses it once; with mock data the dev server always uses `acme/widgets`.
   A PR is identified by repository and number (`pullRequestKey` in `src/model/report.ts`), never by number alone.
 - `src/board/`: board logic without React: state codes (`states.ts`), columns and widths, the view and its URL,
-  filtering and sorting rows (`view.ts`), the repositories and extra bots in the address (`link.ts`), authors,
-  failed-check grouping, text formatting, and `localStorage`. Also notes (`notes.ts`), repository groups
-  (`groups.ts`), the Reviewers list (`reviewers.ts`), and the live load's status in words (`progress.ts`).
-- `src/hooks/`: `usePopover` (and `useDismiss`), `useReportData` (loads `prs.json`), `useLiveLoad` (a live load
-  from GitHub, its status, and its error), `useAllComments` (the comments panel's REST load, cached per PR version),
-  `useColumnWidths` (saved, dragged, and fitted widths), `useBoardSettings` (stored settings plus the extra bots
-  from the address), `useNotes` (notes, with changes storage refused), `useModal` (Escape, focus kept in a dialog and given back).
-  `src/context.ts`: the viewer's rules, the comments API, notes, and how the Review column shows reviews.
+  filtering and sorting rows (`view.ts`), the settings in the address (`link.ts`), which repositories show, load,
+  and fill the empty table (`repositories.ts`), authors, failed-check grouping, text formatting, and `localStorage`.
+  Also notes (`notes.ts`), repository groups (`groups.ts`), the Reviewers list (`reviewers.ts`), and the live load's
+  state and status in words (`progress.ts`).
+- `src/names.ts`: lists of logins, repositories, and names, compared without regard to case; `src/repository.ts`:
+  `owner/name` parsing and `PR_BOARD_REPO`.
+- `src/hooks/`: `usePopover` (and `useDismiss`, which gives focus back on close), `escapeStack.ts` (Escape closes the
+  innermost layer), `useReportData` (loads `prs.json`), `useLiveLoad` (a live load from GitHub, its status, its
+  error, and aborting an older one), `useAutoRefresh`, `useClock`, `useTheme`, `useAllComments` (the comments
+  panel's REST load, cached per PR version), `useColumnWidths` (saved, dragged, and fitted widths),
+  `useBoardSettings` (stored settings plus the settings in the address), `useNotes` and `useNoteText` (notes, with
+  changes storage refused), and `useModal` (focus kept in a dialog and given back). `src/context.ts`: the viewer's
+  rules, the comments API, notes, how the Review column shows reviews, and how a row names its PR.
 - `src/settings.ts`: personal settings in `localStorage`, validated on load. Extra bots are not stored there; they
-  live in the address (`bots`).
+  live in the address (`bots`). Hidden columns and repository groups are stored and also travel in the address.
 - `src/markdown.ts`: comment Markdown through `marked` and DOMPurify; browser only.
-- `src/components/`: React components, one per file: `common/`, `cells/` (table cells and their popovers), `header/`,
-  `toolbar/`, `table/`, `legend/`, and `settings/`.
+- `src/components/`: React components, one exported component per file: `common/` (with `MenuButton`, the toolbar
+  menus' shared button, and `ids.ts`, values several components share), `cells/` (table cells and their popovers),
+  `header/`, `toolbar/`, `table/`, `legend/`, and `settings/`. Components may import from every other layer; nothing
+  outside `src/components/` and `src/App.tsx` imports a component.
 - `src/App.tsx`: composes the page; `src/main.tsx`: the entry point and the stylesheets in cascade order.
 - `src/styles/`: `tokens.css` (all colors and fonts, both themes) and one file per area of the page.
 - `dev/mock-plugin.ts`: the Vite plugin that serves the mocks (helpers in `dev/http.ts`) and injects
@@ -56,8 +64,9 @@ A board of the open pull requests of one or more GitHub repositories, published 
 
 ## Gotchas
 
-- The mocks run inside the Vite config, so Vite restarts when `src/github/` or anything under `dev/` changes.
-  Edits to other `src/` files hot-reload.
+- The mocks run inside the Vite config, so Vite restarts when anything it imports changes: `dev/`, `src/github/`,
+  and the modules they use (`src/repository.ts`, `src/names.ts`, `src/model/`). Edits to other `src/` files
+  hot-reload.
 - The Playwright MCP browser can open the dev server and take screenshots; it writes only inside the repository
   (`.playwright-mcp/`, ignored by git).
 - Node's test runner cannot load `.tsx`; test React code through the browser (`npm run test:e2e`). Playwright

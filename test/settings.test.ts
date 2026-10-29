@@ -2,7 +2,6 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { areasOf } from '../src/model/areas.ts';
 import { attentionReasons, DEFAULT_RULES, isBot } from '../src/model/rules.ts';
-import { parseList } from '../src/names.ts';
 import { DEFAULT_SETTINGS, loadSettings, parseSettings, rulesAreDefault, saveSettings } from '../src/settings.ts';
 import type { PullRequest } from '../src/types.ts';
 
@@ -32,10 +31,6 @@ test('SET-2: stale limits outside 1–365 or fractional are rejected', () => {
   for (const staleDays of [0, 366, 2.5, '5']) {
     assert.equal(parseSettings({ rules: { staleDays } }).rules.staleDays, DEFAULT_RULES.staleDays, String(staleDays));
   }
-});
-
-test('SET-5: lists split on commas and spaces and drop duplicates', () => {
-  assert.deepEqual(parseList(' a, b  c,,a '), ['a', 'b', 'c']);
 });
 
 const pr = (fields: Record<string, unknown>) =>
