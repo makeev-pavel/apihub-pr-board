@@ -97,6 +97,28 @@ test.describe('columns', () => {
     await expect(panel.getByRole('button', { name: 'Reset column widths' })).toBeDisabled();
   });
 
+  test('SET-24 FILTER-14: Settings moves columns, the address keeps the order, and Reset to defaults restores it', async ({ page }) => {
+    await openBoard(page, { report: 'typical', query: ALL });
+    const headers = page.locator('.board > thead > tr > th');
+    await expect(headers.nth(3)).toHaveText(/^Author/);
+    const panel = await openSettings(page);
+    await panel.getByRole('button', { name: 'Move Author up' }).click();
+    await expect(headers.nth(2)).toHaveText(/^Author/);
+    await expect(headers.nth(3)).toHaveText(/^Issue/);
+    await expect(page).toHaveURL(/[?&]cols=repo,number,title,author,issue,/);
+    await expect(panel.getByRole('button', { name: 'Move # up' })).toBeDisabled();
+    await page.reload();
+    await expect(headers.nth(2)).toHaveText(/^Author/);
+    // A link with its own order wins over the saved one.
+    await page.goto('/?' + ALL + '&cols=title,number');
+    await expect(headers.nth(0)).toHaveText(/^Pull request/);
+    await expect(headers.nth(1)).toHaveText(/^#/);
+    await openSettings(page);
+    await page.getByRole('dialog', { name: 'Settings' }).getByRole('button', { name: 'Reset to defaults' }).click();
+    await expect(headers.nth(0)).toHaveText(/^#/);
+    expect(page.url()).not.toContain('cols=');
+  });
+
   test('SET-8: Reset column widths in Settings restores every column', async ({ page }) => {
     await openBoard(page, { report: 'typical', query: ALL });
     const panel = await openSettings(page);

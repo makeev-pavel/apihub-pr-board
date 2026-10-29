@@ -613,3 +613,13 @@ the real ones were fixed with a test that fails without the fix.
 - [x] **F5. Styles and mocks:** muted text, the dark backdrop, mocks in step with the client (`7a50d12`).
 - [x] **F6. Structure:** tests mirror `src/names.ts`; CLAUDE.md describes the new modules and layer rules.
 
+## Backlog: labels, the first visit, column order, README pictures
+
+Requested on October 29, 2026.
+
+- [x] **N1. Labels:** a Show or Hide setting for label chips in Settings and as the wizard's fourth step (SET-23).
+- [x] **N2. First visit:** the board shows at once with a card that offers the tour; the wizard no longer opens by
+  itself (SET-21).
+- [x] **N3. Column order:** arrows in Settings move columns; the order is saved and travels in the address as `cols`
+  (SET-24, FILTER-14).
+- [x] **N4. README pictures:** the screenshot baselines in the README, with a test that every picture exists.

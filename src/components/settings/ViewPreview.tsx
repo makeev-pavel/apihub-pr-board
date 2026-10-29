@@ -11,27 +11,36 @@ interface PreviewRow {
   reviewers: { icon: OcticonName; tone: Tone; mine?: boolean }[];
   title: string;
   avatar: string;
+  // Label chips under the title, as theme color names, for the Labels step.
+  labels: string[];
 }
 
 // Three made-up rows that show the states the wizard is about: passing and failing checks, approved, changes
 // requested, and a review that waits for the viewer.
 const ROWS: PreviewRow[] = [
-  { ci: { code: 'P', tone: 'good' }, review: { code: '✓', tone: 'good' }, title: '78%', avatar: 'var(--issue-type-green)',
+  { ci: { code: 'P', tone: 'good' }, review: { code: '✓', tone: 'good' }, title: '78%', avatar: 'var(--issue-type-green)', labels: ['blue', 'purple'],
     reviewers: [{ icon: 'check', tone: 'good' }, { icon: 'check', tone: 'good' }] },
-  { ci: { code: 'F', tone: 'bad' }, review: { code: 'CR', tone: 'bad' }, title: '62%', avatar: 'var(--issue-type-purple)',
+  { ci: { code: 'F', tone: 'bad' }, review: { code: 'CR', tone: 'bad' }, title: '62%', avatar: 'var(--issue-type-purple)', labels: ['red'],
     reviewers: [{ icon: 'fileDiff', tone: 'bad' }, { icon: 'dot', tone: 'warn' }] },
-  { ci: { code: 'P', tone: 'good' }, review: { code: '–', tone: 'idle' }, title: '70%', avatar: 'var(--issue-type-orange)',
+  { ci: { code: 'P', tone: 'good' }, review: { code: '–', tone: 'idle' }, title: '70%', avatar: 'var(--issue-type-orange)', labels: ['yellow', 'green', 'blue'],
     reviewers: [{ icon: 'dot', tone: 'warn', mine: true }, { icon: 'dot', tone: 'warn' }] },
 ];
 
-function Board({ theme, density, review }: { theme: 'light' | 'dark'; density: Density; review: ReviewColumn }) {
+function Board({ theme, density, review, labels }: { theme: 'light' | 'dark'; density: Density; review: ReviewColumn; labels: boolean }) {
   return (
     <div className={'view-preview theme-' + theme + ' vp-' + density}>
       <div className="vp-head"><span className="vp-tile" /><span className="vp-tile" /><span className="vp-tile accent" /></div>
       {ROWS.map((row, index) => (
         <div key={index} className={'vp-row ci-' + row.ci.tone}>
           <span className="vp-avatar" style={{ background: row.avatar }} />
-          <span className="vp-title"><span style={{ width: row.title }} /></span>
+          <span className="vp-title">
+            <span style={{ width: row.title }} />
+            {labels ? (
+              <span className="vp-labels">
+                {row.labels.map((color, i) => <span key={i} className="vp-label" style={{ background: 'var(--issue-type-' + color + ')' }} />)}
+              </span>
+            ) : null}
+          </span>
           <span className={'vp-pill ' + row.ci.tone}>{row.ci.code}</span>
           {review === 'code' ? <span className={'vp-pill ' + row.review.tone}>{row.review.code}</span> : (
             <span className="vp-reviewers">
@@ -98,12 +107,17 @@ export function ReviewCellPreview({ theme, review }: { theme: 'light' | 'dark' |
 
 // A small picture of the board in a given look, for the setup wizard (SET-21). It is decoration: the card's label says
 // what it shows. "split" is the System theme: the light and the dark board side by side.
-export function ViewPreview({ theme, density, review }: { theme: 'light' | 'dark' | 'split'; density: Density; review: ReviewColumn }) {
-  if (theme !== 'split') return <div className="preview-frame" aria-hidden="true"><Board theme={theme} density={density} review={review} /></div>;
+export function ViewPreview({ theme, density, review, labels }: {
+  theme: 'light' | 'dark' | 'split';
+  density: Density;
+  review: ReviewColumn;
+  labels: boolean;
+}) {
+  if (theme !== 'split') return <div className="preview-frame" aria-hidden="true"><Board theme={theme} density={density} review={review} labels={labels} /></div>;
   return (
     <div className="preview-frame vp-split" aria-hidden="true">
-      <Board theme="light" density={density} review={review} />
-      <Board theme="dark" density={density} review={review} />
+      <Board theme="light" density={density} review={review} labels={labels} />
+      <Board theme="dark" density={density} review={review} labels={labels} />
     </div>
   );
 }

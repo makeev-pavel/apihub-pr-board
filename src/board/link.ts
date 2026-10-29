@@ -1,10 +1,10 @@
 // Settings that travel in the page address, so a link or a bookmark carries them: the repositories to show, the extra
-// bot logins, the hidden columns, and the repository groups. They sit beside the view in the query, but Reset view
+// bot logins, the hidden columns and their order, and the repository groups. They sit beside the view in the query, but Reset view
 // leaves them alone.
 
 import { isRepositoryName, MAX_REPOSITORIES } from '../repository.ts';
 import { parseList, splitList, uniqueNames } from '../names.ts';
-import { COLUMNS } from './columns.ts';
+import { COLUMNS, orderToKeep } from './columns.ts';
 import { groupsToText, parseGroupLines } from './groups.ts';
 import type { RepoGroup } from './groups.ts';
 import type { Settings } from '../settings.ts';
@@ -25,6 +25,8 @@ export interface LinkSettings {
   bots: string[];
   // Ids of the hidden columns; undefined when the address does not say, so the saved ones apply.
   hidden?: string[];
+  // Every column id in order; undefined when the address does not say, so the saved order applies (SET-24).
+  order?: string[];
   // The repository groups; undefined when the address does not name them, so the saved ones apply.
   groups?: RepoGroup[];
 }
@@ -51,7 +53,10 @@ export function parseLinkSettings(search: string): LinkSettings {
   const groupsValue = params.get('repogroups');
   // An empty list names no groups, so the saved ones apply, as the address then shows.
   const groups = groupsValue ? parseLinkGroups(groupsValue) : undefined;
-  return { repos, bots: cleanBots(parseList(params.get('bots') || '')), hidden, ...(groups ? { groups } : {}) };
+  const cols = params.get('cols');
+  // A list without a known id, such as one from a newer version, names no order.
+  const order = cols && splitList(cols).some((id) => COLUMNS.some((column) => column.id === id)) ? orderToKeep(splitList(cols)) : undefined;
+  return { repos, bots: cleanBots(parseList(params.get('bots') || '')), hidden, ...(order ? { order } : {}), ...(groups ? { groups } : {}) };
 }
 
 // Repository names are only letters, digits, and . _ - /, so they stay readable in the link; logins are encoded.
@@ -60,6 +65,7 @@ export function linkSettingsQuery(link: LinkSettings): string {
   if (link.repos.length) parts.push('repos=' + link.repos.join(','));
   if (link.bots.length) parts.push('bots=' + link.bots.map(encodeURIComponent).join(','));
   if (link.hidden && link.hidden.length) parts.push('hide=' + link.hidden.join(','));
+  if (link.order && link.order.length) parts.push('cols=' + link.order.join(','));
   if (link.groups && link.groups.length) parts.push('repogroups=' + linkGroupsValue(link.groups));
   return parts.join('&');
 }
@@ -95,4 +101,11 @@ export function linkWithGroups(link: LinkSettings, saved: RepoGroup[]): LinkSett
 // The groups to save when Settings changes: the ones the viewer edited, or else the saved ones, never a link's.
 export function groupsToSave(next: RepoGroup[], shown: RepoGroup[], saved: RepoGroup[]): RepoGroup[] {
   return groupsToText(next) === groupsToText(shown) ? saved : next;
+}
+
+// The column order works like the hidden columns: a link that names it wins and is saved; otherwise the saved order
+// goes into the address, so a copied link carries the same columns in the same order (SET-24).
+export function applyLinkOrder(settings: Settings, link: LinkSettings): { settings: Settings; link: LinkSettings; changed: boolean } {
+  if (link.order === undefined) return { settings, link: { ...link, order: settings.columnOrder }, changed: false };
+  return { settings: { ...settings, columnOrder: link.order }, link, changed: true };
 }

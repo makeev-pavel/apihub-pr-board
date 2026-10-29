@@ -17,6 +17,7 @@ import { LoadStatus } from './components/common/LoadStatus.tsx';
 import { ViewerBadge } from './components/header/ViewerBadge.tsx';
 import { SetupWizard } from './components/settings/SetupWizard.tsx';
 import { TokenDialog } from './components/settings/TokenDialog.tsx';
+import { WizardInvite } from './components/settings/WizardInvite.tsx';
 import { Tiles } from './components/header/Tiles.tsx';
 import { UpdateInfo } from './components/header/UpdateInfo.tsx';
 import { LegendBar } from './components/legend/LegendBar.tsx';
@@ -78,7 +79,7 @@ export function App() {
   const [showProblem, setShowProblem] = useState(false);
   useEffect(() => { if (!problem) setShowProblem(false); }, [problem]);
 
-  const offeredColumns = useMemo(() => boardColumns(repos.length), [repos.length]);
+  const offeredColumns = useMemo(() => boardColumns(repos.length, settings.columnOrder), [repos.length, settings.columnOrder]);
   const columns = useMemo(() => offeredColumns.filter((c) => isColumnShown(c, settings.hiddenColumns)), [offeredColumns, settings.hiddenColumns]);
   const { tableWrapRef, widths, tableWidth, resize, canResetWidths, resetWidths } =
     useColumnWidths(columns, settings.reviewColumn === 'list' ? REVIEWERS_LIST_WIDTHS : undefined);
@@ -91,9 +92,13 @@ export function App() {
     if (next.reviewColumn !== settings.reviewColumn) resize.onReset('review');
     setSettings(next);
   };
-  // The setup wizard (SET-21) opens by itself until it is closed once in this browser.
-  const [wizardOpen, setWizardOpen] = useState(() => !readWizardDone());
+  // The setup wizard (SET-21). A first visit offers it in a small card, so the board shows first; taking the tour or
+  // Not now answers the card for good in this browser.
+  const [inviting, setInviting] = useState(() => !readWizardDone());
+  const [wizardOpen, setWizardOpen] = useState(false);
   const closeWizard = useCallback(() => { storeWizardDone(); setWizardOpen(false); }, []);
+  const startTour = useCallback(() => { storeWizardDone(); setInviting(false); setWizardOpen(true); }, []);
+  const dismissInvite = useCallback(() => { storeWizardDone(); setInviting(false); }, []);
   // The token dialog (SET-18). After Not now, or after the token is forgotten, it does not open by itself again until
   // the page reloads.
   const [askingToken, setAskingToken] = useState(false);
@@ -256,7 +261,7 @@ export function App() {
           <colgroup>{columns.map((col) => <col key={col.id} style={{ width: widths[col.id] + 'px' }} />)}</colgroup>
           <thead><tr>{columns.map((col, index) => <HeaderCell key={col.id} col={col} index={index} view={view} onSort={onSort} width={widths[col.id]} resize={resize} />)}</tr></thead>
           <tbody>
-            {rows.length ? rows.map((pr) => <Row key={pullRequestKey(pr)} pr={pr} now={now} columns={columns} repos={repos}
+            {rows.length ? rows.map((pr) => <Row key={pullRequestKey(pr)} pr={pr} now={now} columns={columns} repos={repos} showLabels={settings.showLabels}
               groupColor={rowColors.get(pr.repo.toLowerCase())} activeLabels={activeLabels} onToggleLabel={onToggleLabel} />)
               : <TableMessage colSpan={columns.length} onResetView={resetView} progress={load && !load.finished ? <LoadStatus load={load} /> : null}
                 kind={emptyTableKind({ loading: data.status === 'loading' || refreshing, notLoaded, failed: data.status === 'error', plan })} />}
@@ -268,6 +273,7 @@ export function App() {
       <LoadAnnouncer load={load} />
       <LegendBar />
       {wizardOpen ? <SetupWizard settings={settings} onChange={changeSettings} onClose={closeWizard} /> : null}
+      {inviting && !askingToken ? <WizardInvite onStart={startTour} onDismiss={dismissInvite} /> : null}
       {askingToken ? (
         <TokenDialog onClose={closeTokenDialog}
           onSave={(value) => { setToken(value); setAskingToken(false); refresh(value); }} />

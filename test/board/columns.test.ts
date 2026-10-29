@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { boardColumns, COLUMNS, DEFAULT_WIDTHS, fitToWidth, isColumnShown } from '../../src/board/columns.ts';
+import {
+  boardColumns, COLUMNS, completeOrder, DEFAULT_WIDTHS, fitToWidth, isColumnShown, moveColumn, orderToKeep,
+} from '../../src/board/columns.ts';
 
 const sum = (widths: Record<string, number>, ids: string[]) => ids.reduce((total, id) => total + widths[id], 0);
 const ALL_IDS = COLUMNS.map((c) => c.id);
@@ -46,4 +48,22 @@ test('TABLE-26: the Repository column comes first, and only with more than one r
   const repo = COLUMNS.find((c) => c.id === 'repo')!;
   assert.equal(repo.required, undefined, 'the column can be hidden');
   assert.equal(isColumnShown(repo, ['repo']), false);
+});
+
+test('SET-24: an order keeps its known ids once and adds the rest in the default order, and the default keeps nothing', () => {
+  const full = completeOrder(['author', 'nope', 'title', 'author']);
+  assert.deepEqual(full.slice(0, 2), ['author', 'title']);
+  assert.equal(full.length, COLUMNS.length);
+  assert.deepEqual(orderToKeep(COLUMNS.map((c) => c.id)), []);
+  assert.deepEqual(orderToKeep(['author']).slice(0, 2), ['author', 'repo']);
+  assert.deepEqual(boardColumns(1, ['author']).map((c) => c.id).slice(0, 2), ['author', 'number']);
+});
+
+test('SET-24: a column moves one place among the columns offered, so the hidden Repository column takes no step', () => {
+  const offered = boardColumns(1).map((c) => c.id);
+  // # is the first offered column; Repository, before it, is not offered with one repository.
+  const up = moveColumn([], 'title', -1, offered);
+  assert.deepEqual(up.filter((id) => offered.includes(id)).slice(0, 2), ['title', 'number']);
+  assert.deepEqual(moveColumn([], 'number', -1, offered), completeOrder([]), 'the first offered column stays');
+  assert.deepEqual(moveColumn([], 'attention', 1, offered), completeOrder([]), 'the last column stays');
 });

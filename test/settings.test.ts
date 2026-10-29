@@ -134,3 +134,9 @@ test('SET-20: the Review column is a code or a list of reviewers, and anything e
   assert.equal(parseSettings({ reviewColumn: 'people' }).reviewColumn, 'code');
   assert.equal(DEFAULT_SETTINGS.reviewColumn, 'code');
 });
+
+test('SET-23: labels show by default, and anything stored but true or false falls back to showing them', () => {
+  assert.equal(DEFAULT_SETTINGS.showLabels, true);
+  assert.equal(parseSettings({ showLabels: false }).showLabels, false);
+  assert.equal(parseSettings({ showLabels: 'no' }).showLabels, true);
+});

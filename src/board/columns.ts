@@ -42,9 +42,39 @@ export const REVIEWERS_LIST_WIDTHS: Widths = { ...DEFAULT_WIDTHS, review: REVIEW
 // Columns that absorb spare width so the table always fills the window.
 export const FLEX_COLUMNS = ['title', 'comment'];
 
-// The columns the board offers for data from this many repositories, before the viewer hides any.
-export function boardColumns(repoCount: number): Column[] {
-  return COLUMNS.filter((column) => !column.severalRepos || repoCount > 1);
+const DEFAULT_ORDER = COLUMNS.map((column) => column.id);
+const isColumnId = (id: string) => DEFAULT_ORDER.includes(id);
+
+// Every column id once: the known ones of the order given, then the rest in the default order (SET-24). An id from a
+// newer version is dropped, and a column added later goes where it is by default.
+export function completeOrder(order: string[]): string[] {
+  const known = [...new Set(order.filter(isColumnId))];
+  return [...known, ...DEFAULT_ORDER.filter((id) => !known.includes(id))];
+}
+
+// What to keep for an order: nothing when it is the default one.
+export function orderToKeep(order: string[]): string[] {
+  const full = completeOrder(order);
+  return full.join(',') === DEFAULT_ORDER.join(',') ? [] : full;
+}
+
+// Moves a column one place up or down among the columns offered now, so a hidden Repository column never takes a
+// step of its own.
+export function moveColumn(order: string[], id: string, step: -1 | 1, offered: string[]): string[] {
+  const full = completeOrder(order);
+  const visible = full.filter((columnId) => offered.includes(columnId));
+  const neighbor = visible[visible.indexOf(id) + step];
+  if (!neighbor || !visible.includes(id)) return full;
+  const a = full.indexOf(id);
+  const b = full.indexOf(neighbor);
+  [full[a], full[b]] = [full[b], full[a]];
+  return full;
+}
+
+// The columns the board offers for data from this many repositories, in the viewer's order, before any is hidden.
+export function boardColumns(repoCount: number, order: string[] = []): Column[] {
+  return completeOrder(order).map((id) => COLUMNS.find((column) => column.id === id)!)
+    .filter((column) => !column.severalRepos || repoCount > 1);
 }
 
 export function isColumnShown(column: Column, hiddenColumns: string[]): boolean {

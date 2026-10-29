@@ -53,12 +53,23 @@ test.describe('screenshots', () => {
     await expect(page).toHaveScreenshot('board-reviewers-list.png');
   });
 
-  test('SET-21: the setup wizard with a picture for every theme', async ({ page }) => {
+  test('SET-21: the first-visit card that offers the wizard, over the board', async ({ page }) => {
     await firstVisit(page);
     await openBoard(page, { report: 'typical', query: ALL });
+    await expect(page.getByRole('complementary', { name: 'New here?' })).toBeVisible();
+    await settle(page);
+    await expect(page).toHaveScreenshot('state-first-visit.png');
+  });
+
+  test('SET-21 SET-23: the setup wizard with a picture for every theme, and the Labels step', async ({ page }) => {
+    await firstVisit(page);
+    await openBoard(page, { report: 'typical', query: ALL });
+    await page.getByRole('button', { name: 'Take the tour' }).click();
     await expect(page.getByRole('dialog', { name: 'Set up your board' })).toBeVisible();
     await settle(page);
     await expect(page.getByRole('dialog', { name: 'Set up your board' })).toHaveScreenshot('wizard-theme.png');
+    for (let i = 0; i < 3; i++) await page.getByRole('button', { name: 'Next' }).click();
+    await expect(page.getByRole('dialog', { name: 'Set up your board' })).toHaveScreenshot('wizard-labels.png');
   });
 
   test('TABLE-26 TABLE-27: two repositories add the Repository column', async ({ page }) => {

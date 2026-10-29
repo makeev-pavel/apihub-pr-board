@@ -82,9 +82,10 @@
   the default view has a clean address. Opening a link restores the view; unknown values fall back to the defaults, and
   a value given twice counts once. Logins match without regard to case. A choice of one login spelled like a preset,
   such as a person called `bots`, keeps a trailing comma (`authors=bots,`), so it reads back as that person.
-- **FILTER-14** The address also carries four settings: `repos`, the repositories to show
+- **FILTER-14** The address also carries five settings: `repos`, the repositories to show
   (`repos=acme/widgets,acme/gadgets`), `bots`, the extra bot logins (**SET-5**), `hide`, the hidden columns
-  (`hide=ci,assignee`, **SET-8**), and `repogroups`, the repository groups (**SET-19**), as
+  (`hide=ci,assignee`, **SET-8**), `cols`, every column in the viewer's order when it is not the default (**SET-24**),
+  which works like `hide`, and `repogroups`, the repository groups (**SET-19**), as
   `repogroups=*Core:acme/widgets,acme/gadgets;Tools:acme/tools`. A link with groups shows them without saving them, so
   it never replaces the viewer's own; editing the groups in Settings saves the edit. Without groups in the link, the
   saved ones go into the address. An empty list or a list with a wrong group is ignored. Copy link keeps them, and

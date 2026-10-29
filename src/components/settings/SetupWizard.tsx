@@ -25,7 +25,7 @@ export function SetupWizard({ settings, onChange, onClose }: { settings: Setting
     if (picked) picked.focus();
   }, [step, dialog]);
 
-  const { theme, density, reviewColumn } = settings;
+  const { theme, density, reviewColumn, showLabels } = settings;
   // The other steps draw in the theme picked, or in light and dark when it follows the system.
   const shown = theme === 'system' ? 'split' : theme;
   const set = (change: Partial<Settings>) => onChange({ ...settings, ...change });
@@ -35,11 +35,11 @@ export function SetupWizard({ settings, onChange, onClose }: { settings: Setting
       text: 'Pick the colors of the board.',
       choices: [
         { label: 'System', hint: 'Follows the light or dark setting of your system.', picked: theme === 'system', pick: () => set({ theme: 'system' }),
-          preview: <ViewPreview theme="split" density={density} review={reviewColumn} /> },
+          preview: <ViewPreview theme="split" density={density} review={reviewColumn} labels={showLabels} /> },
         { label: 'Light', hint: 'Dark text on a light background.', picked: theme === 'light', pick: () => set({ theme: 'light' }),
-          preview: <ViewPreview theme="light" density={density} review={reviewColumn} /> },
+          preview: <ViewPreview theme="light" density={density} review={reviewColumn} labels={showLabels} /> },
         { label: 'Dark', hint: 'Light text on a dark background.', picked: theme === 'dark', pick: () => set({ theme: 'dark' }),
-          preview: <ViewPreview theme="dark" density={density} review={reviewColumn} /> },
+          preview: <ViewPreview theme="dark" density={density} review={reviewColumn} labels={showLabels} /> },
       ],
     },
     {
@@ -47,9 +47,9 @@ export function SetupWizard({ settings, onChange, onClose }: { settings: Setting
       text: 'Pick how much room each pull request takes.',
       choices: [
         { label: 'Comfortable', hint: 'More space around each row.', picked: density === 'comfortable', pick: () => set({ density: 'comfortable' }),
-          preview: <ViewPreview theme={shown} density="comfortable" review={reviewColumn} /> },
+          preview: <ViewPreview theme={shown} density="comfortable" review={reviewColumn} labels={showLabels} /> },
         { label: 'Compact', hint: 'More rows on the screen at once.', picked: density === 'compact', pick: () => set({ density: 'compact' }),
-          preview: <ViewPreview theme={shown} density="compact" review={reviewColumn} /> },
+          preview: <ViewPreview theme={shown} density="compact" review={reviewColumn} labels={showLabels} /> },
       ],
     },
     {
@@ -60,6 +60,16 @@ export function SetupWizard({ settings, onChange, onClose }: { settings: Setting
           pick: () => set({ reviewColumn: 'code' }), preview: <ReviewCellPreview theme={shown} review="code" /> },
         { label: 'Reviewers', hint: 'Every reviewer with GitHub\'s icons; your own pending review stands out.', picked: reviewColumn === 'list',
           pick: () => set({ reviewColumn: 'list' }), preview: <ReviewCellPreview theme={shown} review="list" /> },
+      ],
+    },
+    {
+      title: 'Labels',
+      text: 'Pick whether labels show under the titles. Search finds them either way.',
+      choices: [
+        { label: 'Show', hint: 'Colored labels under each title and linked issue.', picked: showLabels, pick: () => set({ showLabels: true }),
+          preview: <ViewPreview theme={shown} density={density} review={reviewColumn} labels /> },
+        { label: 'Hide', hint: 'Shorter rows with titles alone.', picked: !showLabels, pick: () => set({ showLabels: false }),
+          preview: <ViewPreview theme={shown} density={density} review={reviewColumn} labels={false} /> },
       ],
     },
   ];

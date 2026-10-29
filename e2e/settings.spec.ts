@@ -25,7 +25,7 @@ test.describe('settings', () => {
     for (const section of ['Repositories', 'Attention rules', 'Areas', 'View', 'Columns', 'GitHub token']) {
       await expect(panel.getByRole('heading', { name: section })).toBeVisible();
     }
-    await expect(panel).toContainText('Saved in this browser. The page address carries the repositories, extra bots, hidden columns, and groups.');
+    await expect(panel).toContainText('Saved in this browser. The page address carries the repositories, extra bots, hidden columns, column order, and groups.');
     await expect(panel.locator('#token-input')).not.toBeFocused();
   });
 
@@ -81,6 +81,22 @@ test.describe('settings', () => {
     // No form: browsers do not offer to save the token as a password (SEC-1).
     await openSettings(page);
     await expect(page.locator('.settings-panel form')).toHaveCount(0);
+  });
+
+  test('SET-23: Labels hides the label chips of PRs and linked issues, and search still finds labels', async ({ page }) => {
+    await openBoard(page, { report: 'typical', query: ALL });
+    await expect(page.locator('.board .label-chip').first()).toBeAttached();
+    const panel = await openSettings(page);
+    const labels = panel.getByRole('group', { name: 'Labels' });
+    await expect(labels.getByRole('button', { name: 'Show' })).toHaveAttribute('aria-pressed', 'true');
+    await labels.getByRole('button', { name: 'Hide' }).click();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.board .label-chip')).toHaveCount(0);
+    await expect(page.locator('.board .issue-labels')).toHaveCount(0);
+    await page.getByLabel('Search pull requests').fill('label:bug');
+    await expect(rows(page).first()).toBeVisible();
+    await page.reload();
+    await expect(page.locator('.board .label-chip')).toHaveCount(0);
   });
 
   test('SET-6 RULE-11: adding a scope to an area moves its PRs there', async ({ page }) => {

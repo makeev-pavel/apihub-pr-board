@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { isColumnShown } from '../../board/columns.ts';
+import { isColumnShown, moveColumn, orderToKeep } from '../../board/columns.ts';
 import type { Column } from '../../board/columns.ts';
 import { AREAS } from '../../model/areas.ts';
 import { groupsToText, parseGroupLines } from '../../board/groups.ts';
@@ -7,7 +7,7 @@ import { parseList } from '../../names.ts';
 import { checkRepositoryList } from '../../repository.ts';
 import type { Rules } from '../../model/rules.ts';
 import {
-  DEFAULT_SETTINGS, DENSITIES, REFRESH_INTERVALS, REVIEW_COLUMNS, isValidStaleDays, MAX_STALE_DAYS, MIN_STALE_DAYS, THEMES,
+  DEFAULT_SETTINGS, DENSITIES, LABEL_CHOICES, REFRESH_INTERVALS, REVIEW_COLUMNS, isValidStaleDays, MAX_STALE_DAYS, MIN_STALE_DAYS, THEMES,
 } from '../../settings.ts';
 import type { Settings } from '../../settings.ts';
 import type { AreaId } from '../../types.ts';
@@ -126,6 +126,11 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
     const modules = parseList(areaDrafts[id]);
     if (modules.join(',') !== rules.areaModules[id].join(',')) setRules({ areaModules: { ...rules.areaModules, [id]: modules } });
   };
+  // The order covers every column, including Repository while one repository hides it (SET-24).
+  const moveTo = (id: string, step: -1 | 1) => onChange({
+    ...settings,
+    columnOrder: orderToKeep(moveColumn(settings.columnOrder, id, step, columns.map((col) => col.id))),
+  });
   const toggleColumn = (id: string) => onChange({
     ...settings,
     hiddenColumns: settings.hiddenColumns.includes(id) ? settings.hiddenColumns.filter((c) => c !== id) : settings.hiddenColumns.concat(id),
@@ -214,6 +219,14 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
           </div>
         </div>
         <div className="setting-row">
+          <span>Labels</span>
+          <div className="segmented" role="group" aria-label="Labels">
+            {LABEL_CHOICES.map(([value, label]) => (
+              <button key={label} type="button" aria-pressed={settings.showLabels === value} onClick={() => onChange({ ...settings, showLabels: value })}>{label}</button>
+            ))}
+          </div>
+        </div>
+        <div className="setting-row">
           <span>Review column</span>
           <div className="segmented" role="group" aria-label="Review column">
             {REVIEW_COLUMNS.map(([value, label]) => (
@@ -224,15 +237,22 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
       </section>
       <section>
         <h2>Columns</h2>
-        <div className="column-options">
-          {columns.map((col) => (
-            <label key={col.id} title={col.required ? 'This column is always shown' : undefined}>
-              <input type="checkbox" checked={isColumnShown(col, settings.hiddenColumns)} disabled={col.required}
-                onChange={() => toggleColumn(col.id)} />
-              {col.label}
-            </label>
+        <p className="hint">Check the columns to show, and move them with the arrows. The page address keeps the order.</p>
+        <ul className="column-options">
+          {columns.map((col, index) => (
+            <li key={col.id}>
+              <label title={col.required ? 'This column is always shown' : undefined}>
+                <input type="checkbox" checked={isColumnShown(col, settings.hiddenColumns)} disabled={col.required}
+                  onChange={() => toggleColumn(col.id)} />
+                {col.label}
+              </label>
+              <button type="button" className="btn icon-only" aria-label={'Move ' + col.label + ' up'} disabled={index === 0}
+                onClick={() => moveTo(col.id, -1)}>↑</button>
+              <button type="button" className="btn icon-only" aria-label={'Move ' + col.label + ' down'} disabled={index === columns.length - 1}
+                onClick={() => moveTo(col.id, 1)}>↓</button>
+            </li>
           ))}
-        </div>
+        </ul>
         <button type="button" className="btn" disabled={!canResetWidths} onClick={onResetWidths}>Reset column widths</button>
       </section>
       <section>
@@ -262,7 +282,7 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
         </div>
       </section>
       <div className="settings-foot">
-        <span className="muted">Saved in this browser. The page address carries the repositories, extra bots, hidden columns, and groups.</span>
+        <span className="muted">Saved in this browser. The page address carries the repositories, extra bots, hidden columns, column order, and groups.</span>
         <button type="button" className="btn" onClick={resetAll}>Reset to defaults</button>
       </div>
     </div>

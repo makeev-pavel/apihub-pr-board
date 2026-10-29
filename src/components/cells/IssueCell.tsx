@@ -6,8 +6,10 @@ const VISIBLE_ISSUE_LABELS = 3;
 
 // The Issue column (TABLE-8): the issues the PR closes (the Development field), each with its type and labels. Without
 // one, the project it was added to instead, or "No issue".
-export function IssueCell({ pr, now }: { pr: PullRequest; now: number }) {
-  if (pr.issues.length) return <div className="issue-list">{pr.issues.map((issue, i) => <IssueItem key={i} issue={issue} now={now} />)}</div>;
+export function IssueCell({ pr, now, showLabels }: { pr: PullRequest; now: number; showLabels: boolean }) {
+  if (pr.issues.length) {
+    return <div className="issue-list">{pr.issues.map((issue, i) => <IssueItem key={i} issue={issue} now={now} showLabels={showLabels} />)}</div>;
+  }
   if (pr.projects && pr.projects.length) return <span className="dash">No issue · in {pr.projects.join(', ')}</span>;
   return <span className="dash">No issue</span>;
 }
@@ -40,8 +42,8 @@ function ProjectFields({ issue, now }: { issue: Issue; now: number }) {
   );
 }
 
-function IssueItem({ issue, now }: { issue: Issue; now: number }) {
-  const shown = issue.labels.slice(0, VISIBLE_ISSUE_LABELS);
+function IssueItem({ issue, now, showLabels }: { issue: Issue; now: number; showLabels: boolean }) {
+  const shown = showLabels ? issue.labels.slice(0, VISIBLE_ISSUE_LABELS) : [];
   const hidden = issue.labels.slice(VISIBLE_ISSUE_LABELS);
   return (
     <div className="issue-item">

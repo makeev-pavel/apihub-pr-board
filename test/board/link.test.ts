@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  applyLinkColumns, cleanBots, groupsToSave, linkSettingsQuery, MAX_BOTS, linkWithGroups, moveStoredBots, parseLinkSettings,
+  applyLinkColumns, applyLinkOrder, cleanBots, groupsToSave, linkSettingsQuery, MAX_BOTS, linkWithGroups, moveStoredBots, parseLinkSettings,
 } from '../../src/board/link.ts';
 import { DEFAULT_SETTINGS } from '../../src/settings.ts';
 
@@ -97,4 +97,15 @@ test('FILTER-14 SET-17: a hide list of only unknown ids keeps the saved columns,
   assert.deepEqual(parseLinkSettings('?hide=').hidden, []);
   const stored = { ...DEFAULT_SETTINGS, rules: { ...DEFAULT_SETTINGS.rules, extraBots: ['ci-bot', 'CI-Bot', 'not a login', 'release_bot'] } };
   assert.deepEqual(moveStoredBots(stored, { repos: [], bots: [] }).link.bots, ['ci-bot']);
+});
+
+test('FILTER-14 SET-24: the column order travels in the address, a link with it wins, and an unknown list names nothing', () => {
+  const order = parseLinkSettings('?cols=author,title,bogus').order!;
+  assert.deepEqual(order.slice(0, 2), ['author', 'title']);
+  assert.equal(parseLinkSettings('?cols=bogus').order, undefined);
+  assert.equal(parseLinkSettings('?q=x').order, undefined);
+  assert.match(linkSettingsQuery({ repos: [], bots: [], order }), /^cols=author,title,repo,number,/);
+  const stored = { ...DEFAULT_SETTINGS, columnOrder: ['ci'] };
+  assert.deepEqual(applyLinkOrder(stored, { repos: [], bots: [], order }).settings.columnOrder, order);
+  assert.deepEqual(applyLinkOrder(stored, { repos: [], bots: [] }).link.order, ['ci']);
 });

@@ -15,12 +15,14 @@ import { LabelList } from '../common/LabelList.tsx';
 import { Person } from '../common/Person.tsx';
 import { Pill } from '../common/Pill.tsx';
 
-export const Row = memo(function Row({ pr, now, columns, repos, groupColor, activeLabels, onToggleLabel }: {
+export const Row = memo(function Row({ pr, now, columns, repos, showLabels, groupColor, activeLabels, onToggleLabel }: {
   pr: DerivedPullRequest;
   now: number;
   columns: Column[];
   // Every repository on the board, so the Repository cell can leave out a shared owner.
   repos: string[];
+  // Whether label chips show (SET-23).
+  showLabels: boolean;
   // The tint of the repository name's group (TABLE-31), or undefined outside any group.
   groupColor?: number;
   activeLabels: Set<string>;
@@ -43,18 +45,18 @@ export const Row = memo(function Row({ pr, now, columns, repos, groupColor, acti
     title: (
       <td key="title" className="c-title">
         <div className="pr-title">{link(pr.title)}<NoteButton pr={pr} /></div>
-        {(pr.draft || pr.base !== 'main' || pr.example || pr.labels.length) ? (
+        {(pr.draft || pr.base !== 'main' || pr.example || (showLabels && pr.labels.length)) ? (
           <div className="sub">
             {pr.example ? <span className="chip example">example</span> : null}
             {pr.draft ? <span className="chip draft">Draft</span> : null}
             {pr.base !== 'main' ? <span className="chip branch" title="Target branch">→ {pr.base}</span> : null}
-            <LabelList labels={pr.labels} activeLabels={activeLabels} onToggle={onToggleLabel} />
+            {showLabels ? <LabelList labels={pr.labels} activeLabels={activeLabels} onToggle={onToggleLabel} /> : null}
           </div>
         ) : null}
         {pr.exampleNote ? <div className="example-note">{pr.exampleNote}</div> : null}
       </td>
     ),
-    issue: <td key="issue" className="c-issue"><IssueCell pr={pr} now={now} /></td>,
+    issue: <td key="issue" className="c-issue"><IssueCell pr={pr} now={now} showLabels={showLabels} /></td>,
     author: <td key="author" className="c-person"><Person actor={pr.author} /></td>,
     ci: <td key="ci" className="c-state"><CiCell pr={pr} /></td>,
     review: <td key="review" className="c-state"><ReviewCell pr={pr} now={now} /></td>,

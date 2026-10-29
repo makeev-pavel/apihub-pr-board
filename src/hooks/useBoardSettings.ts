@@ -3,7 +3,7 @@
 // groups come from the address.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { applyLinkColumns, cleanBots, groupsToSave, linkWithGroups, moveStoredBots, readLinkSettings } from '../board/link.ts';
+import { applyLinkColumns, applyLinkOrder, cleanBots, groupsToSave, linkWithGroups, moveStoredBots, readLinkSettings } from '../board/link.ts';
 import { groupsToText } from '../board/groups.ts';
 import { loadSettings, saveSettings } from '../settings.ts';
 import type { Settings } from '../settings.ts';
@@ -12,7 +12,12 @@ export function useBoardSettings() {
   const [start] = useState(() => {
     const bots = moveStoredBots(loadSettings(), readLinkSettings());
     const columns = applyLinkColumns(bots.settings, bots.link);
-    return { settings: columns.settings, link: linkWithGroups(columns.link, columns.settings.repoGroups), changed: bots.moved || columns.changed };
+    const order = applyLinkOrder(columns.settings, columns.link);
+    return {
+      settings: order.settings,
+      link: linkWithGroups(order.link, order.settings.repoGroups),
+      changed: bots.moved || columns.changed || order.changed,
+    };
   });
   const [stored, setStored] = useState(start.settings);
   const [link, setLink] = useState(start.link);
@@ -28,9 +33,11 @@ export function useBoardSettings() {
     // The same link object when bots, columns, and groups did not change: a theme change then leaves the address alone.
     const bots = cleanBots(next.rules.extraBots);
     const hidden = next.hiddenColumns;
+    const order = next.columnOrder;
     const groups = next.repoGroups;
     setLink((prev) => (bots.join(',') === prev.bots.join(',') && hidden.join(',') === (prev.hidden || []).join(',')
-      && groupsToText(groups) === groupsToText(prev.groups || []) ? prev : { ...prev, bots, hidden, groups }));
+      && order.join(',') === (prev.order || []).join(',')
+      && groupsToText(groups) === groupsToText(prev.groups || []) ? prev : { ...prev, bots, hidden, order, groups }));
   }, [shownGroups, stored.repoGroups]);
   const setRepos = useCallback((repos: string[]) => setLink((prev) => ({ ...prev, repos })), []);
   return { settings, setSettings, link, setRepos };

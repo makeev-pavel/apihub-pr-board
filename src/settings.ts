@@ -4,7 +4,7 @@
 import { groupNameError, MAX_GROUPS } from './board/groups.ts';
 import type { RepoGroup } from './board/groups.ts';
 import { AREAS } from './model/areas.ts';
-import { COLUMNS } from './board/columns.ts';
+import { COLUMNS, orderToKeep } from './board/columns.ts';
 import { isRepositoryName, MAX_REPOSITORIES } from './repository.ts';
 import { parseList, uniqueNames } from './names.ts';
 import { DEFAULT_RULES } from './model/rules.ts';
@@ -23,18 +23,23 @@ export interface Settings {
   // The Review column as a code or as GitHub's Reviewers list (SET-20).
   reviewColumn: ReviewColumn;
   refreshMinutes: RefreshMinutes;
+  // Labels of the PR and its linked issues show in the table (SET-23); search finds them either way.
+  showLabels: boolean;
   // Ids of columns the viewer turned off.
   hiddenColumns: string[];
+  // Every column id in the viewer's order, or empty for the default order (SET-24).
+  columnOrder: string[];
   // Named lists of repositories for the Repositories menu (SET-19).
   repoGroups: RepoGroup[];
 }
 
-export const DEFAULT_SETTINGS: Settings = { rules: DEFAULT_RULES, theme: 'system', density: 'comfortable', reviewColumn: 'code', refreshMinutes: 5, hiddenColumns: [], repoGroups: [] };
+export const DEFAULT_SETTINGS: Settings = { rules: DEFAULT_RULES, theme: 'system', density: 'comfortable', reviewColumn: 'code', refreshMinutes: 5, showLabels: true, hiddenColumns: [], columnOrder: [], repoGroups: [] };
 export const MIN_STALE_DAYS = 1;
 export const MAX_STALE_DAYS = 365;
 export const THEMES: [Theme, string][] = [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']];
 export const DENSITIES: [Density, string][] = [['comfortable', 'Comfortable'], ['compact', 'Compact']];
 export const REVIEW_COLUMNS: [ReviewColumn, string][] = [['code', 'Code'], ['list', 'Reviewers']];
+export const LABEL_CHOICES: [boolean, string][] = [[true, 'Show'], [false, 'Hide']];
 export const REFRESH_INTERVALS: [RefreshMinutes, string][] = [[0, 'Off'], [2, '2 min'], [5, '5 min'], [10, '10 min'], [30, '30 min']];
 
 const SETTINGS_KEY = 'apihub-pr-board.settings';
@@ -89,10 +94,12 @@ export function parseSettings(value: unknown): Settings {
     density: pick(stored.density, DENSITIES, DEFAULT_SETTINGS.density),
     reviewColumn: pick(stored.reviewColumn, REVIEW_COLUMNS, DEFAULT_SETTINGS.reviewColumn),
     refreshMinutes: pick(stored.refreshMinutes, REFRESH_INTERVALS, DEFAULT_SETTINGS.refreshMinutes),
+    showLabels: typeof stored.showLabels === 'boolean' ? stored.showLabels : DEFAULT_SETTINGS.showLabels,
     // An id no column has any more, such as one from an older version, is dropped (SET-8).
     hiddenColumns: Array.isArray(stored.hiddenColumns)
       ? [...new Set(stored.hiddenColumns.filter((id): id is string => typeof id === 'string' && COLUMNS.some((column) => column.id === id)))]
       : [],
+    columnOrder: Array.isArray(stored.columnOrder) ? orderToKeep(stored.columnOrder.filter((id): id is string => typeof id === 'string')) : [],
     repoGroups: parseGroups(stored.repoGroups),
   };
 }

@@ -12,7 +12,9 @@
 | **SET-6** | Areas | BE and FE lists of labels and title scopes (**RULE-11**). | Monorepo modules; `ui-tests` is FE |
 | **SET-7** | View | Theme: System, Light, or Dark. Density: Comfortable or Compact rows. | System, Comfortable |
 | **SET-8** | Columns | Show or hide each column except # and Pull request, kept in this browser and in the address (**FILTER-14**); **Reset column widths**. | All shown |
+| **SET-24** | Columns | Move each column up or down with arrow buttons; the first and the last cannot move further. A move skips the Repository column while one repository hides it. The order is kept in this browser and in the address (`cols`, **FILTER-14**). | The order of **TABLE-4** |
 | **SET-9** | GitHub token | Save, replace, or forget the token for Refresh and the comments panel. | None |
+| **SET-23** | View | Labels: Show or Hide the label chips of PRs and of their linked issues (**TABLE-7**, **TABLE-8**). Search still finds labels. | Show |
 | **SET-22** | GitHub token | Load live data again: Off, 2, 5, 10, or 30 minutes (**DATA-24**). Anything else stored falls back to the default. | 5 min |
 
 - **SET-10** When an attention rule differs from its default, the gear shows a dot, the legend shows **Custom
@@ -21,11 +23,12 @@
 - **SET-11** Settings are stored in this browser (`localStorage`) and survive reloads: the settings of this panel under
   one key, and the token, the column widths, the notes (**NOTE-2**), and whether the setup wizard was closed
   (**SET-21**) each under its own. The repositories and the extra bots live only in the address (**SET-17**); the hidden
-  columns and the repository groups are stored and also travel in the address (**FILTER-14**). A stored value that is
-  missing or invalid falls back to its default, field by field, so an old or edited entry never breaks the page.
-- **SET-12** **Reset to defaults** restores the rules, areas, view (theme, density, and the Review column), the live
-  load interval, and columns, clears the repository groups, and removes the repositories and extra bots from the
-  address. It keeps the token, the column widths, and the notes.
+  columns, the column order, and the repository groups are stored and also travel in the address (**FILTER-14**). A
+  stored value that is missing or invalid falls back to its default, field by field, so an old or edited entry never
+  breaks the page.
+- **SET-12** **Reset to defaults** restores the rules, areas, view (theme, density, the Review column, and labels), the
+  live load interval, and columns with their order, clears the repository groups, and removes the repositories and extra
+  bots from the address. It keeps the token, the column widths, and the notes.
 - **SET-13** **Refresh** without a token opens the token dialog (**SET-18**). Opening the settings panel from the
   gear does not jump to the token.
 - **SET-14** A number field keeps the last valid value: an invalid entry does not apply and is replaced when the field
@@ -36,14 +39,16 @@
 - **SET-20** A Review column setting shows reviews as the Review code (**TABLE-12**, **TABLE-13**), the default, or as a
   list of reviewers (**TABLE-30**). It is kept in this browser; anything else stored falls back to the code. Switching
   it drops a Review width dragged for the other layout, so each starts at its own default.
-- **SET-21** A setup wizard walks through the look of the board in three steps: theme (System, Light, Dark), row
-  density, and the Review column (**SET-20**). Each choice is a card with a small picture of the board drawn in that
-  look, so both variants show side by side; System shows the light and the dark picture together. The Review column
-  step shows only Review cells, large enough to read, in both layouts. A choice applies at once. The wizard opens by
-  itself on the first visit in a browser, before the token dialog (**SET-18**), and again from **Setup wizard** in
-  Settings. **Skip**, Escape, and **Done** close it, and a click outside does not; after that it does not open by
-  itself again in this browser. Focus starts on the card picked, stays in the wizard, and returns where it was, or to
-  the Settings button, when it closes.
+- **SET-21** A setup wizard walks through the look of the board in four steps: theme (System, Light, Dark), row density,
+  the Review column (**SET-20**), and labels (**SET-23**). Each choice is a card with a small picture of the board drawn
+  in that look, so both variants show side by side; System shows the light and the dark picture together. The Review
+  column step shows only Review cells, large enough to read, in both layouts, and the Labels step the rows with and
+  without labels. A choice applies at once. The wizard never opens by itself: on the first visit in a browser the board
+  shows at once, with a small card in the corner that offers a tour of how the board can look, with **Take the tour**
+  and **Not now**. Either button answers the card for good in this browser. The card gives way to the token dialog
+  (**SET-18**) while it is open. The wizard also opens from **Setup wizard** in Settings. **Skip**, Escape, and **Done**
+  close it, and a click outside does not. Focus starts on the card picked, stays in the wizard, and returns where it
+  was, or to the Settings button, when it closes.
 
 ## Settings in the address
 

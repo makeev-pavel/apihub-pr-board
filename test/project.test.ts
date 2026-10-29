@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 
 const workflow = readFileSync('.github/workflows/pages.yml', 'utf8');
 const pkg = JSON.parse(readFileSync('package.json', 'utf8')) as Record<string, Record<string, string>>;
@@ -76,4 +76,11 @@ test('QUAL-6: colors in the stylesheets come only from the theme tokens', () => 
   const dark = new Set(blocks[1].map((d) => d.split(':')[0]));
   const missing = blocks[0].map((d) => d.split(':')[0]).filter((name) => THEMED.test(name) && !dark.has(name));
   assert.deepEqual(missing, [], 'light tokens without a dark value');
+});
+
+test('the README shows only screenshots that exist, so a renamed baseline cannot leave a broken picture', () => {
+  const readme = readFileSync('README.md', 'utf8');
+  const images = [...readme.matchAll(/!\[[^\]]*\]\(([^)]+)\)/g)].map((m) => m[1]);
+  assert.ok(images.length >= 5);
+  assert.deepEqual(images.filter((file) => !existsSync(file)), []);
 });

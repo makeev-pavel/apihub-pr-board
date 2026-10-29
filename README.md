@@ -6,6 +6,24 @@ such as `?repos=owner/name`, and each viewer loads the data with their own GitHu
 
 The requirements are in [docs/requirements/](docs/requirements/README.md).
 
+## Screenshots
+
+The pictures are the screenshot test baselines, taken on fictional mock data, so they always match the interface.
+
+![The board in the light theme: tiles, filters, and one row per pull request](e2e/__screenshots__/board-light-comfortable-win32.png)
+
+| Dark theme | Repository groups with their tints |
+| --- | --- |
+| ![The board in the dark theme](e2e/__screenshots__/board-dark-comfortable-win32.png) | ![Two repositories, their names tinted by group, with the Repositories menu open](e2e/__screenshots__/board-groups-light-win32.png) |
+| **The Reviewers list, with your review due** | **Every comment of a PR, as GitHub Markdown** |
+| ![The Review column as a list of reviewers](e2e/__screenshots__/board-reviewers-list-win32.png) | ![The comments panel](e2e/__screenshots__/panel-comments-win32.png) |
+| **The first visit: the board, and a card that offers a tour** | **The tour: a picture for every choice** |
+| ![The board with the card that offers the setup wizard](e2e/__screenshots__/state-first-visit-win32.png) | ![The setup wizard's Labels step](e2e/__screenshots__/wizard-labels-win32.png) |
+
+| Failed checks | Search syntax | Settings |
+| --- | --- | --- |
+| ![The failed checks popover](e2e/__screenshots__/popover-checks-win32.png) | ![The search syntax popover](e2e/__screenshots__/popover-search-win32.png) | ![The settings panel](e2e/__screenshots__/panel-settings-win32.png) |
+
 ## How it works
 
 - The workflow builds the page and publishes it on GitHub Pages. The page holds no data and the workflow uses no
@@ -23,23 +41,29 @@ The requirements are in [docs/requirements/](docs/requirements/README.md).
 
 - **Search** takes plain words and GitHub-style qualifiers: `label:bug`, `label:"good first issue"`, `author:`,
   `assignee:`, `reviewer:` (reviewed or requested), `area:be|fe|other`, `ci:failing`, `review:approved`,
-  `is:draft|bot|conflict|stale|attention`, `no:issue|label|assignee|review`, `repo:`, `note:`. A minus excludes:
+  `review:requested`, `is:draft|bot|conflict|stale|attention`, `no:issue|label|assignee|review`, `repo:`,
+  `priority:`, `sprint:current`, `note:`. `label:`, `repo:`, and `priority:` match a whole name. A minus excludes:
   `-is:draft`.
   A linked issue number such as `885` finds its PR.
   The **?** button next to the field lists them. Click a label on a row to filter by it.
 - **Area** (BE, FE, Other) comes from the labels and Conventional Commits scopes listed in Settings, `[BE]`/`[FE]`
-  tags in the PR and issue titles, and `frontend/` or `backend/` paths in Dependabot titles.
+  tags in the PR and issue titles, and `frontend` or `backend` directories in Dependabot titles.
 - **Column widths** change by dragging the header edge, or with the arrow keys on a focused edge. They are saved
-  in this browser; double-click an edge to reset that column.
-- **Setup wizard:** on the first visit, a short wizard shows the theme, the row density, and the Review column as
-  cards with a picture of the board in each look; every choice applies at once. **Setup wizard** in Settings opens
-  it again.
-- **Settings** (the gear next to Refresh): repositories, attention rules, BE/FE lists, extra bots, theme, density,
-  the Review column as a code or as GitHub's list of reviewers, visible columns, and the GitHub token. The
-  repositories and extra bots live in the page address, so a copied link or a bookmark carries them; everything else
-  is saved in this browser.
-- **Repository groups:** define groups in Settings, one per line (`Backend: owner/a, owner/b`); a Repositories menu
-  then checks whole groups at once. They stay in this browser, while the link carries the chosen repositories.
+  in this browser; double-click an edge to reset that column. **Column order** changes with the arrows in Settings
+  and travels in the link.
+- **Setup wizard:** the first visit opens the board at once, with a small card that offers a short tour. The tour
+  shows the theme, the row density, the Review column, and labels as cards with a picture of the board in each look;
+  every choice applies at once. **Setup wizard** in Settings opens it again.
+- **Settings** (the gear next to Refresh): repositories and repository groups, attention rules, BE/FE lists, extra
+  bots, theme, density, labels, the Review column as a code or as GitHub's list of reviewers, the columns and their
+  order, how often live data loads again, and the GitHub token. The page address carries the repositories, extra
+  bots, hidden columns, column order, and groups, so a copied link or a bookmark carries them; the rest is saved in
+  this browser.
+- **Repository groups:** define groups in Settings, one per line (`Backend: owner/a, owner/b`), with a leading `*`
+  for a group checked when the board opens. The Repositories menu then shows the rows of the checked groups, and
+  Ungrouped those of the repositories in no group. Without repositories in the link, only the checked groups load.
+  Each group has its own tint on the repository names. The link carries the groups, without replacing the ones saved
+  in a viewer's browser.
 - **Several repositories:** with more than one, a Repository column comes first. A link such as
   `?repos=owner/a,owner/b` shows just those.
 - **Notes:** the ✎ icon after a PR title opens a Markdown note for that PR, with Preview and Edit, such as what was
@@ -75,8 +99,9 @@ The dev server injects a **DEV** panel in the bottom-right corner. Use it to swi
 
 - **prs.json on page load:** typical board plus corner cases, two repositories, empty board, 300 PRs, project data
   unavailable, stale snapshot, slow load, missing file, invalid JSON, JSON without a PR list.
-- **Refresh button:** success, pagination, partial GraphQL errors, fewer PRs than `totalCount`, slow response,
-  401, 502, repository not found, network failure. Any token works in mock mode.
+- **Live loads:** success, pagination, partial GraphQL errors, project fields refused on a later page, fewer PRs than
+  `totalCount`, slow response, pages one by one, 401, 502, repository not found, network failure. Any token works in
+  mock mode.
 
 All mock data is fictional. `dev/fixtures/typical.ts` generates an ordinary board with a fixed seed, and
 `dev/fixtures/cases/` holds the corner cases, one file per topic. `dev/fixtures/gadgets.ts` is a second repository,

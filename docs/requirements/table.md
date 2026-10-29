@@ -14,7 +14,7 @@
 
 ## Columns
 
-- **TABLE-4** The table has one row per PR and these columns, in order:
+- **TABLE-4** The table has one row per PR and these columns, in this order unless the viewer moves them (**SET-24**):
 
   | Column | Content |
   | --- | --- |
