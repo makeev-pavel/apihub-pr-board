@@ -25,7 +25,7 @@ test.describe('settings', () => {
     for (const section of ['Repositories', 'Attention rules', 'Areas', 'View', 'Columns', 'GitHub token']) {
       await expect(panel.getByRole('heading', { name: section })).toBeVisible();
     }
-    await expect(panel).toContainText('Saved in this browser. Repositories and extra bots live in the page address.');
+    await expect(panel).toContainText('Saved in this browser. The page address carries the repositories, extra bots, hidden columns, and groups.');
     await expect(panel.locator('#token-input')).not.toBeFocused();
   });
 

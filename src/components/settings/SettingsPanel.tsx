@@ -115,7 +115,7 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); commitRepos(); } }} />
         {reposError ? <p id="repos-error" className="field-error" role="alert">{reposError}</p> : null}
         <label className="stacked-field" htmlFor="groups-input">Repository groups</label>
-        <p className="hint">One per line: <code>Name: owner/name, owner/name</code>. A leading <code>*</code> checks the group when the board opens. They fill the Repositories menu on the board and stay in this browser.</p>
+        <p className="hint">One per line: <code>Name: owner/name, owner/name</code>. A leading <code>*</code> checks the group when the board opens. They fill the Repositories menu on the board, stay in this browser, and travel in the page address.</p>
         <textarea id="groups-input" className="text-field" rows={3} value={groupsDraft} autoComplete="off"
           placeholder="Backend: acme/widgets, acme/gadgets" aria-invalid={!!groupsError}
           aria-describedby={groupsError ? 'groups-error' : undefined}
@@ -214,7 +214,7 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
         </form>
       </section>
       <div className="settings-foot">
-        <span className="muted">Saved in this browser. Repositories and extra bots live in the page address.</span>
+        <span className="muted">Saved in this browser. The page address carries the repositories, extra bots, hidden columns, and groups.</span>
         <button type="button" className="btn" onClick={resetAll}>Reset to defaults</button>
       </div>
     </div>

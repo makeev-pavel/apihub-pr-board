@@ -50,7 +50,7 @@
   (**FILTER-14**); an empty field removes it. A malformed entry is not applied, and the field names the entry and
   what is wrong with it.
 - **SET-17** The repositories and the extra bot logins (**SET-5**) live in the address, not in this browser, so a
-  link or a bookmark carries them. The panel footer says so. **Reset to defaults** removes both from the address.
+  link or a bookmark carries them. The panel footer says what the address carries. **Reset to defaults** removes both from the address.
   Extra bots that an earlier version saved in this browser move into the address on the first visit. When that
   visit comes through a link with its own bots, the link's bots apply and the saved ones are dropped.
 - **SET-18** When the page needs a token and has none, a dialog explains how to create one: a link to GitHub's page
