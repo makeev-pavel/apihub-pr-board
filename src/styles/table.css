@@ -145,3 +145,18 @@
 .issue-number { flex: none; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
 .issue-ref a:hover .issue-number { color: inherit; }
 .muted-line { color: var(--muted); display: flex; gap: 5px; }
+
+/* Standup notes (NOTE-3, NOTE-4). */
+.note-wrap { display: flex; align-items: flex-start; gap: 6px; }
+.note-wrap > input { margin: 3px 0 0; flex: none; }
+.note-preview { min-width: 0; flex: 1; padding: 0; border: 0; background: none; color: var(--fg); font: inherit; font-size: 13px; text-align: left; cursor: pointer;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.note-preview.faded { color: var(--muted); font-style: italic; }
+.note-preview:hover { text-decoration: underline; }
+.note-popover { gap: 8px; }
+.note-popover textarea { resize: vertical; font: inherit; font-size: 13px; padding: 6px 8px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); color: var(--fg); }
+.note-asked { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.note-history { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-height: 240px; overflow: auto; }
+.note-history li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; font-size: 13px; }
+.note-history .when { color: var(--muted); font-size: 12px; min-width: 76px; }
+.note-history .note-text { flex-basis: 100%; overflow-wrap: anywhere; white-space: pre-wrap; }

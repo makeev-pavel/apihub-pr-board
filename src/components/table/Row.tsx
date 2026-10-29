@@ -7,6 +7,7 @@ import type { DerivedPullRequest } from '../../types.ts';
 import { AttentionBadge } from '../cells/AttentionBadge.tsx';
 import { CiCell } from '../cells/CiCell.tsx';
 import { CommentCell } from '../cells/CommentCell.tsx';
+import { NoteCell } from '../cells/NoteCell.tsx';
 import { ReviewCell } from '../cells/ReviewCell.tsx';
 import { IssueLine } from '../common/IssueLine.tsx';
 import { LabelList } from '../common/LabelList.tsx';
@@ -71,6 +72,7 @@ export const Row = memo(function Row({ pr, now, columns, repos, activeLabels, on
         {pr.attention.length ? <AttentionBadge reasons={pr.attention} number={pr.number} /> : null}
       </td>
     ),
+    notes: <td key="notes" className="c-notes"><NoteCell pr={pr} /></td>,
   };
   return <tr className={cls}>{columns.map((col) => cells[col.id])}</tr>;
 });

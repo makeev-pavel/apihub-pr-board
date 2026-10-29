@@ -23,7 +23,7 @@ test('TABLE-22 TABLE-24: the column being resized keeps its width, and the last 
   const resizing = fitToWidth(DEFAULT_WIDTHS, total + 40, 'title', COLUMNS);
   assert.equal(resizing.title, DEFAULT_WIDTHS.title);
   assert.equal(resizing.comment, DEFAULT_WIDTHS.comment + 40);
-  const shown = COLUMNS.filter((c) => c.id !== 'comment' && c.id !== 'attention');
+  const shown = COLUMNS.filter((c) => !['comment', 'attention', 'notes'].includes(c.id));
   const lastOnly = fitToWidth(DEFAULT_WIDTHS, sum(DEFAULT_WIDTHS, shown.map((c) => c.id)) + 30, 'title', shown);
   assert.equal(lastOnly.assignee, DEFAULT_WIDTHS.assignee + 30);
 });

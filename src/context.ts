@@ -1,4 +1,5 @@
 import { createContext } from 'react';
+import type { NoteEntry, Notes } from './board/notes.ts';
 import { REST_URL } from './github/rest.ts';
 import { DEFAULT_RULES } from './model/rules.ts';
 import type { Rules } from './model/rules.ts';
@@ -12,3 +13,11 @@ interface Api {
   restUrl: string;
 }
 export const ApiContext = createContext<Api>({ token: '', restUrl: REST_URL });
+
+// Standup notes (NOTE-1) and today's date; only the Standup cells read them, so a note re-renders only those cells.
+interface NotesApi {
+  notes: Notes;
+  today: string;
+  update: (key: string, change: Partial<Pick<NoteEntry, 'asked' | 'text'>>) => void;
+}
+export const NotesContext = createContext<NotesApi>({ notes: {}, today: '', update: () => {} });

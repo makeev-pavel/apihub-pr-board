@@ -531,7 +531,7 @@ their own PRs), and they stay in this browser's `localStorage`. Spec: `docs/requ
 - [x] **N1. Spec** (NOTE-1 to NOTE-7). About 20 min.
 - [x] **N2. Notes model and storage:** `src/board/notes.ts` (per PR and local day, validated on load, capped at 100
   days) with unit tests. About 45 min.
-- [ ] **N3. Standup column and popover:** checkbox, today's text, the latest earlier note faded, history newest first,
+- [x] **N3. Standup column and popover:** checkbox, today's text, the latest earlier note faded, history newest first,
   the day change at midnight; browser tests. About 1.5 hours.
 - [ ] **N4. Quick filter and search:** the Not asked today tile and `note:`; unit and browser tests. About 30 min.
 - [ ] **N5. Docs, screenshots, and all checks.** About 30 min.

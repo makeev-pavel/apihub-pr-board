@@ -25,6 +25,7 @@
   | Assignee | Avatars and logins, or "Unassigned". |
   | Last comment | Author, time, a counter, and a two-line preview. Opens the comments panel. |
   | Attention | An icon with the number of reasons. Opens the reasons. |
+  | Standup | Asked today, and today's note or the latest earlier one (**NOTE-3**). Opens the notes. |
 
 - **TABLE-5** Columns can be hidden in Settings (**SET-8**); # and Pull request are always shown.
 

@@ -20,13 +20,14 @@ import { AuthorMenu } from './components/toolbar/AuthorMenu.tsx';
 import { CopyLink } from './components/toolbar/CopyLink.tsx';
 import { SearchHelp } from './components/toolbar/SearchHelp.tsx';
 import { REPOSITORIES } from './config.ts';
-import { ApiContext, RulesContext } from './context.ts';
+import { ApiContext, NotesContext, RulesContext } from './context.ts';
 import { fetchOpenPullRequests } from './github/graphql.ts';
 import { REST_URL } from './github/rest.ts';
 import { useBoardSettings } from './hooks/useBoardSettings.ts';
 import { AUTO_REFRESH_MS } from './board/format.ts';
 import { useAutoRefresh } from './hooks/useAutoRefresh.ts';
 import { useColumnWidths } from './hooks/useColumnWidths.ts';
+import { useNotes } from './hooks/useNotes.ts';
 import { useReportData } from './hooks/useReportData.ts';
 import { derive } from './model/derive.ts';
 import { pullRequestKey } from './model/report.ts';
@@ -54,6 +55,7 @@ export function App() {
   const [lastAttempt, setLastAttempt] = useState(0);
   const [now, setNow] = useState(Date.now);
   const { settings, setSettings, link, setRepos } = useBoardSettings();
+  const notesApi = useNotes(now);
 
   useEffect(() => writeView(view, linkSettingsQuery(link)), [view, link]);
   useEffect(() => {
@@ -158,7 +160,7 @@ export function App() {
   const api = useMemo(() => ({ token, restUrl: DEV ? DEV.restUrl : REST_URL }), [token]);
 
   return (
-    <ApiContext.Provider value={api}><RulesContext.Provider value={rules}>
+    <ApiContext.Provider value={api}><RulesContext.Provider value={rules}><NotesContext.Provider value={notesApi}>
       <header className="masthead">
         <h1>
           <span className="repo" title={headerRepos.length > 2 ? headerRepos.join(', ') : undefined}>{repositoriesSummary(headerRepos)}</span>
@@ -227,6 +229,6 @@ export function App() {
         <TokenDialog onClose={closeTokenDialog}
           onSave={(value) => { setToken(value); setAskingToken(false); refresh(value); }} />
       ) : null}
-    </RulesContext.Provider></ApiContext.Provider>
+    </NotesContext.Provider></RulesContext.Provider></ApiContext.Provider>
   );
 }

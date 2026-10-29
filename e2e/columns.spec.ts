@@ -81,7 +81,7 @@ test.describe('columns', () => {
     const panel = await openSettings(page);
     await expect(panel.getByLabel('#', { exact: true })).toBeDisabled();
     await expect(panel.getByLabel('Pull request', { exact: true })).toBeDisabled();
-    for (const label of ['Assignee', 'Last comment', 'Attention']) await panel.getByLabel(label, { exact: true }).uncheck();
+    for (const label of ['Assignee', 'Last comment', 'Attention', 'Standup']) await panel.getByLabel(label, { exact: true }).uncheck();
     await page.keyboard.press('Escape');
     await expect(page.locator('.board > thead > tr > th')).toHaveCount(7);
     await expect(th(page, 'Assignee')).toHaveCount(0);
