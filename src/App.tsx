@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { collectAuthors, selectedAuthors } from './board/authors.ts';
 import { boardColumns, DEFAULT_WIDTHS, isColumnShown, REVIEWERS_LIST_WIDTHS } from './board/columns.ts';
 import { repositoriesSummary } from './board/format.ts';
-import { checkedGroups, groupCounts, groupFilter, groupOptions, groupRepositories, groupsSelection } from './board/groups.ts';
+import { checkedGroups, checkedRepositories, groupCounts, groupFilter, groupOptions, groupsSelection } from './board/groups.ts';
 import { boardRepos, linkSettingsQuery, missingReposMessage } from './board/link.ts';
 import { readToken, readWizardDone, storeToken, storeWizardDone } from './board/storage.ts';
 import {
@@ -83,8 +83,10 @@ export function App() {
   const groups = settings.repoGroups;
   const groupNames = useMemo(() => groupOptions(groups, repos), [groups, repos]);
   const checked = useMemo(() => checkedGroups(view.groups, groups, groupNames), [view.groups, groups, groupNames]);
-  const groupRepos = useMemo(() => groupRepositories(groups.filter((group) => checked.includes(group.name))), [groups, checked]);
+  const groupRepos = useMemo(() => (groups.length ? checkedRepositories(groups, checked, repos) : []), [groups, checked, repos]);
   const wanted = link.repos.length ? link.repos : groupRepos;
+  // Groups decide what loads, and the checked ones have nothing to load.
+  const noGroupChecked = !link.repos.length && groups.length > 0 && !groupRepos.length;
   const missing = useMemo(() => boardRepos(dataRepos, wanted).missing, [dataRepos, wanted]);
   const notLoaded = data.noSnapshot && !report;
   const headerRepos = link.repos.length ? link.repos : notLoaded ? wanted : dataRepos;
@@ -113,6 +115,10 @@ export function App() {
   const refresh = (withToken: string) => {
     // Refresh reads the repositories the address asks for, or else those of the checked groups, or else those on the
     // page; the build's list only counts before the data loads.
+    if (noGroupChecked) {
+      setRefreshError('Check a repository group in the Repositories menu first.');
+      return;
+    }
     const names = wanted.length ? wanted : report && report.repos.length ? report.repos : REPOSITORIES.map(repositoryName);
     if (!names.length) {
       setRefreshError('Choose the repositories to show in Settings first.');
@@ -132,13 +138,15 @@ export function App() {
     });
   };
 
-  // Without a snapshot the page loads live data itself, once for each set of repositories and token (DATA-23).
-  const autoLoaded = useRef('');
+  // Without a snapshot the page loads live data itself, once for each set of repositories and token (DATA-23). Fewer
+  // repositories than the data holds need no load: their rows are already there, and the next load reads only these.
+  const autoLoaded = useRef({ key: '', token: '' });
   useEffect(() => {
     const key = wanted.join(',').toLowerCase() + '|' + token;
-    if (!data.noSnapshot || !token || !wanted.length || refreshing || autoLoaded.current === key) return;
-    autoLoaded.current = key;
-    refresh(token);
+    if (!data.noSnapshot || !token || !wanted.length || refreshing || autoLoaded.current.key === key) return;
+    const covered = !!report && autoLoaded.current.token === token && !missing.length;
+    autoLoaded.current = { key, token };
+    if (!covered) refresh(token);
   });
   // Live data loads again every 5 minutes while the tab is visible (DATA-24).
   useAutoRefresh(data.source === 'live' && !!token && !refreshing, lastAttempt, AUTO_REFRESH_MS, () => refresh(token));
@@ -263,7 +271,8 @@ export function App() {
             {rows.length ? rows.map((pr) => <Row key={pullRequestKey(pr)} pr={pr} now={now} columns={columns} repos={repos} activeLabels={activeLabels} onToggleLabel={onToggleLabel} />)
               : <TableMessage colSpan={columns.length} onResetView={resetView} progress={load && !load.finished ? <LoadStatus load={load} /> : null}
                 kind={data.status === 'loading' || refreshing ? 'loading'
-                  : notLoaded ? (wanted.length ? 'not-loaded' : 'no-repos') : data.status === 'error' ? 'not-loaded' : 'no-match'} />}
+                  : notLoaded ? (wanted.length ? 'not-loaded' : noGroupChecked ? 'no-groups' : 'no-repos')
+                    : data.status === 'error' ? 'not-loaded' : 'no-match'} />}
           </tbody>
         </table>
       </div>

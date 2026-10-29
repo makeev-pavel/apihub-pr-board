@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
 
-// What the table body says when it has no rows: loading, no repositories chosen, nothing loaded yet, or no match.
+// What the table body says when it has no rows: loading, no repositories chosen, no group checked, nothing loaded
+// yet, or no match.
 
-export type TableMessageKind = 'loading' | 'no-repos' | 'not-loaded' | 'no-match';
+export type TableMessageKind = 'loading' | 'no-repos' | 'no-groups' | 'not-loaded' | 'no-match';
 
 export function TableMessage({ kind, colSpan, onResetView, progress }: {
   kind: TableMessageKind;
@@ -19,6 +20,12 @@ export function TableMessage({ kind, colSpan, onResetView, progress }: {
         <>
           <strong>Choose the repositories to show</strong>
           <span>Add them in Settings, or open a link with <code>?repos=owner/name</code>.</span>
+        </>
+      ) : null}
+      {kind === 'no-groups' ? (
+        <>
+          <strong>No repository group is checked</strong>
+          <span>Check a group in the Repositories menu to load its pull requests.</span>
         </>
       ) : null}
       {kind === 'not-loaded' ? <strong>No pull requests loaded yet</strong> : null}

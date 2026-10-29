@@ -61,7 +61,7 @@
 - **SET-19** A Repository groups section, under Repositories, defines named groups in a text field, one per line:
   `<name>: owner/name, owner/name`. A leading `*` marks a group checked by default in the Repositories menu
   (**FILTER-17**). It applies like a list (**SET-14**); a line without a name, with a comma or a semicolon in the name,
-  named Ungrouped, or with an entry that is not `owner/name`, is not applied, and the field says which line and why. Up
-  to 20 groups. The groups are kept in this browser and in the address (`repogroups`, **FILTER-14**); the board has none
-  until the viewer adds them. Enter adds a line; the field applies on blur or Ctrl+Enter. **Reset to defaults** clears
-  the groups.
+  with a name that starts with `*`, named Ungrouped, or with an entry that is not `owner/name`, is not applied, and the
+  field says which line and why. Up to 20 groups. The groups are kept in this browser and travel in the address
+  (`repogroups`, **FILTER-14**), which does not save them; the board has none until the viewer adds them. Enter adds a
+  line; the field applies on blur or Ctrl+Enter. **Reset to defaults** clears the groups.

@@ -111,6 +111,7 @@ test('SET-19: stored groups are checked; a broken group is dropped and the rest 
     { name: 'Tools', repos: ['acme/tools'], isDefault: 'yes' },
     { name: 'A, B', repos: ['acme/a'] },
     { name: 'Ungrouped', repos: ['acme/b'] },
+    { name: '*Star', repos: ['acme/c'] },
   ] });
   assert.deepEqual(marked.repoGroups, [{ name: 'Core', repos: ['acme/widgets'], isDefault: true }, { name: 'Tools', repos: ['acme/tools'] }]);
 });

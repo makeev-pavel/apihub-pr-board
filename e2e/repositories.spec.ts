@@ -224,22 +224,71 @@ test.describe('several repositories', () => {
     ]);
     await openBoard(page, { report: 'two-repos', refresh: 'ok', query: ALL });
     await page.getByRole('button', { name: 'Refresh', exact: true }).click();
-    await expect(page.getByRole('alert')).toHaveText('Refresh failed. The checked groups name 42 repositories; the board reads at most 40.'
+    // Ungrouped is checked too and adds the two repositories of the data in no group.
+    await expect(page.getByRole('alert')).toHaveText('Refresh failed. The checked groups name 44 repositories; the board reads at most 40.'
       + ' Uncheck a group in the Repositories menu.');
   });
 
-  test('FILTER-14 SET-19: a link with repository groups fills the menu, is saved, and Settings edits go into the address', async ({ page }) => {
+  test('FILTER-14 SET-19: a link with repository groups fills the menu without replacing the saved groups', async ({ page }) => {
+    const savedGroups = () => page.evaluate(() => JSON.parse(localStorage.getItem('apihub-pr-board.settings') || '{}').repoGroups);
+    await page.addInitScript(() => {
+      if (sessionStorage.getItem('seeded')) return;
+      localStorage.setItem('apihub-pr-board.settings', JSON.stringify({ repoGroups: [{ name: 'Mine', repos: ['acme/widgets'] }] }));
+      sessionStorage.setItem('seeded', '1');
+    });
     await openBoard(page, { report: 'two-repos', query: ALL + '&repogroups=Widgets:acme/widgets;*Gadgets%20%26%20Co:acme/gadgets' });
     const button = page.getByRole('button', { name: /^Repositories:/ });
     await expect(button).toHaveText(/Repositories:\s*Gadgets & Co/);
     await expect(rows(page)).toHaveCount(4);
-    const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('apihub-pr-board.settings')!).repoGroups);
-    expect(stored).toEqual([{ name: 'Widgets', repos: ['acme/widgets'] }, { name: 'Gadgets & Co', repos: ['acme/gadgets'], isDefault: true }]);
+    // Another setting changes; the saved groups stay the viewer's own.
     await page.getByRole('button', { name: /^Settings/ }).click();
-    const field = page.getByRole('dialog', { name: 'Settings' }).getByRole('textbox', { name: 'Repository groups' });
+    const settings = page.getByRole('dialog', { name: 'Settings' });
+    await settings.getByRole('checkbox', { name: 'Author' }).uncheck();
+    expect(await savedGroups()).toEqual([{ name: 'Mine', repos: ['acme/widgets'] }]);
+    // Editing the groups saves the edit and puts it in the address.
+    const field = settings.getByRole('textbox', { name: 'Repository groups' });
     await field.fill('Gadgets: acme/gadgets');
     await field.press('Control+Enter');
     await expect(page).toHaveURL(/[?&]repogroups=Gadgets:acme\/gadgets(&|$)/);
+    expect(await savedGroups()).toEqual([{ name: 'Gadgets', repos: ['acme/gadgets'] }]);
+    // Without groups in the link, the saved ones apply and go into the address.
+    await page.goto('/?' + ALL);
+    await expect(page).toHaveURL(/[?&]repogroups=Gadgets:acme\/gadgets(&|$)/);
+  });
+
+  test('DATA-18 FILTER-17: Refresh with Ungrouped checked reads the repositories in no group too', async ({ page }) => {
+    await page.addInitScript((key) => localStorage.setItem(key, 'mock-token'), TOKEN_KEY);
+    await openBoard(page, { report: 'two-repos', refresh: 'ok', query: ALL + '&repogroups=Gadgets:acme/gadgets' });
+    const button = page.getByRole('button', { name: /^Repositories:/ });
+    await expect(button).toHaveText(/Repositories:\s*All/);
+    await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+    await expect(page.locator('.source-button')).toHaveText('live, just now');
+    // The mixed board of acme/widgets, which is in no group, and the four PRs of acme/gadgets.
+    await expect(rows(page)).toHaveCount(84);
+    await button.click();
+    await expect(page.getByRole('group', { name: 'Repositories' }).getByRole('checkbox', { name: 'Ungrouped' })).toBeChecked();
+  });
+
+  test('FILTER-17 DATA-23: with no group checked nothing loads, and unchecking a group loads nothing new', async ({ page }) => {
+    await page.addInitScript((key) => localStorage.setItem(key, 'mock-token'), TOKEN_KEY);
+    const loads: string[] = [];
+    page.on('request', (request) => { if (request.url().includes('/__dev/graphql')) loads.push(request.url()); });
+    await openBoard(page, { report: 'missing', refresh: 'ok', query: ALL + '&groups=&repogroups=Widgets:acme/widgets;Gadgets:acme/gadgets' });
+    await expect(page.getByText('No repository group is checked')).toBeVisible();
+    expect(loads).toEqual([]);
+    await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+    await expect(page.getByRole('alert')).toHaveText('Refresh failed. Check a repository group in the Repositories menu first.');
+
+    const button = page.getByRole('button', { name: /^Repositories:/ });
+    await button.click();
+    const menu = page.getByRole('group', { name: 'Repositories' });
+    await menu.getByRole('button', { name: 'All' }).click();
+    await expect(page.locator('.source-button')).toHaveText('live, just now');
+    await expect(rows(page)).toHaveCount(84);
+    const afterLoad = loads.length;
+    await menu.getByRole('checkbox', { name: 'Widgets' }).uncheck();
+    await expect(rows(page)).toHaveCount(4);
+    expect(loads.length).toBe(afterLoad);
   });
 });
 

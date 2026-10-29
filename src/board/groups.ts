@@ -18,6 +18,7 @@ export const UNGROUPED = 'Ungrouped';
 // Group names go into the address in lists split by commas and semicolons, so they hold neither.
 export function groupNameError(name: string): string | null {
   if (/[,;]/.test(name)) return 'the group name "' + name + '" has a comma or a semicolon.';
+  if (name.startsWith('*')) return 'the group name "' + name + '" starts with *; one * before the name marks a default group.';
   if (name.toLowerCase() === UNGROUPED.toLowerCase()) return '"' + UNGROUPED + '" names the repositories in no group; choose another name.';
   return null;
 }
@@ -56,6 +57,14 @@ export function groupsToText(groups: RepoGroup[]): string {
 // groups when the address names no repositories (DATA-18).
 export function groupRepositories(groups: RepoGroup[]): string[] {
   return uniqueNames(groups.flatMap((group) => group.repos));
+}
+
+// The repositories the checked entries load: those of the checked groups, and for Ungrouped those of the data that
+// are in no group (DATA-18).
+export function checkedRepositories(groups: RepoGroup[], checked: string[], dataRepos: string[]): string[] {
+  const grouped = inAnyGroup(groups);
+  const ungrouped = checked.includes(UNGROUPED) ? dataRepos.filter((repo) => !grouped.has(repo.toLowerCase())) : [];
+  return uniqueNames([...groupRepositories(groups.filter((group) => checked.includes(group.name))), ...ungrouped]);
 }
 
 const inAnyGroup = (groups: RepoGroup[]) => new Set(groups.flatMap((group) => group.repos.map((repo) => repo.toLowerCase())));

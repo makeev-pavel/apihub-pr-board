@@ -571,6 +571,10 @@ menu filters the rows of the loaded data instead of filling `repos`, with Ungrou
 - [x] **G5. Groups in the address:** `repogroups` carries the groups like `hide` (FILTER-14, SET-19); a long
   repository name is cut at its start (TABLE-26); the Reviewers list puts requested changes first and approvals
   last (TABLE-30). About 1 hour.
+- [x] **G6. Review fixes:** a link shows its groups without saving them; with nothing to load Refresh and the table
+  say to check a group; unchecking loads nothing new; Ungrouped loads the repositories of the data in no group; an
+  empty `repogroups` keeps the saved groups; a group name cannot start with `*` (FILTER-14, DATA-18, DATA-23,
+  SET-19). About 1 hour.
 
 ## Backlog: your reviews
 

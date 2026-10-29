@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  applyLinkColumns, applyLinkGroups, boardRepos, cleanBots, linkSettingsQuery, MAX_BOTS, missingReposMessage, moveStoredBots, parseLinkSettings,
+  applyLinkColumns, boardRepos, cleanBots, groupsToSave, linkSettingsQuery, MAX_BOTS, missingReposMessage, linkWithGroups, moveStoredBots, parseLinkSettings,
 } from '../../src/board/link.ts';
 import { DEFAULT_SETTINGS } from '../../src/settings.ts';
 
@@ -96,16 +96,16 @@ test('FILTER-14 SET-19: repository groups travel in the address, readable, and a
   assert.deepEqual(parseLinkSettings('?' + query).groups, GROUPS);
   assert.equal(parseLinkSettings('?q=x').groups, undefined);
   assert.equal(parseLinkSettings('?repogroups=Old:gadgets').groups, undefined, 'an entry that is not owner/name');
-  assert.deepEqual(parseLinkSettings('?repogroups=').groups, []);
+  assert.equal(parseLinkSettings('?repogroups=').groups, undefined, 'an empty list keeps the saved groups');
   assert.equal(linkSettingsQuery({ repos: [], bots: [], groups: [] }), '');
 });
 
-test('SET-19: a link with groups wins and is kept; without one, the saved groups go into the address', () => {
-  const stored = { ...DEFAULT_SETTINGS, repoGroups: [GROUPS[1]] };
-  const fromLink = applyLinkGroups(stored, { repos: [], bots: [], groups: GROUPS });
-  assert.deepEqual(fromLink.settings.repoGroups, GROUPS);
-  assert.equal(fromLink.changed, true);
-  const fromStorage = applyLinkGroups(stored, { repos: [], bots: [] });
-  assert.deepEqual(fromStorage.link.groups, [GROUPS[1]]);
-  assert.equal(fromStorage.changed, false);
+test('SET-19: a link with groups shows them without saving; without one, the saved groups go into the address', () => {
+  const saved = [GROUPS[1]];
+  assert.deepEqual(linkWithGroups({ repos: [], bots: [], groups: GROUPS }, saved).groups, GROUPS);
+  assert.deepEqual(linkWithGroups({ repos: [], bots: [] }, saved).groups, saved);
+  // Another setting changes: the saved groups stay, not the link's.
+  assert.deepEqual(groupsToSave(GROUPS, GROUPS, saved), saved);
+  // The viewer edits the groups: the edit is saved.
+  assert.deepEqual(groupsToSave([GROUPS[0]], GROUPS, saved), [GROUPS[0]]);
 });

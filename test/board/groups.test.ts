@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  checkedGroups, groupCounts, groupFilter, groupOptions, groupRepositories, groupsSelection, groupsSummary, groupsToText, parseGroupLines, UNGROUPED,
+  checkedGroups, checkedRepositories, groupCounts, groupFilter, groupOptions, groupRepositories, groupsSelection, groupsSummary, groupsToText, parseGroupLines, UNGROUPED,
 } from '../../src/board/groups.ts';
 import type { RepoGroup } from '../../src/board/groups.ts';
 
@@ -35,6 +35,8 @@ test('SET-19: a leading * marks a default group; a name with a comma, a semicolo
   assert.deepEqual(parseGroupLines('Core; old: acme/widgets'), { error: 'Line 1: the group name "Core; old" has a comma or a semicolon.' });
   assert.deepEqual(parseGroupLines('ungrouped: acme/widgets'),
     { error: 'Line 1: "Ungrouped" names the repositories in no group; choose another name.' });
+  assert.deepEqual(parseGroupLines('**Core: acme/widgets'),
+    { error: 'Line 1: the group name "*Core" starts with *; one * before the name marks a default group.' });
 });
 
 const DATA = ['acme/widgets', 'acme/gadgets', 'acme/tools', 'acme/misc'];
@@ -92,4 +94,11 @@ test('DATA-18: the board loads every repository of the groups once, in the order
   assert.deepEqual(groupRepositories([...GROUPS, { name: 'More', repos: ['ACME/widgets', 'acme/misc'] }]),
     ['acme/widgets', 'acme/gadgets', 'acme/tools', 'acme/misc']);
   assert.deepEqual(groupRepositories([]), []);
+});
+
+test('DATA-18: the checked entries load their groups, and Ungrouped loads the repositories of the data in no group', () => {
+  assert.deepEqual(checkedRepositories(GROUPS, ['Tools'], DATA), ['acme/gadgets', 'acme/tools']);
+  assert.deepEqual(checkedRepositories(GROUPS, ['Core', UNGROUPED], DATA), ['acme/widgets', 'acme/gadgets', 'acme/misc']);
+  assert.deepEqual(checkedRepositories(GROUPS, [UNGROUPED], []), [], 'nothing loaded, nothing known to be ungrouped');
+  assert.deepEqual(checkedRepositories(GROUPS, [], DATA), []);
 });

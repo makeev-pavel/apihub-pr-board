@@ -78,12 +78,13 @@
 - **FILTER-14** The address also carries four settings: `repos`, the repositories to show
   (`repos=acme/widgets,acme/gadgets`), `bots`, the extra bot logins (**SET-5**), `hide`, the hidden columns
   (`hide=ci,assignee`, **SET-8**), and `repogroups`, the repository groups (**SET-19**), as
-  `repogroups=*Core:acme/widgets,acme/gadgets;Tools:acme/tools`. Groups work like `hide`: a link with them wins and is
-  saved, and without it the saved groups go into the address; a list with a wrong group is ignored. Copy link keeps
-  them, and **Reset view** leaves them alone. Without `repos` the board shows every repository of the data; without
-  `bots` there are no extra bots; without `hide` the columns saved in this browser apply, and the address then shows
-  them. A link with `hide` wins and is saved. Invalid entries are dropped: a repository must be `owner/name` (up to 40),
-  a bot a GitHub login (up to 50), and a column a known id.
+  `repogroups=*Core:acme/widgets,acme/gadgets;Tools:acme/tools`. A link with groups shows them without saving them, so
+  it never replaces the viewer's own; editing the groups in Settings saves the edit. Without groups in the link, the
+  saved ones go into the address. An empty list or a list with a wrong group is ignored. Copy link keeps them, and
+  **Reset view** leaves them alone. Without `repos` the board shows every repository of the data; without `bots` there
+  are no extra bots; without `hide` the columns saved in this browser apply, and the address then shows them. A link
+  with `hide` wins and is saved. Invalid entries are dropped: a repository must be `owner/name` (up to 40), a bot a
+  GitHub login (up to 50), and a column a known id.
 
 ## Several repositories
 

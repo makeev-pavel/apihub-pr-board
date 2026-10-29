@@ -1,9 +1,10 @@
 // Settings that travel in the page address, so a link or a bookmark carries them: the repositories to show, the extra
-// bot logins, the hidden columns, and the repository groups. They sit beside the view in the query, but Reset view leaves them alone.
+// bot logins, the hidden columns, and the repository groups. They sit beside the view in the query, but Reset view
+// leaves them alone.
 
 import { isRepositoryName, MAX_REPOSITORIES, sameName, splitList, uniqueNames } from '../repository.ts';
 import { COLUMNS } from './columns.ts';
-import { parseGroupLines } from './groups.ts';
+import { groupsToText, parseGroupLines } from './groups.ts';
 import type { RepoGroup } from './groups.ts';
 import { parseList } from '../settings.ts';
 import type { Settings } from '../settings.ts';
@@ -45,7 +46,8 @@ export function parseLinkSettings(search: string): LinkSettings {
   const hide = params.get('hide');
   const hidden = hide === null ? undefined : uniqueNames(splitList(hide).filter((id) => COLUMNS.some((column) => column.id === id)));
   const groupsValue = params.get('repogroups');
-  const groups = groupsValue === null ? undefined : parseLinkGroups(groupsValue);
+  // An empty list names no groups, so the saved ones apply, as the address then shows.
+  const groups = groupsValue ? parseLinkGroups(groupsValue) : undefined;
   return { repos, bots: cleanBots(parseList(params.get('bots') || '')), hidden, ...(groups ? { groups } : {}) };
 }
 
@@ -102,9 +104,13 @@ export function applyLinkColumns(settings: Settings, link: LinkSettings): { sett
   return { settings: { ...settings, hiddenColumns: link.hidden }, link, changed: true };
 }
 
-// Repository groups work like hidden columns: a link that names them wins and is saved; otherwise the saved ones go
-// into the address, so a copied link carries the same groups.
-export function applyLinkGroups(settings: Settings, link: LinkSettings): { settings: Settings; link: LinkSettings; changed: boolean } {
-  if (link.groups === undefined) return { settings, link: { ...link, groups: settings.repoGroups }, changed: false };
-  return { settings: { ...settings, repoGroups: link.groups }, link, changed: true };
+// Repository groups from a link show on this page without being saved, so opening a shared link never replaces the
+// viewer's own groups. Without them, the saved groups go into the address, so a copied link carries them.
+export function linkWithGroups(link: LinkSettings, saved: RepoGroup[]): LinkSettings {
+  return link.groups === undefined ? { ...link, groups: saved } : link;
+}
+
+// The groups to save when Settings changes: the ones the viewer edited, or else the saved ones, never a link's.
+export function groupsToSave(next: RepoGroup[], shown: RepoGroup[], saved: RepoGroup[]): RepoGroup[] {
+  return groupsToText(next) === groupsToText(shown) ? saved : next;
 }
