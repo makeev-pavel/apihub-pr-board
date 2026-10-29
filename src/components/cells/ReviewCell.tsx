@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { ReviewViewContext } from '../../context.ts';
+import { PrNameContext, ReviewViewContext } from '../../context.ts';
 import { displayLogin, formatAgo, plural } from '../../board/format.ts';
 import { DECISION_BY_REVIEW, REVIEW, REVIEW_SECTIONS } from '../../board/states.ts';
 import { usePopover } from '../../hooks/usePopover.ts';
@@ -21,16 +21,20 @@ export function ReviewCell({ pr, now }: { pr: DerivedPullRequest; now: number })
 
 // The Review code with its reviewers popover (TABLE-8).
 function ReviewCode({ pr, now }: { pr: DerivedPullRequest; now: number }) {
+  const prName = useContext(PrNameContext);
   const { open, position, ref, toggle } = usePopover(REVIEW_POPOVER_PX);
   const state = REVIEW[pr.review];
   const waiting = pr.requestedReviewers;
-  const approvers = pr.reviewers.filter((r) => r.state === 'APPROVED').map((r) => r.login);
+  const approvers = pr.reviewers.filter((r) => r.state === 'APPROVED').map(displayLogin);
   const decided = pr.reviewers.filter((r) => r.state === DECISION_BY_REVIEW[pr.review]).length;
   const accessibleName = state.label + (decided > 1 ? ' by ' + decided + ' reviewers' : '')
-    + (waiting.length ? ', ' + plural(waiting.length, 'pending reviewer') : '') + ' on PR #' + pr.number + '. Show reviewers';
+    + (waiting.length ? ', ' + plural(waiting.length, 'pending reviewer') : '') + ' on ' + prName + '. Show reviewers';
+  // The decision first, as TABLE-12 asks, then who approved: changes requested by one reviewer and approved by another
+  // still reads as changes requested.
   const tooltip = [
-    approvers.length ? 'Approved by ' + approvers.join(', ') : state.label,
-    waiting.length ? 'Waiting for ' + waiting.map((r) => r.login).join(', ') : '',
+    pr.review === 'approved' ? 'Approved by ' + approvers.join(', ') : state.label,
+    pr.review !== 'approved' && approvers.length ? 'Approved by ' + approvers.join(', ') : '',
+    waiting.length ? 'Waiting for ' + waiting.map((r) => (r.team ? '@' + r.login : displayLogin(r))).join(', ') : '',
   ].filter(Boolean).join('. ');
   // The index keeps keys unique for two deleted accounts (ghost) or a team and a user with the same name.
   const reviewer = (r: Reviewer | RequestedReviewer, index: number) => {
@@ -58,7 +62,7 @@ function ReviewCode({ pr, now }: { pr: DerivedPullRequest; now: number }) {
         </span>
       ) : null}
       {open ? (
-        <div className="popover review-popover" role="dialog" aria-label={'Reviewers of PR #' + pr.number} style={position}>
+        <div className="popover review-popover" role="dialog" aria-label={'Reviewers of ' + prName} style={position}>
           {REVIEW_SECTIONS.map(({ state: s, title }) => {
             const list = pr.reviewers.filter((r) => r.state === s);
             return list.length ? <section key={s}><strong className="popover-title">{title}</strong><ul className="people">{list.map(reviewer)}</ul></section> : null;

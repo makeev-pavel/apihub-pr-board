@@ -4,6 +4,7 @@ import type { Column } from '../../board/columns.ts';
 import { formatAge, formatAgo, repositoryLabel } from '../../board/format.ts';
 import { MERGE } from '../../board/states.ts';
 import type { DerivedPullRequest } from '../../types.ts';
+import { PrNameContext } from '../../context.ts';
 import { AttentionBadge } from '../cells/AttentionBadge.tsx';
 import { CiCell } from '../cells/CiCell.tsx';
 import { CommentCell } from '../cells/CommentCell.tsx';
@@ -26,13 +27,15 @@ export const Row = memo(function Row({ pr, now, columns, repos, groupColor, acti
   onToggleLabel: (name: string) => void;
 }) {
   const cls = ['ci-' + pr.ci, pr.example ? 'example' : ''].join(' ').trim();
+  const prName = 'PR ' + (repos.length > 1 ? repositoryLabel(pr.repo, repos) : '') + '#' + pr.number;
   const merge = MERGE[pr.mergeable];
   const link = (content: ReactNode) => <a href={pr.url} target="_blank" rel="noopener">{content}</a>;
   const cells: Record<string, ReactNode> = {
     repo: (
       <td key="repo" className="c-repo mono">
         {pr.repo ? <a href={'https://github.com/' + pr.repo} target="_blank" rel="noopener" title={pr.repo}
-          className={groupColor === undefined ? undefined : 'group-' + groupColor}><bdi>{repositoryLabel(pr.repo, repos)}</bdi></a>
+          className={groupColor === undefined ? undefined : 'tinted'}
+          style={groupColor === undefined ? undefined : { background: 'var(--group-' + groupColor + ')' }}><bdi>{repositoryLabel(pr.repo, repos)}</bdi></a>
           : <span className="dash">—</span>}
       </td>
     ),
@@ -48,7 +51,7 @@ export const Row = memo(function Row({ pr, now, columns, repos, groupColor, acti
             <LabelList labels={pr.labels} activeLabels={activeLabels} onToggle={onToggleLabel} />
           </div>
         ) : null}
-        {pr.note ? <div className="note">{pr.note}</div> : null}
+        {pr.exampleNote ? <div className="example-note">{pr.exampleNote}</div> : null}
       </td>
     ),
     issue: <td key="issue" className="c-issue"><IssueCell pr={pr} now={now} /></td>,
@@ -72,9 +75,9 @@ export const Row = memo(function Row({ pr, now, columns, repos, groupColor, acti
     comment: <td key="comment" className="c-comment"><CommentCell pr={pr} now={now} /></td>,
     attention: (
       <td key="attention" className="c-attn">
-        {pr.attention.length ? <AttentionBadge reasons={pr.attention} number={pr.number} /> : null}
+        {pr.attention.length ? <AttentionBadge reasons={pr.attention} /> : null}
       </td>
     ),
   };
-  return <tr className={cls}>{columns.map((col) => cells[col.id])}</tr>;
+  return <tr className={cls}><PrNameContext.Provider value={prName}>{columns.map((col) => cells[col.id])}</PrNameContext.Provider></tr>;
 });

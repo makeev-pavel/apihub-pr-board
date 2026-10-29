@@ -23,7 +23,8 @@ export function RulesButton() {
             {rules.requireIssue ? <li>The PR has no linked issue (the Development field) and is not added to a GitHub Project.</li> : null}
           </ul>
           {custom ? (
-            <p className="muted">These are your rules from Settings. The team defaults are {DEFAULT_RULES.staleDays} days, with the title and issue checks on.</p>
+            <p className="muted">These are your rules from Settings. The team defaults are {DEFAULT_RULES.staleDays} days, with the
+              title check {DEFAULT_RULES.checkTitle ? 'on' : 'off'} and the issue check {DEFAULT_RULES.requireIssue ? 'on' : 'off'}.</p>
           ) : null}
           <strong className="popover-title">How states are read</strong>
           <ul>

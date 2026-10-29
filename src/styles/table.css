@@ -25,7 +25,8 @@
 .col-resizer:hover::after, .col-resizer:focus-visible::after { background: var(--accent); }
 .board > thead > tr > th:last-child .col-resizer { right: 0; }
 .board > thead > tr > th:not(:last-child) { border-right: 1px solid var(--line); }
-.board > tbody > tr > td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; overflow: hidden; }
+/* position: relative keeps hidden screen reader text inside its cell, so it never stretches the page (TABLE-21). */
+.board > tbody > tr > td { position: relative; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; overflow: hidden; }
 /* Compact density (Settings): tighter rows and smaller avatars. */
 :root[data-density="compact"] .board > tbody > tr > td { padding-top: 4px; padding-bottom: 4px; }
 :root[data-density="compact"] .person .avatar:not(.sm) { width: 22px; height: 22px; font-size: 10px; }
@@ -45,7 +46,7 @@
 .pr-title a { color: var(--fg); }
 .pr-title a:hover { color: var(--accent); }
 .sub { display: flex; flex-wrap: wrap; gap: 4px 6px; margin-top: 4px; align-items: center; }
-.note { margin-top: 6px; font-size: 12px; color: var(--example-ink); }
+.example-note { margin-top: 6px; font-size: 12px; color: var(--example-ink); }
 .chip {
   display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; line-height: 18px; padding: 0 7px;
   border-radius: 9px; background: var(--idle-soft); color: var(--idle); white-space: nowrap; font-weight: 500;
@@ -130,13 +131,7 @@
    stays left to right inside its bdi. */
 .c-repo a { direction: rtl; text-align: left; }
 /* The name of a repository in a group sits on the group's tint (TABLE-31). */
-.c-repo a[class*="group-"] { display: inline-block; max-width: 100%; vertical-align: top; padding: 1px 6px; border-radius: 4px; color: var(--fg); }
-.c-repo a.group-0 { background: var(--group-0); }
-.c-repo a.group-1 { background: var(--group-1); }
-.c-repo a.group-2 { background: var(--group-2); }
-.c-repo a.group-3 { background: var(--group-3); }
-.c-repo a.group-4 { background: var(--group-4); }
-.c-repo a.group-5 { background: var(--group-5); }
+.c-repo a.tinted { display: inline-block; max-width: 100%; vertical-align: top; padding: 1px 6px; border-radius: 4px; color: var(--fg); }
 .c-repo a:hover { color: var(--fg); }
 .board > thead > tr > th.c-state > button, .board > thead > tr > th.c-state > span:not(.col-resizer) { justify-content: center; }
 /* QUAL-11: a code that opens a popover shows an outline and a ▾ at rest, so it reads as a button before hover. */

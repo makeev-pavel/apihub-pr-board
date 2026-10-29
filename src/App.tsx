@@ -12,7 +12,8 @@ import {
 } from './board/view.ts';
 import type { SortKey, View } from './board/view.ts';
 import { RefreshControl } from './components/header/RefreshControl.tsx';
-import { LoadAnnouncer, LoadStatus } from './components/common/LoadStatus.tsx';
+import { LoadAnnouncer } from './components/common/LoadAnnouncer.tsx';
+import { LoadStatus } from './components/common/LoadStatus.tsx';
 import { ViewerBadge } from './components/header/ViewerBadge.tsx';
 import { SetupWizard } from './components/settings/SetupWizard.tsx';
 import { TokenDialog } from './components/settings/TokenDialog.tsx';

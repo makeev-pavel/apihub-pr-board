@@ -30,12 +30,17 @@ function addDays(day: string, days: number): string {
 
 // Iteration dates have no time zone, so a sprint is current while the viewer's local day is between its start date
 // and its last day (TABLE-28).
+// The first and last day of a sprint as YYYY-MM-DD.
+export function sprintDays(sprint: Sprint): { first: string; last: string } {
+  return { first: sprint.startDate, last: addDays(sprint.startDate, sprint.duration - 1) };
+}
+
 export function isCurrentSprint(sprint: Sprint | null, now: number): boolean {
   if (!sprint) return false;
   const today = localDay(now);
-  return today >= sprint.startDate && today <= addDays(sprint.startDate, sprint.duration - 1);
+  const { first, last } = sprintDays(sprint);
+  return today >= first && today <= last;
 }
-
 
 // RULE-12: on a PR the viewer did not open, a personal review request is new, or again after an earlier review.
 export function myReview(pr: PullRequest, viewer: string): DerivedPullRequest['myReview'] {

@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react';
-import type { FormEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { isColumnShown } from '../../board/columns.ts';
 import type { Column } from '../../board/columns.ts';
 import { AREAS } from '../../model/areas.ts';
@@ -12,8 +11,7 @@ import {
 } from '../../settings.ts';
 import type { Settings } from '../../settings.ts';
 import type { AreaId } from '../../types.ts';
-import { TOKEN_HELP_URL } from './TokenDialog.tsx';
-
+import { TOKEN_HELP_URL } from '../common/ids.ts';
 
 // The repositories in the address, the ones the data has, and how to change the address.
 export interface RepositorySettings {
@@ -56,6 +54,36 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
   useEffect(() => setAreaDrafts(joinAreas(rules.areaModules)), [rules.areaModules]);
 
   const setRules = (changes: Partial<Rules>) => onChange({ ...settings, rules: { ...rules, ...changes } });
+  // The settings the list fields would give, or null while a field holds a mistake; unchanged fields keep their value.
+  const fromDrafts = (): Settings | null => {
+    const groups = parseGroupLines(groupsDraft);
+    if ('error' in groups) return null;
+    const bots = parseList(botsDraft);
+    const areas = { be: parseList(areaDrafts.be), fe: parseList(areaDrafts.fe) };
+    const same = (a: string[], b: string[]) => a.join(',') === b.join(',');
+    return {
+      ...settings,
+      rules: {
+        ...rules,
+        extraBots: same(bots, rules.extraBots) ? rules.extraBots : bots,
+        areaModules: same(areas.be, rules.areaModules.be) && same(areas.fe, rules.areaModules.fe) ? rules.areaModules : areas,
+      },
+      repoGroups: groupsToText(groups.groups) === groupsToText(settings.repoGroups) ? settings.repoGroups : groups.groups,
+    };
+  };
+  const changed = (next: Settings) => next.rules.extraBots !== rules.extraBots || next.rules.areaModules !== rules.areaModules
+    || next.repoGroups !== settings.repoGroups;
+  // Escape or a click outside closes the panel before a field loses focus, so what was typed applies on the way out.
+  const flush = useRef(() => {});
+  flush.current = () => {
+    const next = fromDrafts();
+    if (next && changed(next)) onChange(next);
+    const repos = checkRepositoryList(reposDraft);
+    if ('repos' in repos && repos.repos.join(',').toLowerCase() !== repositories.requested.join(',').toLowerCase()) {
+      repositories.onChange(repos.repos);
+    }
+  };
+  useEffect(() => () => flush.current(), []);
   const changeStale = (text: string) => {
     setStaleDraft(text);
     const days = Number(text);
@@ -87,17 +115,24 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
     onChange({ ...DEFAULT_SETTINGS });
     repositories.onChange([]);
     setReposError(null);
+    setGroupsError(null);
   };
-  const commitBots = () => setRules({ extraBots: parseList(botsDraft) });
-  const commitArea = (id: AreaId) => setRules({ areaModules: { ...rules.areaModules, [id]: parseList(areaDrafts[id]) } });
+  // Lists apply on blur or Enter, and only when they changed, so a blur alone does not rebuild the board.
+  const commitBots = () => {
+    const bots = parseList(botsDraft);
+    if (bots.join(',') !== rules.extraBots.join(',')) setRules({ extraBots: bots });
+  };
+  const commitArea = (id: AreaId) => {
+    const modules = parseList(areaDrafts[id]);
+    if (modules.join(',') !== rules.areaModules[id].join(',')) setRules({ areaModules: { ...rules.areaModules, [id]: modules } });
+  };
   const toggleColumn = (id: string) => onChange({
     ...settings,
     hiddenColumns: settings.hiddenColumns.includes(id) ? settings.hiddenColumns.filter((c) => c !== id) : settings.hiddenColumns.concat(id),
   });
-  const saveToken = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const saveToken = () => {
     const value = tokenDraft.trim();
-    if (!value) return;
+    if (!value || refreshing) return;
     setToken(value);
     setTokenDraft('');
     onRefresh(value);
@@ -147,12 +182,13 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
       </section>
       <section>
         <h2>Areas</h2>
-        <p className="hint">Label names, with or without <code>module:</code>, and title scopes such as <code>fix(ui)</code>. Tags like [BE] and [FE] and backend/ or frontend/ paths always count.</p>
+        <p className="hint">Label names, with or without <code>module:</code>, and title scopes such as <code>fix(ui)</code>. Tags like [BE] and [FE] and backend or frontend directories always count.</p>
         {AREAS.map((area) => (
           <div key={area.id} className="area-field">
             <label className="stacked-field" htmlFor={'area-' + area.id}>{area.label}</label>
             <textarea id={'area-' + area.id} className="text-field" rows={3} value={areaDrafts[area.id]}
-              onChange={(e) => setAreaDrafts({ ...areaDrafts, [area.id]: e.target.value })} onBlur={() => commitArea(area.id)} />
+              onChange={(e) => setAreaDrafts({ ...areaDrafts, [area.id]: e.target.value })} onBlur={() => commitArea(area.id)}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); commitArea(area.id); } }} />
           </div>
         ))}
       </section>
@@ -210,18 +246,20 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
             ))}
           </div>
         </div>
-        <form className="token-form" onSubmit={saveToken}>
+        {/* No <form>: browsers then offer to save the token as a password and sync it outside this browser (SEC-1). */}
+        <div className="token-form">
           <p>Refresh queries GitHub directly with your personal token. It stays in this browser and is sent only to api.github.com.</p>
           <p><a href={TOKEN_HELP_URL} target="_blank" rel="noopener">Create a fine-grained token</a> with public repository read access. No extra permissions are needed.</p>
           <label htmlFor="token-input">Token</label>
           <input id="token-input" type="password" autoComplete="off"
             placeholder={token ? 'Saved. Paste a new one to replace it' : 'github_pat_…'}
-            value={tokenDraft} onChange={(e) => setTokenDraft(e.target.value)} />
+            value={tokenDraft} onChange={(e) => setTokenDraft(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') saveToken(); }} />
           <div className="actions">
-            <button type="submit" className="btn primary" disabled={!tokenDraft.trim() || refreshing}>Save and refresh</button>
+            <button type="button" className="btn primary" disabled={!tokenDraft.trim() || refreshing} onClick={saveToken}>Save and refresh</button>
             {token ? <button type="button" className="btn" onClick={() => setToken('')}>Forget token</button> : null}
           </div>
-        </form>
+        </div>
       </section>
       <div className="settings-foot">
         <span className="muted">Saved in this browser. The page address carries the repositories, extra bots, hidden columns, and groups.</span>

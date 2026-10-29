@@ -57,7 +57,9 @@
 
 ## Status codes
 
-- **TABLE-12** Cells show short codes; the full name is in the tooltip, the accessible name, and the legend.
+- **TABLE-12** Cells show short codes; the full name is in the tooltip, the accessible name, and the legend. The Review
+  tooltip starts with the decision and then names the approvers, so changes requested stays visible when someone also
+  approved.
 
   | Column | Codes |
   | --- | --- |
@@ -107,9 +109,9 @@
   request and Last comment, or to the last column when both are hidden. Wider columns make the table scroll
   sideways.
 - **TABLE-23** Thin vertical lines separate the columns in the header and in every row.
-- **TABLE-24** A column resizes by dragging its header edge, or with the left and right arrow keys on the focused
-  edge. The handle sits on the column line and highlights on hover and focus. A double-click resets that column.
-  Widths are kept in this browser (**SET-11**). No column gets narrower than 56 px.
+- **TABLE-24** A column resizes by dragging its header edge, or with the left and right arrow keys on the focused edge.
+  The handle sits on the column line and highlights on hover and focus. A double-click resets that column, and a click
+  without a drag changes nothing. Widths are kept in this browser (**SET-11**). No column gets narrower than 56 px.
 
 ## Legend
 

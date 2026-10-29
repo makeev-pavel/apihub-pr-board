@@ -16,11 +16,11 @@ interface PreviewRow {
 // Three made-up rows that show the states the wizard is about: passing and failing checks, approved, changes
 // requested, and a review that waits for the viewer.
 const ROWS: PreviewRow[] = [
-  { ci: { code: 'P', tone: 'good' }, review: { code: '✓', tone: 'good' }, title: '78%', avatar: '#2da44e',
+  { ci: { code: 'P', tone: 'good' }, review: { code: '✓', tone: 'good' }, title: '78%', avatar: 'var(--issue-type-green)',
     reviewers: [{ icon: 'check', tone: 'good' }, { icon: 'check', tone: 'good' }] },
-  { ci: { code: 'F', tone: 'bad' }, review: { code: 'CR', tone: 'bad' }, title: '62%', avatar: '#a475f9',
+  { ci: { code: 'F', tone: 'bad' }, review: { code: 'CR', tone: 'bad' }, title: '62%', avatar: 'var(--issue-type-purple)',
     reviewers: [{ icon: 'fileDiff', tone: 'bad' }, { icon: 'dot', tone: 'warn' }] },
-  { ci: { code: 'P', tone: 'good' }, review: { code: '–', tone: 'idle' }, title: '70%', avatar: '#e16f24',
+  { ci: { code: 'P', tone: 'good' }, review: { code: '–', tone: 'idle' }, title: '70%', avatar: 'var(--issue-type-orange)',
     reviewers: [{ icon: 'dot', tone: 'warn', mine: true }, { icon: 'dot', tone: 'warn' }] },
 ];
 

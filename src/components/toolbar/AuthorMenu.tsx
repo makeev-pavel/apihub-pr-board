@@ -1,10 +1,10 @@
-import { useState } from 'react';
 import { authorsSummary, toggleAuthor } from '../../board/authors.ts';
 import type { AuthorEntry } from '../../board/authors.ts';
 import { displayLogin } from '../../board/format.ts';
 import type { AuthorsFilter } from '../../board/view.ts';
-import { useDismiss } from '../../hooks/useDismiss.ts';
+import { GHOST_LOGIN } from '../../types.ts';
 import { Avatar } from '../common/Avatar.tsx';
+import { MenuButton } from '../common/MenuButton.tsx';
 
 export function AuthorMenu({ authors, selected, mode, setAuthors }: {
   authors: AuthorEntry[];
@@ -12,9 +12,6 @@ export function AuthorMenu({ authors, selected, mode, setAuthors }: {
   mode: AuthorsFilter;
   setAuthors: (value: AuthorsFilter) => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const ref = useDismiss(open, setOpen);
-
   const summary = authorsSummary(mode, selected);
   const toggle = (login: string) => setAuthors(toggleAuthor(login, selected, authors, mode));
   const group = (title: string, list: AuthorEntry[]) => list.length ? (
@@ -22,9 +19,9 @@ export function AuthorMenu({ authors, selected, mode, setAuthors }: {
       <div className="group">{title}</div>
       {list.map((a) => (
         <label key={a.login}>
-          <input type="checkbox" id={'author-' + a.login} checked={selected.has(a.login)} onChange={() => toggle(a.login)} />
+          <input type="checkbox" checked={selected.has(a.login)} onChange={() => toggle(a.login)} />
           <Avatar actor={a.actor} small />
-          <span>{a.actor ? displayLogin(a.actor) : 'ghost'}</span>
+          <span>{a.actor ? displayLogin(a.actor) : GHOST_LOGIN}</span>
           <span className="n">{a.count}</span>
         </label>
       ))}
@@ -32,12 +29,9 @@ export function AuthorMenu({ authors, selected, mode, setAuthors }: {
   ) : null;
 
   return (
-    <div className="menu-wrap" ref={ref}>
-      <button type="button" className="btn" aria-haspopup="true" aria-expanded={open} onClick={() => setOpen(!open)}>
-        Authors: <strong>{summary}</strong> <span className="arrow" aria-hidden="true">{open ? '▲' : '▼'}</span>
-      </button>
-      {open ? (
-        <div className="menu" role="group" aria-label="Authors">
+    <MenuButton label="Authors" summary={summary}>
+      {() => (
+        <>
           <div className="actions">
             <button type="button" className="btn" onClick={() => setAuthors(null)}>People</button>
             <button type="button" className="btn" onClick={() => setAuthors('bots')}>Bots</button>
@@ -46,8 +40,8 @@ export function AuthorMenu({ authors, selected, mode, setAuthors }: {
           </div>
           {group('People', authors.filter((a) => !a.bot))}
           {group('Bots', authors.filter((a) => a.bot))}
-        </div>
-      ) : null}
-    </div>
+        </>
+      )}
+    </MenuButton>
   );
 }

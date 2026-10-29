@@ -29,7 +29,7 @@ test.describe('table', () => {
     const row = await onlyCase(page, 'experimental GraphQL schema diff');
     await expect(row.locator('.chip.draft')).toHaveText('Draft');
     await expect(row.locator('.chip.example')).toHaveText('example');
-    await expect(row.locator('.note')).toContainText('Every problem at once');
+    await expect(row.locator('.example-note')).toContainText('Every problem at once');
     const branch = await onlyCase(page, 'retry discovery when the API server is throttling');
     await expect(branch.locator('.chip.branch')).toHaveText('→ develop');
   });

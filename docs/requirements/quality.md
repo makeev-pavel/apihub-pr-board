@@ -2,13 +2,14 @@
 
 ## Accessibility
 
-- **QUAL-1** Every button that shows only an icon or a code has an accessible name that says what it does and, for
-  states, what the state is ("Failing", "Changes requested by 2 reviewers, 1 pending reviewer on PR #12").
+- **QUAL-1** Every button that shows only an icon or a code, and every code that opens nothing, has an accessible name
+  that says what it does and, for states, what the state is ("Failing", "Changes requested by 2 reviewers, 1 pending
+  reviewer on PR #12").
 - **QUAL-2** Buttons that open a popover or menu report whether it is open. Sortable headers report the sort order.
   Toggle buttons (tiles, segmented controls, label chips) report whether they are pressed.
 - **QUAL-3** Everything works from the keyboard: popovers close on Escape, which closes only the innermost open layer,
-  such as a menu before the panel around it, column edges take focus and resize with the arrow keys, and focus is always
-  visible.
+  such as a menu before the panel around it, and focus returns to the button that opened it; column edges take focus and
+  resize with the arrow keys, and focus is always visible.
 - **QUAL-11** Codes that open a popover look clickable before the pointer reaches them: the CI and Review codes that are
   buttons have a thin outline and a small ▾, and the attention icon a thin ring. Codes that open nothing, such as P or
   OK, stay flat. Hovering a clickable code strengthens its outline, and the pointer becomes a hand.

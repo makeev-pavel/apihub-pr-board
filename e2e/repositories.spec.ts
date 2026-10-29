@@ -17,7 +17,8 @@ test.describe('several repositories', () => {
     await openBoard(page, { report: 'two-repos', query: ALL + '&q=' + encodeURIComponent('repo:gadgets "version on connect"') });
     await expect(rows(page)).toHaveCount(1);
     await rows(page).first().locator('.comment-preview').click();
-    const panel = page.getByRole('dialog', { name: 'Comments on PR #101' });
+    // With two repositories, the PR is named with its repository (DATA-20).
+    const panel = page.getByRole('dialog', { name: 'Comments on PR gadgets#101' });
     await expect(panel.locator('article')).toHaveCount(1);
     await expect(panel.locator('article')).toContainText('Tested on the gadget bench');
     expect(requests).toContain('/__dev/rest/repos/acme/gadgets/issues/101/comments');
@@ -279,13 +280,13 @@ test.describe('several repositories', () => {
     const names = page.locator('td.c-repo a');
     const tinted = names.filter({ hasText: 'gadgets' });
     await expect(tinted).toHaveCount(4);
-    for (const name of await tinted.all()) await expect(name).toHaveClass(/\bgroup-0\b/);
-    await expect(names.filter({ hasText: 'widgets' }).first()).not.toHaveClass(/\bgroup-/);
-    await expect(rows(page).first()).not.toHaveClass(/\bgroup-/);
+    for (const name of await tinted.all()) await expect(name).toHaveAttribute('style', /var\(--group-0\)/);
+    await expect(names.filter({ hasText: 'widgets' }).first()).not.toHaveAttribute('style', /--group-/);
+    await expect(rows(page).first()).not.toHaveAttribute('style', /--group-/);
     await page.getByRole('button', { name: /^Repositories:/ }).click();
     const menu = page.getByRole('group', { name: 'Repositories' });
-    await expect(menu.locator('label').filter({ hasText: 'Gadgets' })).toHaveClass(/\bgroup-0\b/);
-    await expect(menu.locator('label').filter({ hasText: 'Ungrouped' })).not.toHaveClass(/\bgroup-/);
+    await expect(menu.locator('label').filter({ hasText: 'Gadgets' })).toHaveAttribute('style', /var\(--group-0\)/);
+    await expect(menu.locator('label').filter({ hasText: 'Ungrouped' })).not.toHaveAttribute('style', /--group-/);
   });
 
   test('DATA-18 FILTER-17: Refresh with Ungrouped checked reads the repositories in no group too', async ({ page }) => {

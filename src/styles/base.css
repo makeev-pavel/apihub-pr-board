@@ -20,7 +20,7 @@ html, body { height: 100%; }
 #app { height: 100%; display: flex; flex-direction: column; gap: 14px; }
 #app > * { flex: none; }
 
-.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 /* On small screens a one-screen layout leaves no room for rows; let the page scroll instead. */
 @media (max-width: 700px), (max-height: 520px) {

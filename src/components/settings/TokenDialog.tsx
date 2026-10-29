@@ -1,18 +1,17 @@
 import { useState } from 'react';
 import { useModal } from '../../hooks/useModal.ts';
-import { SETTINGS_BUTTON_ID } from '../header/RefreshControl.tsx';
-
-export const TOKEN_HELP_URL = 'https://github.com/settings/personal-access-tokens/new';
+import { SETTINGS_BUTTON_ID, TOKEN_HELP_URL } from '../common/ids.ts';
 
 // Explains how to create a token and takes it (SET-18). There is no <form>, so browsers do not offer to save the token
-// as a password and sync it outside this browser.
+// as a password and sync it outside this browser. A click outside does not close it, as with the setup wizard: a stray
+// click would count as Not now and keep it from opening again until a reload.
 export function TokenDialog({ onSave, onClose }: { onSave: (token: string) => void; onClose: () => void }) {
   const [draft, setDraft] = useState('');
   const { ref, onKeyDown } = useModal(onClose, SETTINGS_BUTTON_ID);
   const save = () => { if (draft.trim()) onSave(draft.trim()); };
 
   return (
-    <div className="dialog-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <div className="dialog-backdrop">
       <div className="token-dialog" role="dialog" aria-modal="true" aria-labelledby="token-dialog-title" ref={ref} onKeyDown={onKeyDown}>
         <h2 id="token-dialog-title">Add a GitHub token</h2>
         <p>The board reads pull requests from GitHub with your own token. It stays in this browser and is sent only to

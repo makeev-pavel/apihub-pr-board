@@ -5,9 +5,7 @@ import { rulesAreDefault } from '../../settings.ts';
 import type { Settings } from '../../settings.ts';
 import { SettingsPanel } from '../settings/SettingsPanel.tsx';
 import type { RepositorySettings } from '../settings/SettingsPanel.tsx';
-
-// The gear button, where focus returns when a dialog opened from the panel closes.
-export const SETTINGS_BUTTON_ID = 'settings-button';
+import { SETTINGS_BUTTON_ID } from '../common/ids.ts';
 
 export function RefreshControl({ token, setToken, refreshing, onRefresh, onAskToken, settings, onSettingsChange, columns, repositories, canResetWidths, onResetWidths, onOpenWizard }: {
   token: string;

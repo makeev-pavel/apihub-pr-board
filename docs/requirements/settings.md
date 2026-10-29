@@ -28,8 +28,9 @@
   address. It keeps the token, the column widths, and the notes.
 - **SET-13** **Refresh** without a token opens the token dialog (**SET-18**). Opening the settings panel from the
   gear does not jump to the token.
-- **SET-14** A number field keeps the last valid value: an invalid entry does not apply and is replaced when the
-  field loses focus. Lists apply when their field loses focus or on Enter.
+- **SET-14** A number field keeps the last valid value: an invalid entry does not apply and is replaced when the field
+  loses focus. Lists apply when their field loses focus, on Enter, and when the panel closes, by Escape or a click
+  outside, before the field loses focus; a list that did not change applies nothing.
 - **SET-15** Compact density makes rows tighter and avatars smaller. Theme Light or Dark overrides the system
   setting; System follows it.
 - **SET-20** A Review column setting shows reviews as the Review code (**TABLE-12**, **TABLE-13**), the default, or as a
@@ -59,10 +60,10 @@
   a new fine-grained token and short steps (any name and expiry; Repository access: Public repositories, read only; no
   extra permissions; copy the `github_pat_…` value). It has a token field with **Save and load** and **Not now**. Saving
   stores the token (**SET-9**) and loads the data. The dialog opens by itself on a page without a snapshot whose link
-  names repositories (**DATA-23**), and from **Refresh** without a token. After **Not now**, or after **Forget token**,
-  it does not open by itself again until the page reloads; the banner's **Add token** button opens it. Focus starts in
-  the token field, stays in the dialog, and returns to what opened it when it closes, or to the Settings button when
-  that is gone. A dialog that opens right after another one closes keeps the focus.
+  names repositories (**DATA-23**), and from **Refresh** without a token. A click outside does not close it. After **Not
+  now**, or after **Forget token**, it does not open by itself again until the page reloads; the banner's **Add token**
+  button opens it. Focus starts in the token field, stays in the dialog, and returns to what opened it when it closes,
+  or to the Settings button when that is gone. A dialog that opens right after another one closes keeps the focus.
 - **SET-19** A Repository groups section, under Repositories, defines named groups in a text field, one per line:
   `<name>: owner/name, owner/name`. A leading `*` marks a group checked by default in the Repositories menu
   (**FILTER-17**). It applies like a list (**SET-14**); a line without a name, with a comma, a semicolon, or a colon in

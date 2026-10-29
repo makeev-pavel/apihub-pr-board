@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useModal } from '../../hooks/useModal.ts';
 import type { Settings } from '../../settings.ts';
-import { SETTINGS_BUTTON_ID } from '../header/RefreshControl.tsx';
+import { SETTINGS_BUTTON_ID } from '../common/ids.ts';
 import { ReviewCellPreview, ViewPreview } from './ViewPreview.tsx';
 
 interface Choice {

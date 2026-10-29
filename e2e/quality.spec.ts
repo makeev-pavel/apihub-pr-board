@@ -44,6 +44,20 @@ test.describe('quality', () => {
     await expect(page.getByRole('dialog', { name: 'Board rules' })).toHaveCount(0);
   });
 
+  test('QUAL-1 QUAL-3: codes that open nothing carry their full name, and focus returns to the button of a menu closed with Escape', async ({ page }) => {
+    await openBoard(page, { report: 'corner', query: ALL + '&q=' + encodeURIComponent('WIP export') });
+    const row = rows(page).first();
+    await expect(row.getByRole('img', { name: 'No conflicts' })).toBeVisible();
+    // Focus inside the Authors menu goes back to its button when Escape closes it.
+    const authors = page.getByRole('button', { name: /^Authors:/ });
+    await authors.click();
+    const menu = page.getByRole('group', { name: 'Authors' });
+    await menu.getByRole('checkbox').first().focus();
+    await page.keyboard.press('Escape');
+    await expect(menu).toHaveCount(0);
+    await expect(authors).toBeFocused();
+  });
+
   test('QUAL-5: running checks pulse, and stop when the system asks for reduced motion', async ({ page }) => {
     await openBoard(page, { report: 'typical', query: ALL });
     const running = page.locator('.board .pill.running').first();

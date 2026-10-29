@@ -69,6 +69,20 @@ test.describe('settings', () => {
     await expect(rows(page).first().locator('.chip.bot')).toBeVisible();
   });
 
+  test('SET-14: what is typed in a list field applies when the panel closes with Escape before the field loses focus', async ({ page }) => {
+    await openBoard(page, { report: 'typical', query: ALL });
+    const panel = await openSettings(page);
+    await panel.locator('#extra-bots').fill('acme-release-bot');
+    await panel.getByRole('textbox', { name: 'Repositories' }).fill('acme/widgets');
+    await page.keyboard.press('Escape');
+    await expect(panel).toHaveCount(0);
+    await expect(page).toHaveURL(/[?&]bots=acme-release-bot(&|$)/);
+    await expect(page).toHaveURL(/[?&]repos=acme\/widgets(&|$)/);
+    // No form: browsers do not offer to save the token as a password (SEC-1).
+    await openSettings(page);
+    await expect(page.locator('.settings-panel form')).toHaveCount(0);
+  });
+
   test('SET-6 RULE-11: adding a scope to an area moves its PRs there', async ({ page }) => {
     await openBoard(page, { report: 'typical', query: ALL + '&area=other' });
     const other = await rows(page).locator('td.c-num').count();

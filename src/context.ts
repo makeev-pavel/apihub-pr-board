@@ -7,6 +7,10 @@ import type { Rules } from './model/rules.ts';
 // The viewer's attention rules, for components deep in the table.
 export const RulesContext = createContext<Rules>(DEFAULT_RULES);
 
+// How a row's controls name its PR to screen readers: "PR #12", or "PR gadgets#12" when the board shows several
+// repositories, since a PR is identified by repository and number (DATA-20).
+export const PrNameContext = createContext('PR');
+
 // Where the comments panel loads the full list, and the viewer's token if there is one.
 interface Api {
   token: string;

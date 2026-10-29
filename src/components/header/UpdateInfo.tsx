@@ -10,7 +10,7 @@ export function UpdateInfo({ report, live, now, refreshMinutes }: { report: Repo
   const summary = (live ? 'Live data' : 'Snapshot') + ', ' + formatAgo(report.generatedAt, now);
   return (
     <div className="update-info" ref={ref}>
-      <button type="button" className={'btn ghost source-button' + (live ? ' live' : '')} aria-label={summary}
+      <button type="button" className={'btn ghost source-button' + (live ? ' live' : '')}
         title={summary} aria-expanded={open} onClick={toggle}>
         <span className="source-dot" aria-hidden="true"></span>
         <span className="source-age">{live ? 'live, ' : 'updated '}{formatAgo(report.generatedAt, now)}</span>

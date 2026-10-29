@@ -77,12 +77,13 @@ test.describe('popovers', () => {
     for (const [title, text] of [
       ['handle empty namespace list', 'Check details were not collected for this PR.'],
       ['split the e2e matrix by module', 'no failed check is among the first 100 checks read.'],
-      ['split the e2e matrix by module', 'Only the first 100 of 140 checks were read; others may have failed too.'],
     ]) {
       const row = await onlyCase(page, title);
       await row.locator('.ci-wrap > button').click();
       await expect(page.getByRole('dialog', { name: /on PR/ })).toContainText(text);
     }
+    // That note already says only the first 100 were read, so the one for a partly read list does not repeat it.
+    await expect(page.getByRole('dialog', { name: /on PR/ })).not.toContainText('Only the first 100');
   });
 
   test('PANEL-6 TABLE-13: review shows approvers, pending reviewers, and the counts on the code', async ({ page }) => {

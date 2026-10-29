@@ -110,7 +110,8 @@ export interface PullRequest {
   comments: Comment[];
   // Set only on dev corner cases.
   example?: boolean;
-  note?: string;
+  // What the corner case shows, under the title (TABLE-6).
+  exampleNote?: string;
 }
 
 export interface Report {

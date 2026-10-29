@@ -157,7 +157,9 @@ test.describe('reviewers list', () => {
     // Ten lines: the first three show, the rest wait behind a button.
     await expect(list.getByRole('listitem')).toHaveCount(3);
     await expect(list.getByRole('listitem').filter({ hasText: 'farah-ui' }).getByRole('img', { name: 'awaiting review' })).toBeVisible();
-    await expect(row.getByRole('button', { name: 'Show all 10 reviewers of PR #9408' })).toHaveText('+7 more');
+    // The name starts with the visible text and says what it opens.
+    const more = row.getByRole('button', { name: /^\+7 more\W+all 10 reviewers of PR #9408$/ });
+    await expect(more).toBeVisible();
     await expect(row.locator('.reviewer.due')).toHaveCount(0);
 
     await page.getByRole('button', { name: 'Refresh', exact: true }).click();
@@ -168,7 +170,7 @@ test.describe('reviewers list', () => {
     await expect(mine).toHaveClass(/\bdue\b/);
     await expect(mine).toHaveText('boris-k (you)');
     await expect(mine.getByRole('img', { name: 'awaiting review' })).toBeVisible();
-    await row.getByRole('button', { name: 'Show all 10 reviewers of PR #9408' }).click();
+    await more.click();
     const all = page.getByRole('dialog', { name: 'All reviewers of PR #9408' });
     await expect(all.getByRole('listitem')).toHaveCount(10);
     for (const [who, state] of [['dara-ops', 'requested changes'], ['chen-li', 'approved'], ['gleb-be', 'review dismissed'], ['@widgets-backend', 'awaiting review']]) {

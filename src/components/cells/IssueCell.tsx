@@ -1,5 +1,5 @@
 import { labelTextColor } from '../../board/format.ts';
-import { isCurrentSprint } from '../../model/derive.ts';
+import { isCurrentSprint, sprintDays } from '../../model/derive.ts';
 import type { Issue, PullRequest, Sprint } from '../../types.ts';
 
 const VISIBLE_ISSUE_LABELS = 3;
@@ -13,9 +13,9 @@ export function IssueCell({ pr, now }: { pr: PullRequest; now: number }) {
 }
 
 function sprintDates(sprint: Sprint): string {
-  const start = Date.parse(sprint.startDate + 'T00:00:00Z');
-  const day = (time: number) => new Date(time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
-  return day(start) + ' – ' + day(start + (sprint.duration - 1) * 24 * 60 * 60 * 1000);
+  const { first, last } = sprintDays(sprint);
+  const day = (date: string) => new Date(date + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+  return day(first) + ' – ' + day(last);
 }
 
 // Priority, Estimate, and Sprint from GitHub Projects (TABLE-28); a field that is not set does not show.

@@ -20,14 +20,8 @@
 .menu .group { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); padding: 6px 6px 2px; }
 .menu label { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 4px; cursor: pointer; }
 .menu label:hover { background: var(--surface-2); }
-/* A repository group in the Repositories menu takes the tint its rows show (TABLE-31). */
-.menu label.group-0 { background: var(--group-0); }
-.menu label.group-1 { background: var(--group-1); }
-.menu label.group-2 { background: var(--group-2); }
-.menu label.group-3 { background: var(--group-3); }
-.menu label.group-4 { background: var(--group-4); }
-.menu label.group-5 { background: var(--group-5); }
-.menu label[class*="group-"] + label { margin-top: 2px; }
+/* A repository group in the Repositories menu has its tint inline, as var(--group-N) (TABLE-31). */
+.menu label.tinted + label { margin-top: 2px; }
 .menu label .n { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; font-size: 12px; }
 .menu .actions { display: flex; gap: 4px; border-bottom: 1px solid var(--line); padding-bottom: 6px; margin-bottom: 2px; flex-wrap: wrap; }
 .menu .actions button { font-size: 12px; padding: 3px 8px; }

@@ -32,7 +32,8 @@ src/            the page: App.tsx and main.tsx, settings.ts, markdown.ts, reposi
 src/model/      rules without UI: attention, bots, areas, search, derived fields, prs.json shape
 src/hooks/      popovers and dialogs, loading prs.json, the live load and auto refresh, all comments of a PR,
                 column widths, settings, and notes
-src/components/ React components, one per file: common/, cells/, header/, toolbar/, table/, legend/, settings/
+src/components/ React components, one exported component per file: common/, cells/, header/, toolbar/, table/,
+                legend/, settings/; common/ids.ts holds values several components share
 src/styles/     tokens.css (colors and fonts for both themes) and one stylesheet per area of the page
 src/board/      board logic without React: states, columns, the view and the address, rows, authors, repository
                 groups, the Reviewers list, notes, the load status in words, formatting, storage

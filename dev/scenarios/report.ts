@@ -25,7 +25,7 @@ function report(entries: FixtureEntry[], { now, warnings = [], projectsAvailable
 }): Report {
   const normalize = (repo: string) => ({ node, note }: FixtureEntry) => {
     const pr = normalizePullRequest(node, { repo, projectsAvailable });
-    return note ? { ...pr, example: true, note } : pr;
+    return note ? { ...pr, example: true, exampleNote: note } : pr;
   };
   return {
     repos: gadgets ? [DEV_REPOSITORY, GADGETS_REPOSITORY] : [DEV_REPOSITORY],

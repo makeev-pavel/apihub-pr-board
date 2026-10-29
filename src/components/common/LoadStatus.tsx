@@ -1,18 +1,23 @@
 import { useEffect, useState } from 'react';
+import { MINUTE_MS } from '../../board/format.ts';
 import { describeFinished, describeProgress, formatElapsed } from '../../board/progress.ts';
 import type { LoadState } from '../../board/progress.ts';
 
-const TICK_MS = 100;
+// The clock shows tenths of a second for the first minute and whole seconds after it, so it ticks only as often as it
+// changes.
+const TENTHS_TICK_MS = 100;
+const SECONDS_TICK_MS = 1000;
 
 // The spinner, what the load is doing, and a running clock. It sits in the empty table, or in a corner over a table
 // that already has rows, so they stay where they are. Screen readers hear it from LoadAnnouncer, which stays mounted.
 export function LoadStatus({ load, floating = false }: { load: LoadState; floating?: boolean }) {
   const [now, setNow] = useState(() => Date.now());
+  const pastMinute = now - load.startedAt >= MINUTE_MS;
   useEffect(() => {
     if (load.finished) return undefined;
-    const timer = window.setInterval(() => setNow(Date.now()), TICK_MS);
+    const timer = window.setInterval(() => setNow(Date.now()), pastMinute ? SECONDS_TICK_MS : TENTHS_TICK_MS);
     return () => window.clearInterval(timer);
-  }, [load.finished]);
+  }, [load.finished, pastMinute]);
   const cls = 'load-status' + (floating ? ' floating' : '') + (load.finished ? ' finished' : '');
   if (load.finished) {
     const { prs, repos, at } = load.finished;
@@ -37,13 +42,4 @@ export function LoadStatus({ load, floating = false }: { load: LoadState; floati
       </div>
     </div>
   );
-}
-
-// One live region for the whole page, mounted before any load, so a screen reader hears when a load starts and how it
-// ended. The page-by-page steps stay off it: they change too often to be read out.
-export function LoadAnnouncer({ load }: { load: LoadState | null }) {
-  const text = !load ? '' : load.finished
-    ? describeFinished(load.finished.prs, load.finished.repos) + ' in ' + formatElapsed(load.finished.at - load.startedAt)
-    : 'Loading pull requests from GitHub';
-  return <div className="sr-only" role="status">{text}</div>;
 }

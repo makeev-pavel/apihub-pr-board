@@ -35,8 +35,9 @@
   (`groups=Backend,Ungrouped`; an empty `groups=` checks none); names match without regard to case, unknown ones are
   dropped, and a link that names only unknown groups gets the default. The button reads All, None, up to two names, or
   "N selected".
-- **FILTER-7** **Reset view** shows when the view differs from the default and restores it. **Copy link to this
-  view** copies the page address, says "Link copied", and asks to copy the address bar when the clipboard is blocked.
+- **FILTER-7** **Reset view** shows when the view differs from the default and restores it. **Copy link to this view**
+  copies the page address, says "Link copied", and asks to copy the address bar when the clipboard is blocked; a screen
+  reader hears the outcome, and the button goes back to its label after a moment.
 
 ## Search
 

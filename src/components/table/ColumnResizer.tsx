@@ -14,11 +14,12 @@ export function ColumnResizer({ col, width, onResize, onCommit, onReset }: { col
       latest = Math.max(MIN_COLUMN_PX, Math.round(width + e.clientX - startX));
       onResize(col.id, latest);
     };
+    // A click without a drag saves nothing, so the fitted widths stay fitted.
     const up = () => {
       handle.removeEventListener('pointermove', move);
       handle.removeEventListener('pointerup', up);
       handle.removeEventListener('pointercancel', up);
-      onCommit(col.id, latest);
+      if (latest !== width) onCommit(col.id, latest);
     };
     handle.addEventListener('pointermove', move);
     handle.addEventListener('pointerup', up);
@@ -33,8 +34,7 @@ export function ColumnResizer({ col, width, onResize, onCommit, onReset }: { col
   return (
     <span className="col-resizer" role="separator" aria-orientation="vertical" tabIndex={0}
       aria-label={'Resize the ' + col.label + ' column'} aria-valuenow={width} aria-valuemin={MIN_COLUMN_PX}
-      title="Drag to resize. Double-click to reset."
-      onPointerDown={onPointerDown} onKeyDown={onKeyDown} onClick={(e) => e.stopPropagation()}
-      onDoubleClick={() => onReset(col.id)}></span>
+      aria-valuetext={width + ' pixels'} title="Drag to resize. Double-click to reset."
+      onPointerDown={onPointerDown} onKeyDown={onKeyDown} onDoubleClick={() => onReset(col.id)}></span>
   );
 }

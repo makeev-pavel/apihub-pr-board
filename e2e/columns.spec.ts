@@ -89,6 +89,14 @@ test.describe('columns', () => {
     expect(table).toBe(available);
   });
 
+  test('TABLE-24: a click on a column edge without a drag saves no width', async ({ page }) => {
+    await openBoard(page, { report: 'typical', query: ALL });
+    await dragEdge(page, 'Author', 0);
+    expect(await page.evaluate((key) => localStorage.getItem(key), WIDTHS_KEY)).toBeNull();
+    const panel = await openSettings(page);
+    await expect(panel.getByRole('button', { name: 'Reset column widths' })).toBeDisabled();
+  });
+
   test('SET-8: Reset column widths in Settings restores every column', async ({ page }) => {
     await openBoard(page, { report: 'typical', query: ALL });
     const panel = await openSettings(page);

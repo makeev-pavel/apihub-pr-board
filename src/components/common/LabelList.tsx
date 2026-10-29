@@ -20,11 +20,13 @@ export function LabelList({ labels, activeLabels, onToggle }: { labels: Label[];
   return (
     <>
       {shown.map((l) => <LabelChip key={l.name} label={l} active={activeLabels.has(l.name.toLowerCase())} onToggle={onToggle} />)}
-      {hidden > 0 ? (
-        <button type="button" className="label-more" title={labels.slice(VISIBLE_LABELS).map((l) => l.name).join(', ')}
-          onClick={() => setExpanded(true)}>+{hidden}</button>
+      {labels.length > VISIBLE_LABELS ? (
+        <button type="button" className="label-more" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}
+          title={expanded ? undefined : labels.slice(VISIBLE_LABELS).map((l) => l.name).join(', ')}>
+          {expanded ? 'less' : '+' + hidden}
+          <span className="sr-only">{expanded ? ' labels' : ' more ' + (hidden === 1 ? 'label' : 'labels')}</span>
+        </button>
       ) : null}
-      {expanded && labels.length > VISIBLE_LABELS ? <button type="button" className="label-more" onClick={() => setExpanded(false)}>less</button> : null}
     </>
   );
 }

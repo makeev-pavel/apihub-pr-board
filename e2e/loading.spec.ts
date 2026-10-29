@@ -20,7 +20,7 @@ test.describe('loading prs.json', () => {
   test('DATA-9: the corner cases render, one row each', async ({ page }) => {
     await openBoard(page, { report: 'corner', query: ALL });
     await expect(page.locator('.board > tbody > tr')).toHaveCount(44);
-    await expect(page.locator('.board .note').first()).toBeVisible();
+    await expect(page.locator('.board .example-note').first()).toBeVisible();
   });
 
   test('QUAL-8: 300 PRs render', async ({ page }) => {
@@ -261,7 +261,7 @@ test.describe('loading prs.json', () => {
     const inTable = page.locator('.board .load-status');
     await expect(inTable.locator('.spinner')).toBeVisible();
     // A screen reader hears that the load started, not each step.
-    await expect(page.getByRole('status')).toHaveText('Loading pull requests from GitHub');
+    await expect(page.locator('.load-announcer')).toHaveText('Loading pull requests from GitHub');
     await expect(inTable.locator('.load-headline')).toHaveText(/^Reading repositories: \d of 2 done, \d+ pull requests so far$/);
     await expect(inTable.locator('.load-lines li').first()).toHaveText(/^acme\/(widgets|gadgets): (starting|\d+ of \d+ pull requests)$/);
     await page.clock.setFixedTime(Date.parse(MOCK_NOW) + 2500);
@@ -269,7 +269,7 @@ test.describe('loading prs.json', () => {
     // Then a summary in the corner over the rows, gone after a few seconds.
     const summary = page.locator('.load-status.floating.finished');
     await expect(summary).toHaveText(/^✓Loaded 84 pull requests from 2 repositories\s*in 2\.5 s$/, { timeout: 10_000 });
-    await expect(page.getByRole('status')).toHaveText('Loaded 84 pull requests from 2 repositories in 2.5 s');
+    await expect(page.locator('.load-announcer')).toHaveText('Loaded 84 pull requests from 2 repositories in 2.5 s');
     await expect(rows(page)).toHaveCount(84);
     await expect(summary).toHaveCount(0, { timeout: 8000 });
   });
