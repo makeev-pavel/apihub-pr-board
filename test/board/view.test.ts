@@ -86,3 +86,16 @@ test('TABLE-26: the Repository column sorts A to Z first, with ties by PR number
   assert.deepEqual(keys(visibleRows(prs, { quick: [], sort: 'repo', dir: 'desc' })), ['acme/widgets#7', 'acme/widgets#5', 'acme/Gadgets#9', 'acme/gadgets#2']);
   assert.equal(parseView('?sort=repo&dir=asc').sort, 'repo');
 });
+
+test('FILTER-14: the address carries the link settings after the view', () => {
+  const calls: string[] = [];
+  Object.assign(globalThis, {
+    window: { location: { search: '', pathname: '/board/' } },
+    history: { replaceState: (_state: unknown, _title: string, url: string) => { calls.push(url); } },
+  });
+  writeView(DEFAULT_VIEW, 'repos=acme/widgets');
+  writeView({ ...DEFAULT_VIEW, q: 'fix' }, 'repos=acme/widgets');
+  assert.deepEqual(calls, ['/board/?repos=acme/widgets', '/board/?q=fix&repos=acme/widgets']);
+  delete (globalThis as { window?: unknown }).window;
+  delete (globalThis as { history?: unknown }).history;
+});

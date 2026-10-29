@@ -34,21 +34,43 @@ export function parseRepository(value: string | undefined): Repository {
   return { owner: match[1], name: match[2] };
 }
 
-// A list separated by commas or spaces; a repeat counts once, whatever its case.
-export function parseRepositories(value: string | undefined): Repository[] {
-  const entries = (value || '').split(/[\s,]+/).filter(Boolean);
-  if (!entries.length) return [parseRepository('')];
+// The entries of a list separated by commas, spaces, or new lines.
+export function splitList(text: string): string[] {
+  return text.split(/[\s,]+/).filter(Boolean);
+}
+
+// Keeps the first of names that differ only in case, as GitHub treats them as one repository.
+export function uniqueNames(names: string[]): string[] {
   const seen = new Set<string>();
-  const repositories = entries.map(parseRepository).filter((repository) => {
-    const key = repositoryName(repository).toLowerCase();
+  return names.filter((name) => {
+    const key = name.toLowerCase();
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
+}
+
+export function parseRepositories(value: string | undefined): Repository[] {
+  const entries = splitList(value || '');
+  if (!entries.length) return [parseRepository('')];
+  entries.forEach(parseRepository);
+  const repositories = uniqueNames(entries).map(parseRepository);
   if (repositories.length > MAX_REPOSITORIES) {
     throw new Error(REPO_VARIABLE + ' lists ' + repositories.length + ' repositories; the board reads at most ' + MAX_REPOSITORIES + '.');
   }
   return repositories;
+}
+
+// The Repositories field in Settings: the list, or what is wrong with it. An empty list is valid.
+export function checkRepositoryList(text: string): { repos: string[] } | { error: string } {
+  const entries = splitList(text);
+  const invalid = entries.find((entry) => !isRepositoryName(entry));
+  if (invalid !== undefined) return { error: '"' + invalid + '" is not owner/name, such as acme/widgets.' };
+  const repos = uniqueNames(entries);
+  if (repos.length > MAX_REPOSITORIES) {
+    return { error: 'The board reads at most ' + MAX_REPOSITORIES + ' repositories; this list has ' + repos.length + '.' };
+  }
+  return { repos };
 }
 
 export function repositoryName(repository: Repository): string {

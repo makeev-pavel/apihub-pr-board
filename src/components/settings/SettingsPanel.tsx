@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { isColumnShown } from '../../board/columns.ts';
 import type { Column } from '../../board/columns.ts';
 import { AREAS } from '../../model/areas.ts';
+import { checkRepositoryList } from '../../repository.ts';
 import type { Rules } from '../../model/rules.ts';
 import {
   DEFAULT_SETTINGS, DENSITIES, isValidStaleDays, MAX_STALE_DAYS, MIN_STALE_DAYS, parseList, THEMES,
@@ -12,11 +13,18 @@ import type { AreaId } from '../../types.ts';
 
 const TOKEN_HELP_URL = 'https://github.com/settings/personal-access-tokens/new';
 
+// The repositories in the address, the ones the data has, and how to change the address.
+export interface RepositorySettings {
+  requested: string[];
+  available: string[];
+  onChange: (repos: string[]) => void;
+}
+
 function joinAreas(modules: Rules['areaModules']) {
   return { be: modules.be.join(', '), fe: modules.fe.join(', ') };
 }
 
-export function SettingsPanel({ settings, onChange, token, setToken, refreshing, askForToken, onRefresh, columns, canResetWidths, onResetWidths }: {
+export function SettingsPanel({ settings, onChange, token, setToken, refreshing, askForToken, onRefresh, columns, repositories, canResetWidths, onResetWidths }: {
   settings: Settings;
   onChange: (settings: Settings) => void;
   token: string;
@@ -25,6 +33,7 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
   askForToken: boolean;
   onRefresh: (token: string) => void;
   columns: Column[];
+  repositories: RepositorySettings;
   canResetWidths: boolean;
   onResetWidths: () => void;
 }) {
@@ -32,9 +41,12 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
   const [staleDraft, setStaleDraft] = useState(String(rules.staleDays));
   const [botsDraft, setBotsDraft] = useState(rules.extraBots.join(', '));
   const [tokenDraft, setTokenDraft] = useState('');
+  const [reposDraft, setReposDraft] = useState(repositories.requested.join(', '));
+  const [reposError, setReposError] = useState<string | null>(null);
   const [areaDrafts, setAreaDrafts] = useState(() => joinAreas(rules.areaModules));
   useEffect(() => setStaleDraft(String(rules.staleDays)), [rules.staleDays]);
   useEffect(() => setBotsDraft(rules.extraBots.join(', ')), [rules.extraBots]);
+  useEffect(() => setReposDraft(repositories.requested.join(', ')), [repositories.requested]);
   useEffect(() => setAreaDrafts(joinAreas(rules.areaModules)), [rules.areaModules]);
 
   const setRules = (changes: Partial<Rules>) => onChange({ ...settings, rules: { ...rules, ...changes } });
@@ -42,6 +54,22 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
     setStaleDraft(text);
     const days = Number(text);
     if (isValidStaleDays(days)) setRules({ staleDays: days });
+  };
+  // An invalid list stays in the field with the reason and changes nothing.
+  const commitRepos = () => {
+    const result = checkRepositoryList(reposDraft);
+    if ('error' in result) {
+      setReposError(result.error);
+      return;
+    }
+    setReposError(null);
+    setReposDraft(result.repos.join(', '));
+    repositories.onChange(result.repos);
+  };
+  const resetAll = () => {
+    onChange({ ...DEFAULT_SETTINGS });
+    repositories.onChange([]);
+    setReposError(null);
   };
   const commitBots = () => setRules({ extraBots: parseList(botsDraft) });
   const commitArea = (id: AreaId) => setRules({ areaModules: { ...rules.areaModules, [id]: parseList(areaDrafts[id]) } });
@@ -60,6 +88,17 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
 
   return (
     <div className="menu settings-panel" role="dialog" aria-label="Settings">
+      <section>
+        <h2>Repositories</h2>
+        <p className="hint">As <code>owner/name</code>, separated by commas or spaces. Empty shows every repository of the data.</p>
+        <label className="sr-only" htmlFor="repos-input">Repositories</label>
+        <textarea id="repos-input" className="text-field" rows={2} value={reposDraft} autoComplete="off"
+          placeholder={repositories.available.join(', ')} aria-invalid={!!reposError}
+          aria-describedby={reposError ? 'repos-error' : undefined}
+          onChange={(e) => setReposDraft(e.target.value)} onBlur={commitRepos}
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); commitRepos(); } }} />
+        {reposError ? <p id="repos-error" className="field-error" role="alert">{reposError}</p> : null}
+      </section>
       <section>
         <h2>Attention rules</h2>
         <label className="inline-field">
@@ -140,8 +179,8 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
         </form>
       </section>
       <div className="settings-foot">
-        <span className="muted">Saved in this browser only.</span>
-        <button type="button" className="btn" onClick={() => onChange({ ...DEFAULT_SETTINGS })}>Reset to defaults</button>
+        <span className="muted">Saved in this browser. Repositories and extra bots live in the page address.</span>
+        <button type="button" className="btn" onClick={resetAll}>Reset to defaults</button>
       </div>
     </div>
   );

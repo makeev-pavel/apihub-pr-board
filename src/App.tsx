@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { collectAuthors, selectedAuthors } from './board/authors.ts';
 import { boardColumns, isColumnShown } from './board/columns.ts';
 import { repositoriesSummary } from './board/format.ts';
+import { boardRepos, linkSettingsQuery, missingReposMessage } from './board/link.ts';
 import { readToken, storeToken } from './board/storage.ts';
 import {
   AREA_OPTIONS, DEFAULT_VIEW, DRAFT_OPTIONS, filterPullRequests, firstDirection, readView, visibleRows, writeView,
@@ -20,14 +21,13 @@ import { REPOSITORIES } from './config.ts';
 import { ApiContext, RulesContext } from './context.ts';
 import { fetchOpenPullRequests } from './github/graphql.ts';
 import { REST_URL } from './github/rest.ts';
+import { useBoardSettings } from './hooks/useBoardSettings.ts';
 import { useColumnWidths } from './hooks/useColumnWidths.ts';
 import { useReportData } from './hooks/useReportData.ts';
 import { derive } from './model/derive.ts';
 import { pullRequestKey } from './model/report.ts';
 import { activeLabelFilters, parseQuery, toggleLabelFilter } from './model/search.ts';
 import { parseRepository, repositoryName } from './repository.ts';
-import { loadSettings, saveSettings } from './settings.ts';
-import type { Settings } from './settings.ts';
 import type { DevConfig } from './types.ts';
 
 declare global {
@@ -48,9 +48,9 @@ export function App() {
   const [refreshing, setRefreshing] = useState(false);
   const [refreshError, setRefreshError] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now);
-  const [settings, setSettingsState] = useState(loadSettings);
+  const { settings, setSettings, link, setRepos } = useBoardSettings();
 
-  useEffect(() => writeView(view), [view]);
+  useEffect(() => writeView(view, linkSettingsQuery(link)), [view, link]);
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), CLOCK_TICK_MS);
     return () => clearInterval(timer);
@@ -62,9 +62,11 @@ export function App() {
     root.dataset.density = settings.density;
   }, [settings.theme, settings.density]);
 
-  const setSettings = (next: Settings) => { saveSettings(next); setSettingsState(next); };
   const rules = settings.rules;
-  const repos = useMemo(() => (report ? report.repos : REPOSITORIES.map(repositoryName)), [report]);
+  const dataRepos = useMemo(() => (report ? report.repos : REPOSITORIES.map(repositoryName)), [report]);
+  // The address may narrow the board to some repositories, or ask for ones the data does not have.
+  const { shown: repos, missing } = useMemo(() => boardRepos(dataRepos, link.repos), [dataRepos, link.repos]);
+  const headerRepos = link.repos.length ? link.repos : dataRepos;
   const offeredColumns = useMemo(() => boardColumns(repos.length), [repos.length]);
   const columns = useMemo(() => offeredColumns.filter((c) => isColumnShown(c, settings.hiddenColumns)), [offeredColumns, settings.hiddenColumns]);
   const { tableWrapRef, widths, tableWidth, resize, canResetWidths, resetWidths } = useColumnWidths(columns);
@@ -79,8 +81,10 @@ export function App() {
     setRefreshError(null);
     // Skip the heavy parts of the query that only hidden columns would show.
     const parts = { checks: columns.some((c) => c.id === 'ci'), comments: columns.some((c) => c.id === 'comment') };
-    // Refresh reads the repositories on the page, which the build's list only gives before the data loads.
-    const repositories = report && report.repos.length ? report.repos.map(parseRepository) : REPOSITORIES;
+    // Refresh reads the repositories the address asks for, or else those on the page; the build's list only counts
+    // before the data loads.
+    const names = link.repos.length ? link.repos : report && report.repos.length ? report.repos : null;
+    const repositories = names ? names.map(parseRepository) : REPOSITORIES;
     const options = { token: withToken, repositories, parts };
     fetchOpenPullRequests(DEV ? { ...options, endpoint: DEV.graphqlUrl } : options)
       .then((report) => {
@@ -92,8 +96,10 @@ export function App() {
   };
 
   const prs = useMemo(() => {
-    return (report ? report.prs : []).map((pr) => derive(pr, now, rules));
-  }, [report, now, rules]);
+    const shown = new Set(repos.map((repo) => repo.toLowerCase()));
+    const inView = (report ? report.prs : []).filter((pr) => !link.repos.length || shown.has(pr.repo.toLowerCase()));
+    return inView.map((pr) => derive(pr, now, rules));
+  }, [report, repos, link.repos, now, rules]);
 
   const authors = useMemo(() => collectAuthors(prs), [prs]);
   const selected = useMemo(() => selectedAuthors(view.authors, authors), [view.authors, authors]);
@@ -124,13 +130,15 @@ export function App() {
     <ApiContext.Provider value={api}><RulesContext.Provider value={rules}>
       <header className="masthead">
         <h1>
-          <span className="repo" title={repos.length > 2 ? repos.join(', ') : undefined}>{repositoriesSummary(repos)}</span>Open pull requests
+          <span className="repo" title={headerRepos.length > 2 ? headerRepos.join(', ') : undefined}>{repositoriesSummary(headerRepos)}</span>
+          Open pull requests
         </h1>
         <div className="masthead-side">
           <Tiles base={base} active={view.quick} setQuick={(quick) => patch({ quick })} />
           {report ? <UpdateInfo report={report} live={data.source === 'live'} now={now} /> : null}
           <RefreshControl token={token} setToken={setToken} refreshing={refreshing} onRefresh={refresh}
             settings={settings} onSettingsChange={setSettings} columns={offeredColumns}
+            repositories={{ requested: link.repos, available: dataRepos, onChange: setRepos }}
             canResetWidths={canResetWidths} onResetWidths={resetWidths} />
         </div>
       </header>
@@ -140,6 +148,9 @@ export function App() {
         <div className="banner bad" role="alert">
           {data.error} The scheduled workflow may not have published data yet. Use Refresh with a token to load live data.
         </div>
+      ) : null}
+      {missing.length && data.source === 'scheduled' ? (
+        <div className="banner warn">{missingReposMessage(missing, !!token)}</div>
       ) : null}
       {report && report.warnings.length ? <div className="banner warn">{report.warnings.map((w) => <div key={w}>{w}</div>)}</div> : null}
 

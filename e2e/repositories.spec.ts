@@ -57,4 +57,68 @@ test.describe('several repositories', () => {
     await page.getByRole('dialog', { name: 'Settings' }).getByRole('checkbox', { name: 'Repository' }).uncheck();
     await expect(header).toHaveText('#');
   });
+
+  test('FILTER-14: repos in the address narrow the board, and Reset view and Copy link keep them', async ({ page, context }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await openBoard(page, { report: 'two-repos', query: ALL + '&q=pairing&repos=acme/gadgets' });
+    await expect(page.locator('h1 .repo')).toHaveText('acme/gadgets');
+    await expect(rows(page)).toHaveCount(2);
+    await expect(page.locator('.board > thead > tr > th').first()).toHaveText('#');
+    await page.getByRole('button', { name: 'Reset view' }).click();
+    await expect(page).toHaveURL(/\/\?repos=acme\/gadgets$/);
+    await page.getByRole('button', { name: 'Copy link to this view' }).click();
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/\?repos=acme\/gadgets$/);
+  });
+
+  test('SET-16: the Repositories field writes the address, rejects a bad entry with the reason, and clears', async ({ page }) => {
+    await openBoard(page, { report: 'two-repos', query: ALL });
+    await page.getByRole('button', { name: /^Settings/ }).click();
+    const field = page.getByRole('dialog', { name: 'Settings' }).getByRole('textbox', { name: 'Repositories' });
+    await expect(field).toHaveAttribute('placeholder', 'acme/widgets, acme/gadgets');
+    await field.fill('acme/widgets, gadgets');
+    await field.press('Enter');
+    await expect(page.getByRole('alert')).toHaveText('"gadgets" is not owner/name, such as acme/widgets.');
+    await expect(field).toHaveAttribute('aria-invalid', 'true');
+    expect(page.url()).not.toContain('repos=');
+    await field.fill('acme/gadgets  ACME/gadgets');
+    await field.press('Enter');
+    await expect(page.getByRole('alert')).toHaveCount(0);
+    await expect(field).toHaveValue('acme/gadgets');
+    await expect(page).toHaveURL(/[?&]repos=acme\/gadgets(&|$)/);
+    await expect(rows(page)).toHaveCount(4);
+    await field.fill('');
+    await field.blur();
+    await expect(rows(page)).toHaveCount(40);
+    expect(page.url()).not.toContain('repos=');
+  });
+
+  test('SET-17: bots saved by an earlier version move into the address, and Reset to defaults removes both', async ({ page }) => {
+    await page.addInitScript(() => {
+      if (sessionStorage.getItem('seeded')) return;
+      localStorage.setItem('apihub-pr-board.settings', JSON.stringify({ rules: { extraBots: ['acme-release-bot'] } }));
+      sessionStorage.setItem('seeded', '1');
+    });
+    await openBoard(page, { report: 'two-repos', query: 'repos=acme/widgets' });
+    await expect(page).toHaveURL(/\?repos=acme\/widgets&bots=acme-release-bot$/);
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('apihub-pr-board.settings')!));
+    expect(saved.rules.extraBots).toEqual([]);
+    await page.reload();
+    await expect(page).toHaveURL(/\?repos=acme\/widgets&bots=acme-release-bot$/);
+    await page.getByRole('button', { name: /^Settings/ }).click();
+    await page.getByRole('dialog', { name: 'Settings' }).getByRole('button', { name: 'Reset to defaults' }).click();
+    await expect(page).toHaveURL(/\/$/);
+  });
+
+  test('DATA-22: repositories missing from the snapshot get a banner, and Refresh with a token loads them', async ({ page }) => {
+    await openBoard(page, { report: 'mixed', refresh: 'ok', query: ALL + '&repos=acme/widgets,acme/gadgets' });
+    const banner = page.locator('.banner.warn');
+    await expect(banner).toHaveText('acme/gadgets is not in the hourly snapshot. Add a GitHub token in Settings, then Refresh loads it.');
+    await expect(rows(page)).toHaveCount(75);
+    await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+    await page.locator('#token-input').fill('mock-token');
+    await page.getByRole('button', { name: 'Save and refresh' }).click();
+    await expect(page.locator('.source-button')).toHaveText('live, just now');
+    await expect(rows(page)).toHaveCount(79);
+    await expect(banner).toHaveCount(0);
+  });
 });

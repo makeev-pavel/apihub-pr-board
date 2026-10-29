@@ -1,7 +1,7 @@
 # Settings
 
 - **SET-1** The gear next to **Refresh** opens one settings panel. Changes apply at once. The panel scrolls when the
-  window is short, and its footer says that settings stay in this browser.
+  window is short, and its footer says where settings live (**SET-11**, **SET-17**).
 
 | Id | Section | Setting | Default |
 | --- | --- | --- | --- |
@@ -17,11 +17,11 @@
 - **SET-10** When an attention rule differs from its default, the gear shows a dot, the legend shows **Custom
   rules**, and the Rules popover lists the values in use (**PANEL-7**). Other viewers may then see a different
   Attention count.
-- **SET-11** Settings, the token, and the column widths are stored in this browser (`localStorage`), each under its
-  own key, and survive reloads. A stored value that is missing or invalid falls back to its default, field by
-  field, so an old or edited entry never breaks the page.
-- **SET-12** **Reset to defaults** restores the rules, areas, view, and columns. It keeps the token and the column
-  widths.
+- **SET-11** Settings other than the repositories and extra bots (**SET-17**), the token, and the column widths are
+  stored in this browser (`localStorage`), each under its own key, and survive reloads. A stored value that is
+  missing or invalid falls back to its default, field by field, so an old or edited entry never breaks the page.
+- **SET-12** **Reset to defaults** restores the rules, areas, view, and columns, and removes the repositories and
+  extra bots from the address. It keeps the token and the column widths.
 - **SET-13** **Refresh** without a token opens the panel with the token field focused. Opening the panel from the
   gear does not jump to the token.
 - **SET-14** A number field keeps the last valid value: an invalid entry does not apply and is replaced when the
@@ -34,8 +34,8 @@
 - **SET-16** A Repositories section at the top of the panel takes up to 10 entries as `owner/name`, separated by
   commas, spaces, or new lines, and applies like a list (**SET-14**). Applying writes `repos` to the address
   (**FILTER-14**); an empty field removes it. A malformed entry is not applied, and the field names the entry and
-  what is wrong with it. *Planned: task R5.*
+  what is wrong with it.
 - **SET-17** The repositories and the extra bot logins (**SET-5**) live in the address, not in this browser, so a
   link or a bookmark carries them. The panel footer says so. **Reset to defaults** removes both from the address.
-  Extra bots that an earlier version saved in this browser move into the address on the first visit.
-  *Planned: task R5.*
+  Extra bots that an earlier version saved in this browser move into the address on the first visit, unless the
+  link names its own.

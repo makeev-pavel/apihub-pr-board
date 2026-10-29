@@ -56,7 +56,7 @@
 - **FILTER-14** The address also carries two settings: `repos`, the repositories to show
   (`repos=acme/widgets,acme/gadgets`), and `bots`, the extra bot logins (**SET-5**). Copy link keeps them, and
   **Reset view** leaves them alone. Without `repos` the board shows every repository of the data; without `bots`
-  there are no extra bots. Invalid entries are dropped. *Planned: task R5.*
+  there are no extra bots. Invalid entries are dropped.
 
 ## Several repositories
 

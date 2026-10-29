@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { DEFAULT_RULES } from '../src/model/rules.ts';
-import { parseRepositories, parseRepository, repositoryName } from '../src/repository.ts';
+import { checkRepositoryList, parseRepositories, parseRepository, repositoryName } from '../src/repository.ts';
 
 test('DATA-1: PR_BOARD_REPO names the repository as owner/name', () => {
   assert.deepEqual(parseRepository('acme/widgets'), { owner: 'acme', name: 'widgets' });
@@ -34,4 +34,13 @@ test('DATA-17: an empty list, a malformed entry, or more than 10 repositories st
   assert.throws(() => parseRepositories('acme/widgets, gadgets'), /PR_BOARD_REPO must be "owner\/name", such as acme\/widgets, not "gadgets"/);
   const eleven = Array.from({ length: 11 }, (_, i) => 'acme/r' + i).join(',');
   assert.throws(() => parseRepositories(eleven), /PR_BOARD_REPO lists 11 repositories; the board reads at most 10/);
+});
+
+test('SET-16: the Repositories field takes owner/name entries and names what is wrong', () => {
+  assert.deepEqual(checkRepositoryList(''), { repos: [] });
+  assert.deepEqual(checkRepositoryList('acme/widgets\n acme/gadgets, ACME/widgets'), { repos: ['acme/widgets', 'acme/gadgets'] });
+  assert.deepEqual(checkRepositoryList('acme/widgets, gadgets'), { error: '"gadgets" is not owner/name, such as acme/widgets.' });
+  assert.deepEqual(checkRepositoryList('acme/..'), { error: '"acme/.." is not owner/name, such as acme/widgets.' });
+  const eleven = Array.from({ length: 11 }, (_, i) => 'acme/r' + i).join(' ');
+  assert.deepEqual(checkRepositoryList(eleven), { error: 'The board reads at most 10 repositories; this list has 11.' });
 });

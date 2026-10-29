@@ -11,6 +11,9 @@
 .setting-row .segmented button { padding: 5px 10px; }
 .settings-panel .hint code { font-family: var(--font-mono); font-size: 11px; }
 .area-field { display: grid; gap: 4px; }
+#repos-input { resize: vertical; font-family: var(--font-mono); font-size: 12px; }
+#repos-input[aria-invalid="true"] { border-color: var(--bad); }
+.settings-panel .field-error { margin: 0; padding: 0 6px; font-size: 12px; color: var(--bad); }
 .area-field textarea { resize: vertical; font-family: var(--font-mono); font-size: 12px; }
 .column-options { display: grid; grid-template-columns: 1fr 1fr; }
 .column-options + .btn { justify-self: start; }

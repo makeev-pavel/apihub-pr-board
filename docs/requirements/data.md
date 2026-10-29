@@ -69,4 +69,4 @@
   fictional `acme/gadgets`, with PR numbers that repeat those of `acme/widgets`.
 - **DATA-22** When the address asks for repositories (**FILTER-14**) that the snapshot does not cover, the page
   shows the PRs of the requested repositories it has and a banner naming the missing ones. **Refresh** with a token
-  then loads every requested repository. Without a token, the banner suggests adding one. *Planned: task R5.*
+  then loads every requested repository. Without a token, the banner suggests adding one.

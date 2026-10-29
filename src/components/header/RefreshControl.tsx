@@ -4,8 +4,9 @@ import { useDismiss } from '../../hooks/useDismiss.ts';
 import { rulesAreDefault } from '../../settings.ts';
 import type { Settings } from '../../settings.ts';
 import { SettingsPanel } from '../settings/SettingsPanel.tsx';
+import type { RepositorySettings } from '../settings/SettingsPanel.tsx';
 
-export function RefreshControl({ token, setToken, refreshing, onRefresh, settings, onSettingsChange, columns, canResetWidths, onResetWidths }: {
+export function RefreshControl({ token, setToken, refreshing, onRefresh, settings, onSettingsChange, columns, repositories, canResetWidths, onResetWidths }: {
   token: string;
   setToken: (value: string) => void;
   refreshing: boolean;
@@ -14,6 +15,7 @@ export function RefreshControl({ token, setToken, refreshing, onRefresh, setting
   onSettingsChange: (settings: Settings) => void;
   // The columns the board offers, shown or hidden.
   columns: Column[];
+  repositories: RepositorySettings;
   canResetWidths: boolean;
   onResetWidths: () => void;
 }) {
@@ -38,7 +40,7 @@ export function RefreshControl({ token, setToken, refreshing, onRefresh, setting
       </div>
       {open ? (
         <SettingsPanel settings={settings} onChange={onSettingsChange} token={token} setToken={setToken} refreshing={refreshing} askForToken={askForToken}
-          onRefresh={(value) => { setOpen(false); onRefresh(value); }} columns={columns} canResetWidths={canResetWidths} onResetWidths={onResetWidths} />
+          onRefresh={(value) => { setOpen(false); onRefresh(value); }} columns={columns} repositories={repositories} canResetWidths={canResetWidths} onResetWidths={onResetWidths} />
       ) : null}
     </div>
   );

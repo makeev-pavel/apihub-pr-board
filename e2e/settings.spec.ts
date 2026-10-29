@@ -22,10 +22,10 @@ test.describe('settings', () => {
   test('SET-1: the gear opens one panel with every section, and it says where settings live', async ({ page }) => {
     await openBoard(page, { report: 'typical' });
     const panel = await openSettings(page);
-    for (const section of ['Attention rules', 'Areas', 'View', 'Columns', 'GitHub token']) {
+    for (const section of ['Repositories', 'Attention rules', 'Areas', 'View', 'Columns', 'GitHub token']) {
       await expect(panel.getByRole('heading', { name: section })).toBeVisible();
     }
-    await expect(panel).toContainText('Saved in this browser only.');
+    await expect(panel).toContainText('Saved in this browser. Repositories and extra bots live in the page address.');
     await expect(panel.locator('#token-input')).not.toBeFocused();
   });
 
@@ -55,7 +55,7 @@ test.describe('settings', () => {
     await expect(page.getByRole('dialog', { name: /needs attention/ }).locator('li')).toHaveText([/^Open \d+ days, limit is 10$/]);
   });
 
-  test('SET-5 RULE-10: an extra bot login counts as a bot, without regard to case', async ({ page }) => {
+  test('SET-5 RULE-10 SET-17: an extra bot login counts as a bot, without regard to case, and the link carries it', async ({ page }) => {
     await openBoard(page, { report: 'corner', query: 'draft=all&q=' + encodeURIComponent('bump version to') });
     await expect(rows(page)).toHaveCount(1);
     const panel = await openSettings(page);
@@ -63,7 +63,9 @@ test.describe('settings', () => {
     await panel.locator('#extra-bots').press('Enter');
     await page.keyboard.press('Escape');
     await expect(page.getByText('No pull requests match this view')).toBeVisible();
-    await page.goto('/?authors=bots&draft=all&q=' + encodeURIComponent('bump version to'));
+    await expect(page).toHaveURL(/[?&]bots=ACME-release-bot(&|$)/);
+    expect(JSON.parse((await stored(page, SETTINGS_KEY))!).rules.extraBots).toEqual([]);
+    await page.goto('/?authors=bots&draft=all&bots=ACME-release-bot&q=' + encodeURIComponent('bump version to'));
     await expect(rows(page).first().locator('.chip.bot')).toBeVisible();
   });
 

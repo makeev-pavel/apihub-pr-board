@@ -14,8 +14,8 @@ These files are the spec. A change in behavior updates the matching requirement 
 
 ## Scope
 
-- One repository, chosen by configuration. Several at once are planned (**DATA-17** to **DATA-22**). Open pull
-  requests only, drafts included.
+- One or more repositories, chosen by configuration (**DATA-17**) or by a link (**FILTER-14**). Open pull requests
+  only, drafts included.
 - Read-only: the board never changes anything on GitHub.
 - Out of scope: closed or merged PRs, history and charts, GitHub OAuth login (it would need a server).
 

@@ -495,9 +495,9 @@ names the repositories; Settings lists the column only then.
 Repositories the snapshot does not cover show a banner that offers Refresh.
 
 **Acceptance criteria:**
-- [ ] A copied link opens the same repositories and bots in a fresh browser.
-- [ ] Editing the repository field updates the address; an invalid entry is rejected with the reason.
-- [ ] Repositories outside the snapshot are named in a banner, and Refresh loads them.
+- [x] A copied link opens the same repositories and bots in a fresh browser.
+- [x] Editing the repository field updates the address; an invalid entry is rejected with the reason.
+- [x] Repositories outside the snapshot are named in a banner, and Refresh loads them.
 
 **Verification:** unit tests for parsing and writing the parameters; browser tests for the field, the link, and the
 banner. **Dependencies:** R3. **Files:** `src/board/view.ts`, `src/settings.ts`,

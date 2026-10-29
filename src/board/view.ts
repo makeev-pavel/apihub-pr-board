@@ -104,8 +104,9 @@ export function readView(): View {
   return parseView(window.location.search);
 }
 
-export function writeView(view: View) {
-  const query = viewQuery(view);
+// extraQuery carries the link settings, which live beside the view in the address.
+export function writeView(view: View, extraQuery = '') {
+  const query = [viewQuery(view), extraQuery].filter(Boolean).join('&');
   history.replaceState(null, '', window.location.pathname + (query ? '?' + query : ''));
 }
 
