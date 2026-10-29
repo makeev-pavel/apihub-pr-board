@@ -28,7 +28,7 @@ import { AUTO_REFRESH_MS } from './board/format.ts';
 import { useAutoRefresh } from './hooks/useAutoRefresh.ts';
 import { useColumnWidths } from './hooks/useColumnWidths.ts';
 import { useNotes } from './hooks/useNotes.ts';
-import { useStandup } from './hooks/useStandup.ts';
+import { useNoteText } from './hooks/useNoteText.ts';
 import { useReportData } from './hooks/useReportData.ts';
 import { derive } from './model/derive.ts';
 import { pullRequestKey } from './model/report.ts';
@@ -56,7 +56,7 @@ export function App() {
   const [lastAttempt, setLastAttempt] = useState(0);
   const [now, setNow] = useState(Date.now);
   const { settings, setSettings, link, setRepos } = useBoardSettings();
-  const notesApi = useNotes(now);
+  const notesApi = useNotes();
 
   useEffect(() => writeView(view, linkSettingsQuery(link)), [view, link]);
   useEffect(() => {
@@ -134,7 +134,7 @@ export function App() {
     const inView = (report ? report.prs : []).filter((pr) => !link.repos.length || shown.has(pr.repo.toLowerCase()));
     return inView.map((pr) => derive(pr, now, rules));
   }, [report, repos, link.repos, now, rules]);
-  const prs = useStandup(derived, notesApi.notes, notesApi.today);
+  const prs = useNoteText(derived, notesApi.notes);
 
   const authors = useMemo(() => collectAuthors(prs), [prs]);
   const selected = useMemo(() => selectedAuthors(view.authors, authors), [view.authors, authors]);

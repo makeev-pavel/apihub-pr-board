@@ -54,7 +54,7 @@ test.describe('sorting', () => {
   test('TABLE-16: title and author sort A to Z first', async ({ page }) => {
     await openBoard(page, { report: 'typical', query: ALL });
     await header(page, 'Pull request').click();
-    const titles = (await columnTexts(page, '.pr-title')).map((t) => t.toLowerCase());
+    const titles = (await columnTexts(page, '.pr-title > a')).map((t) => t.toLowerCase());
     expect(titles).toEqual([...titles].sort());
     await header(page, 'Author').click();
     const authors = (await columnTexts(page, 'td.c-person:nth-child(4) .login')).map((t) => t.toLowerCase());

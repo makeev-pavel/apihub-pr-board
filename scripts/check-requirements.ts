@@ -22,7 +22,8 @@ const result = checkRequirements(
 const total = result.covered.length + result.missing.length + result.planned.length + result.manual.length;
 console.log('Requirements with tests: ' + result.covered.length + ' of ' + total
   + (result.planned.length ? '; planned: ' + result.planned.join(', ') : '')
-  + (result.manual.length ? '; checked by hand: ' + result.manual.join(', ') : ''));
+  + (result.manual.length ? '; checked by hand: ' + result.manual.join(', ') : '')
+  + (result.removed.length ? '; removed: ' + result.removed.join(', ') : ''));
 if (result.missing.length) console.error('Requirements without a test: ' + result.missing.join(', '));
 for (const { id, file } of result.unknown) console.error('Unknown requirement ' + id + ' in ' + file);
 if (result.missing.length || result.unknown.length) process.exit(1);

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  DEFAULT_VIEW, filterPullRequests, firstDirection, parseView, QUICK, readView, viewQuery, visibleRows, writeView,
+  DEFAULT_VIEW, filterPullRequests, firstDirection, parseView, readView, viewQuery, visibleRows, writeView,
 } from '../../src/board/view.ts';
 import { parseQuery } from '../../src/model/search.ts';
 import type { DerivedPullRequest } from '../../src/types.ts';
@@ -112,11 +112,4 @@ test('FILTER-13: the address keeps its #fragment, and a browser that refuses to 
   assert.doesNotThrow(() => writeView(DEFAULT_VIEW));
   delete (globalThis as { window?: unknown }).window;
   delete (globalThis as { history?: unknown }).history;
-});
-
-test('NOTE-6: the Not asked today filter keeps the PRs nobody asked about today', () => {
-  const prs = [pr(1, { standup: { askedToday: true, noteText: '' } }), pr(2, { standup: { askedToday: false, noteText: '' } }), pr(3)];
-  assert.deepEqual(visibleRows(prs, { quick: ['standup'], sort: 'number', dir: 'asc' }).map((p) => p.number), [2, 3]);
-  assert.equal(QUICK.find((q) => q.id === 'standup')?.label, 'Not asked today');
-  assert.deepEqual(parseView('?quick=standup').quick, ['standup']);
 });

@@ -33,7 +33,6 @@ export const COLUMNS: Column[] = [
   { id: 'assignee', sort: null, label: 'Assignee', cls: 'c-person', width: 170 },
   { id: 'comment', sort: null, label: 'Last comment', cls: 'c-comment', width: 270 },
   { id: 'attention', sort: 'attention', label: 'Attention', cls: 'c-attn', width: 104, hint: 'Click an icon to see why the PR needs attention' },
-  { id: 'notes', sort: null, label: 'Standup', cls: 'c-notes', width: 200, hint: 'Check when you asked about the PR today; click the note for its history' },
 ];
 export const DEFAULT_WIDTHS: Widths = Object.fromEntries(COLUMNS.map((c) => [c.id, c.width]));
 

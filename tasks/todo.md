@@ -546,3 +546,7 @@ checked in `dev:live`.
   `prs.json` defaults, fixtures and a corner case, unit tests. About 1 hour.
 - [ ] **P2. Display and search:** the fields under each issue, the current sprint, `priority:` and `sprint:`; browser
   tests and screenshots. About 1 hour.
+
+Changed on October 29, 2026, at the user's request: the Standup column became a note icon after the PR title that
+opens one Markdown document per PR (Preview and Edit). Daily checkboxes and the Not asked today tile are removed
+(NOTE-5, NOTE-6, NOTE-8); earlier notes move into the document.

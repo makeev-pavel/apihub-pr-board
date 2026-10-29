@@ -104,13 +104,6 @@ export interface Report {
   prs: PullRequest[];
 }
 
-// What the board knows from the viewer's standup notes (NOTE-6, NOTE-7).
-export interface Standup {
-  askedToday: boolean;
-  // Every note of the PR, lowercased, for search.
-  noteText: string;
-}
-
 export interface DerivedPullRequest extends PullRequest {
   latestComment: Comment | null;
   areas: AreaId[];
@@ -122,8 +115,8 @@ export interface DerivedPullRequest extends PullRequest {
   attention: string[];
   commentText: string;
   searchText: string;
-  // Set by the page from the notes; absent means no notes.
-  standup?: Standup;
+  // The viewer's note, lowercased, for note: (NOTE-7); absent without a note.
+  noteText?: string;
 }
 
 // The dev server injects this as window.PR_BOARD_DEV to point the page at its GraphQL and REST mocks.

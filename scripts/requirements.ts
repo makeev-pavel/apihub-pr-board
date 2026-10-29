@@ -8,6 +8,8 @@ const TEST_TITLE = /\btest\(\s*['`]((?:[A-Z]+-\d+[ ,]*)+):/g;
 const ID = /[A-Z]+-\d+/g;
 const PLANNED = '*Planned';
 const MANUAL = '*Manual check';
+// A removed requirement keeps its id (the conventions in docs/requirements/README.md) and needs no test.
+const REMOVED = '*Removed';
 
 export interface RequirementCheck {
   covered: string[];
@@ -15,6 +17,7 @@ export interface RequirementCheck {
   missing: string[];
   planned: string[];
   manual: string[];
+  removed: string[];
   unknown: { id: string; file: string }[];
 }
 
@@ -37,15 +40,16 @@ export function checkRequirements(specFiles: Record<string, string>, testFiles: 
   for (const [file, text] of Object.entries(testFiles)) {
     for (const title of text.matchAll(TEST_TITLE)) {
       for (const [id] of title[1].matchAll(ID)) {
-        if (defined.has(id)) named.add(id);
+        if (defined.has(id) && !defined.get(id)!.includes(REMOVED)) named.add(id);
         else unknown.push({ id, file });
       }
     }
   }
-  const result: RequirementCheck = { covered: [], missing: [], planned: [], manual: [], unknown };
+  const result: RequirementCheck = { covered: [], missing: [], planned: [], manual: [], removed: [], unknown };
   const order = (a: string, b: string) => a.localeCompare(b, 'en', { numeric: true });
   for (const [id, body] of [...defined].sort(([a], [b]) => order(a, b))) {
-    if (named.has(id)) result.covered.push(id);
+    if (body.includes(REMOVED)) result.removed.push(id);
+    else if (named.has(id)) result.covered.push(id);
     else if (body.includes(PLANNED)) result.planned.push(id);
     else if (body.includes(MANUAL)) result.manual.push(id);
     else result.missing.push(id);

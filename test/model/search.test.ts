@@ -74,8 +74,8 @@ test('FILTER-15: repo: matches the repository name or owner/name, and plain word
   assert.ok(search('gadgets', fields));
 });
 
-test('NOTE-7: note: matches the text of any note, and -note: excludes it', () => {
-  const fields = { standup: { askedToday: false, noteText: 'merged soon fix the tests' } };
+test('NOTE-7: note: matches the text of the note, and -note: excludes it', () => {
+  const fields = { noteText: 'merged soon. fix the tests' };
   assert.ok(search('note:tests', fields));
   assert.ok(search('note:TESTS', fields));
   assert.ok(!search('note:deploy', fields));

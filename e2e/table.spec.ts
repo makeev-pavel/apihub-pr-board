@@ -22,7 +22,7 @@ test.describe('table', () => {
     await openBoard(page, { report: 'typical' });
     const headers = await page.locator('.board > thead > tr > th').allTextContents();
     expect(headers.map((h) => h.replace(/[▲▼]/g, '').trim())).toEqual(
-      ['#', 'Pull request', 'Issue', 'Author', 'CI', 'Review', 'Conflicts', 'Age · activity', 'Assignee', 'Last comment', 'Attention', 'Standup']);
+      ['#', 'Pull request', 'Issue', 'Author', 'CI', 'Review', 'Conflicts', 'Age · activity', 'Assignee', 'Last comment', 'Attention']);
   });
 
   test('TABLE-6: the PR cell shows the draft and target branch chips and a corner case note', async ({ page }) => {
@@ -142,7 +142,7 @@ test.describe('table', () => {
     const dialogs: string[] = [];
     page.on('dialog', (dialog) => { dialogs.push(dialog.message()); void dialog.dismiss(); });
     const row = await onlyCase(page, 'escape');
-    await expect(row.locator('.pr-title')).toHaveText('fix(ui): escape <script>alert("xss")</script> in package names');
+    await expect(row.locator('.pr-title > a')).toHaveText('fix(ui): escape <script>alert("xss")</script> in package names');
     await expect(row.locator('.pr-title script')).toHaveCount(0);
     expect(dialogs).toEqual([]);
   });

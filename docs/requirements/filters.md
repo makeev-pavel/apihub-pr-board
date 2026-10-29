@@ -2,9 +2,8 @@
 
 ## Quick filters
 
-- **FILTER-1** Tiles in the header: Open PRs, CI failing, Without approval, Merge conflicts, Need attention, Not asked
-  today (**NOTE-6**). Each shows how many PRs of the current view (authors, draft status, area, and search) match
-  it.
+- **FILTER-1** Tiles in the header: Open PRs, CI failing, Without approval, Merge conflicts, Need attention. Each
+  shows how many PRs of the current view (authors, draft status, area, and search) match it.
 - **FILTER-2** Clicking a tile turns its filter on or off; active tiles combine with AND. Open PRs turns them all
   off. A tile with no matching PRs is dimmed.
 
@@ -40,7 +39,7 @@
   | `review:` | `review:approved`, `review:changes`, `review:none` |
   | `is:` | `is:draft`, `is:ready`, `is:bot`, `is:conflict`, `is:stale`, `is:attention` |
   | `no:` | `no:issue`, `no:label`, `no:assignee`, `no:review` |
-  | `note:` | `note:tests`: your standup notes (**NOTE-7**) |
+  | `note:` | `note:tests`: your notes (**NOTE-7**) |
   | `priority:` | `priority:high`, `priority:none` (**TABLE-28**) |
   | `sprint:` | `sprint:current`, `sprint:42`, `sprint:none` (**TABLE-28**) |
 

@@ -8,7 +8,7 @@ import { AttentionBadge } from '../cells/AttentionBadge.tsx';
 import { CiCell } from '../cells/CiCell.tsx';
 import { CommentCell } from '../cells/CommentCell.tsx';
 import { IssueCell } from '../cells/IssueCell.tsx';
-import { NoteCell } from '../cells/NoteCell.tsx';
+import { NoteButton } from '../cells/NoteButton.tsx';
 import { ReviewCell } from '../cells/ReviewCell.tsx';
 import { LabelList } from '../common/LabelList.tsx';
 import { Person } from '../common/Person.tsx';
@@ -36,7 +36,7 @@ export const Row = memo(function Row({ pr, now, columns, repos, activeLabels, on
     number: <td key="number" className="c-num mono num">{link('#' + pr.number)}</td>,
     title: (
       <td key="title" className="c-title">
-        <div className="pr-title">{link(pr.title)}</div>
+        <div className="pr-title">{link(pr.title)}<NoteButton pr={pr} /></div>
         {(pr.draft || pr.base !== 'main' || pr.example || pr.labels.length) ? (
           <div className="sub">
             {pr.example ? <span className="chip example">example</span> : null}
@@ -72,7 +72,6 @@ export const Row = memo(function Row({ pr, now, columns, repos, activeLabels, on
         {pr.attention.length ? <AttentionBadge reasons={pr.attention} number={pr.number} /> : null}
       </td>
     ),
-    notes: <td key="notes" className="c-notes"><NoteCell pr={pr} /></td>,
   };
   return <tr className={cls}>{columns.map((col) => cells[col.id])}</tr>;
 });

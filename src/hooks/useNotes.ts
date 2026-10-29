@@ -1,19 +1,15 @@
 import { useCallback, useMemo, useState } from 'react';
-import { loadNotes, localDay, saveNotes, setNote } from '../board/notes.ts';
-import type { NoteEntry } from '../board/notes.ts';
+import { loadNotes, saveNotes, setNote } from '../board/notes.ts';
 
-// Standup notes and today's date. `now` moves every minute, so at midnight today becomes a new day and its
-// checkboxes start empty (NOTE-5).
-export function useNotes(now: number) {
+// Notes per PR, one Markdown document each (NOTE-1), saved in this browser on every change.
+export function useNotes() {
   const [notes, setNotes] = useState(loadNotes);
-  const today = localDay(now);
-  // Today by default; an earlier day when its note is edited (NOTE-8).
-  const update = useCallback((key: string, change: Partial<Pick<NoteEntry, 'asked' | 'text'>>, day = today) => {
+  const update = useCallback((key: string, text: string) => {
     setNotes((prev) => {
-      const next = setNote(prev, key, day, change);
+      const next = setNote(prev, key, text, Date.now());
       saveNotes(next);
       return next;
     });
-  }, [today]);
-  return useMemo(() => ({ notes, today, update }), [notes, today, update]);
+  }, []);
+  return useMemo(() => ({ notes, update }), [notes, update]);
 }

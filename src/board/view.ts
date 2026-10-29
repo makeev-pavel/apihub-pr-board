@@ -18,7 +18,6 @@ export const QUICK: QuickFilter[] = [
   { id: 'review', label: 'Without approval', tone: 'warn', test: (pr) => pr.review !== 'approved' },
   { id: 'conflicts', label: 'Merge conflicts', tone: 'bad', test: (pr) => pr.mergeable === 'conflicts' },
   { id: 'attention', label: 'Need attention', tone: 'bad', test: (pr) => pr.attention.length > 0 },
-  { id: 'standup', label: 'Not asked today', tone: 'warn', test: (pr) => !(pr.standup && pr.standup.askedToday) },
 ];
 
 export type SortKey = 'repo' | 'number' | 'title' | 'author' | 'ci' | 'review' | 'merge' | 'age' | 'attention';

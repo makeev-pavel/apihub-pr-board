@@ -7,12 +7,13 @@ const SPEC = {
     '- **DATA-1** The repository comes from configuration.',
     '- **DATA-2** The dev server uses a fictional repository. *Planned: task C1.*',
     '- **DATA-3** Checked by hand. *Manual check: the workflow schedule.*',
+    '- **DATA-4** *Removed:* the hourly snapshot.',
     '| **SET-2** | Rules | Stale after N days. | 10 |',
     'Text that mentions **DATA-1** again is a reference, not a definition.',
   ].join('\n'),
 };
 
-test('S2: requirements without a test, planned ones, and manual ones are told apart', () => {
+test('S2: requirements without a test, planned ones, manual ones, and removed ones are told apart', () => {
   const result = checkRequirements(SPEC, {
     'x.test.ts': "test('DATA-1: covered', () => {});\ntest(`SET-2 DATA-1: covered twice, ${'loop'}`, () => {});",
   });
@@ -20,7 +21,13 @@ test('S2: requirements without a test, planned ones, and manual ones are told ap
   assert.deepEqual(result.missing, []);
   assert.deepEqual(result.planned, ['DATA-2']);
   assert.deepEqual(result.manual, ['DATA-3']);
+  assert.deepEqual(result.removed, ['DATA-4']);
   assert.deepEqual(result.unknown, []);
+});
+
+test('S2: a test that still names a removed requirement is reported', () => {
+  const result = checkRequirements(SPEC, { 'x.test.ts': "test('DATA-1 SET-2 DATA-4: old behavior', () => {});" });
+  assert.deepEqual(result.unknown, [{ id: 'DATA-4', file: 'x.test.ts' }]);
 });
 
 test('S2: a requirement with no test is missing, and an id no requirement defines is unknown', () => {

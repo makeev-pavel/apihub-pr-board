@@ -16,7 +16,7 @@
   | Column | Content |
   | --- | --- |
   | # | PR number, linked to the PR. |
-  | Pull request | Title linked to the PR; chips; labels. |
+  | Pull request | Title linked to the PR and the note icon (**NOTE-3**); chips; labels. |
   | Issue | The linked issues, or the project (**TABLE-8**). |
   | Author | Avatar and login; a `bot` chip for bots (**RULE-10**). |
   | CI | Status code (**TABLE-12**). **F** opens the failed checks. |
@@ -26,7 +26,6 @@
   | Assignee | Avatars and logins, or "Unassigned". |
   | Last comment | Author, time, a counter, and a two-line preview. Opens the comments panel. |
   | Attention | An icon with the number of reasons. Opens the reasons. |
-  | Standup | Asked today, and today's note or the latest earlier one (**NOTE-3**). Opens the notes. |
 
 - **TABLE-5** Columns can be hidden in Settings (**SET-8**); # and Pull request are always shown.
 

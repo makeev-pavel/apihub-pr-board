@@ -34,9 +34,9 @@ The requirements are in [docs/requirements/](docs/requirements/README.md).
   or a bookmark carries them; everything else is saved in this browser.
 - **Several repositories:** with more than one, a Repository column comes first. A link such as
   `?repos=owner/a,owner/b` shows just those.
-- **Standup** column: check a PR when you asked about it today and write what was promised. The next day the note
-  shows as a faded reminder, and clicking it lists every earlier day. Notes stay in this browser. The Not asked today
-  tile lists the PRs still to ask about.
+- **Notes:** the ✎ icon after a PR title opens a Markdown note for that PR, with Preview and Edit, such as what was
+  asked at the standup and what was promised. It shows on hover, and always once the PR has a note. Notes stay in this
+  browser; `note:` searches them.
 - Click the last comment to open every comment of the PR in a panel on the right, rendered as GitHub Markdown.
   Without a token, GitHub allows 60 such loads an hour.
 - The dot next to the tiles shows where the data comes from (gray for a `prs.json` snapshot, green for live data)
