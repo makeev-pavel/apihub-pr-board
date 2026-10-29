@@ -27,7 +27,7 @@ export const COLUMNS: Column[] = [
   { id: 'issue', sort: null, label: 'Issue', cls: 'c-issue', width: 190 },
   { id: 'author', sort: 'author', label: 'Author', cls: 'c-person', width: 170 },
   { id: 'ci', sort: 'ci', label: 'CI', cls: 'c-state', width: 60 },
-  { id: 'review', sort: 'review', label: 'Review', cls: 'c-state', width: 80 },
+  { id: 'review', sort: 'review', label: 'Review', cls: 'c-state', width: 96 },
   { id: 'merge', sort: 'merge', label: 'Conflicts', cls: 'c-state', width: 96 },
   { id: 'age', sort: 'age', label: 'Age · activity', cls: 'c-age', width: 132 },
   { id: 'assignee', sort: null, label: 'Assignee', cls: 'c-person', width: 170 },

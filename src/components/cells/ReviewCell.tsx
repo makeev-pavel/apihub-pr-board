@@ -6,6 +6,16 @@ import { Avatar } from '../common/Avatar.tsx';
 
 const REVIEW_POPOVER_PX = 320;
 
+// GitHub's own marks from Octicons (MIT): the dot of a pending review, and the arrows of a re-requested one.
+const MY_REVIEW_ICON = {
+  requested: 'M8 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z',
+  again: 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z',
+};
+const MY_REVIEW_TITLE = {
+  requested: 'Your review is requested',
+  again: 'Your review is requested again: you reviewed this PR before',
+};
+
 export function ReviewCell({ pr, now }: { pr: DerivedPullRequest; now: number }) {
   const { open, position, ref, toggle } = usePopover(REVIEW_POPOVER_PX);
   const state = REVIEW[pr.review];
@@ -39,8 +49,8 @@ export function ReviewCell({ pr, now }: { pr: DerivedPullRequest; now: number })
       </button>
       {waiting.length ? <span className="pending" aria-hidden="true" title={'Waiting for ' + plural(waiting.length, 'reviewer')}>◷{waiting.length}</span> : null}
       {pr.myReview ? (
-        <span className={'mine ' + pr.myReview} title={pr.myReview === 'again' ? 'Your review is requested again: you reviewed this PR before' : 'Your review is requested'}>
-          {pr.myReview === 'again' ? '↻ you' : 'you'}
+        <span className={'mine ' + pr.myReview} role="img" aria-label={MY_REVIEW_TITLE[pr.myReview]} title={MY_REVIEW_TITLE[pr.myReview]}>
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d={MY_REVIEW_ICON[pr.myReview]} /></svg>
         </span>
       ) : null}
       {open ? (

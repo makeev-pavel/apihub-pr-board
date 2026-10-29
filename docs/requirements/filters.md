@@ -6,7 +6,8 @@
   shows how many PRs of the current view (authors, draft status, area, and search) match it.
 - **FILTER-18** With a known viewer, a Review requested tile counts the PRs waiting for the viewer's review
   (**RULE-12**) and adds how many of them are re-requested, such as "5 Review requested · 2 again". The `review:`
-  qualifier also takes `requested` and `again`.
+  qualifier also takes `requested` and `again`. Until the viewer is known, a link with this filter (`quick=mine`)
+  shows every PR and keeps the filter in the address for when the data is live.
 - **FILTER-2** Clicking a tile turns its filter on or off; active tiles combine with AND. Open PRs turns them all
   off. A tile with no matching PRs is dimmed.
 

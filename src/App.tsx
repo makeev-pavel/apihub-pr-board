@@ -132,6 +132,8 @@ export function App() {
   }, [data.noSnapshot, token, wanted.length]);
 
   const viewer = data.source === 'live' && report && report.viewer ? report.viewer : '';
+  // Without a known viewer the Review requested filter has nobody to count for: it waits, kept in the address (FILTER-18).
+  const activeQuick = useMemo(() => (viewer ? view.quick : view.quick.filter((id) => id !== 'mine')), [viewer, view.quick]);
   const derived = useMemo(() => {
     const shown = new Set(repos.map((repo) => repo.toLowerCase()));
     const inView = (report ? report.prs : []).filter((pr) => !link.repos.length || shown.has(pr.repo.toLowerCase()));
@@ -153,8 +155,8 @@ export function App() {
   );
 
   const rows = useMemo(
-    () => visibleRows(base, { quick: view.quick, sort: view.sort, dir: view.dir }),
-    [base, view.quick, view.sort, view.dir],
+    () => visibleRows(base, { quick: activeQuick, sort: view.sort, dir: view.dir }),
+    [base, activeQuick, view.sort, view.dir],
   );
 
   const onSort = (key: SortKey) => {
@@ -174,7 +176,8 @@ export function App() {
           Open pull requests
         </h1>
         <div className="masthead-side">
-          <Tiles base={base} active={view.quick} setQuick={(quick) => patch({ quick })} viewer={viewer} />
+          <Tiles base={base} active={activeQuick} viewer={viewer}
+            setQuick={(quick) => patch({ quick: !viewer && view.quick.includes('mine') ? [...quick, 'mine'] : quick })} />
           {report ? <UpdateInfo report={report} live={data.source === 'live'} now={now} /> : null}
           <RefreshControl token={token} setToken={setToken} refreshing={refreshing} onRefresh={refresh} onAskToken={() => setAskingToken(true)}
             settings={settings} onSettingsChange={setSettings} columns={offeredColumns}

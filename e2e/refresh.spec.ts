@@ -117,11 +117,20 @@ test.describe('Refresh', () => {
     await expect(tile.locator('.count')).toHaveText(String(marked));
     await expect(tile).toContainText(again + ' again');
     const row = page.locator('.board > tbody > tr').filter({ hasText: 'validate package names on import' });
-    await expect(row.locator('.mine')).toHaveText('↻ you');
+    await expect(row.getByRole('img', { name: 'Your review is requested again: you reviewed this PR before' })).toBeVisible();
     await expect(row.locator('.mine')).toHaveAttribute('title', 'Your review is requested again: you reviewed this PR before');
     await tile.click();
     await expect(page.locator('.board > tbody > tr')).toHaveCount(marked);
     await page.getByRole('searchbox').fill('review:again');
     await expect(page.locator('.board > tbody > tr')).toHaveCount(again);
+  });
+
+  test('FILTER-18: a link with the Review requested filter shows every PR until the viewer is known, and keeps the filter', async ({ page }) => {
+    await openBoard(page, { report: 'typical', query: ALL + '&quick=mine' });
+    await expect(page.locator('.board > tbody > tr')).toHaveCount(36);
+    await expect(page).toHaveURL(/[?&]quick=mine(&|$)/);
+    // Another tile adds its filter and leaves the waiting one in the address.
+    await page.getByRole('group', { name: 'Quick filters' }).getByRole('button', { name: /CI failing/ }).click();
+    await expect(page).toHaveURL(/[?&]quick=(ci%2Cmine|mine%2Cci)(&|$)/);
   });
 });

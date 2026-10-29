@@ -49,7 +49,7 @@ export function reviewCases(now: number): FixtureEntry[] {
       latestOpinionatedReviews: conn([review('APPROVED', null, ago(2))]),
       reviewRequests: conn([{ requestedReviewer: null }]),
     }),
-    node('Your review again: boris-k, the mock viewer on Refresh, requested changes and is asked again (↻ you).', {
+    node('Your review again: boris-k, the mock viewer on Refresh, requested changes and is asked again (the sync icon).', {
       title: 'fix(portal-backend): validate package names on import',
       author: user('emil-qa'), createdAt: ago(3), updatedAt: ago(0, 2),
       latestOpinionatedReviews: conn([review('CHANGES_REQUESTED', 'boris-k', ago(1))]),

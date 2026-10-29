@@ -169,6 +169,6 @@
 .note-foot { font-size: 12px; }
 .note-error { margin: 0; color: var(--bad); }
 
-/* Your reviews (TABLE-29): a small marker after the Review code. */
-.review-wrap .mine { margin-left: 4px; padding: 0 5px; border-radius: 4px; font-size: 11px; font-weight: 600; line-height: 16px; color: var(--accent); background: var(--accent-soft); }
-.review-wrap .mine.again { color: var(--surface); background: var(--accent); }
+/* Your reviews (TABLE-29): GitHub's icon after the Review code, the dot in its attention color. */
+.review-wrap .mine { display: inline-flex; color: var(--accent); }
+.review-wrap .mine.requested { color: var(--warn); }
