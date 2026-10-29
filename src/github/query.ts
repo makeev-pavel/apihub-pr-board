@@ -1,6 +1,9 @@
 // The GraphQL query for open pull requests and the sizes it asks for.
 
-export const PAGE_SIZE = 50;
+// GitHub stops a GraphQL query after about ten seconds, and PRs with long check lists make pages slow, so pages are
+// small, and a page that times out is asked again with fewer PRs, down to MIN_PAGE_SIZE.
+export const PAGE_SIZE = 20;
+export const MIN_PAGE_SIZE = 5;
 export const CHECKS_PAGE_SIZE = 100;
 
 // More than RECENT_COMMENTS, so empty and marker-only comments do not hide older real ones.

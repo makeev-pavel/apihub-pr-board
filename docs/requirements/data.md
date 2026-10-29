@@ -32,7 +32,10 @@
 
 ## Collected fields
 
-- **DATA-9** One GraphQL query, 50 PRs a page, newest first, collects for each open PR:
+- **DATA-9** One GraphQL query, 20 PRs a page, newest first, collects for each open PR. GitHub stops a query after
+  about ten seconds, so a page that times out (HTTP 502 to 504, or a failed fetch, which is how a timeout without CORS
+  headers looks in the browser) is asked again with half as many PRs, down to five, and later pages keep that size.
+  For each PR the query collects:
   - number, title, URL, draft flag, target branch, created and updated time, and mergeability;
   - the author and up to 10 assignees, with avatars, and whether the author is a GitHub bot;
   - up to 30 labels with color and description;

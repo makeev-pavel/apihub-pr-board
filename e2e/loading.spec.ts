@@ -87,10 +87,10 @@ test.describe('loading prs.json', () => {
     await field.fill('acme/gadgets acme/widgets');
     await field.press('Enter');
     await expect(rows(page)).toHaveCount(79);
-    // One query a page and repository: gadgets, then widgets (two pages of 50) and gadgets. Nothing after that.
-    expect(graphqlCalls).toBe(4);
+    // One query a page and repository: gadgets, then widgets (75 PRs, four pages of 20) and gadgets. Nothing after that.
+    expect(graphqlCalls).toBe(6);
     await page.waitForTimeout(1000);
-    expect(graphqlCalls).toBe(4);
+    expect(graphqlCalls).toBe(6);
   });
 
   test('DATA-23: a repository that cannot be read is loaded once, not again and again', async ({ page }) => {

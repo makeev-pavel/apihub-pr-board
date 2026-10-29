@@ -296,3 +296,26 @@ test('SEC-1 PANEL-11: the token follows next pages only within the API, and a bo
   const notList = restFetch({ [comments]: { body: { message: 'odd' } }, [reviews]: { body: [] } });
   await assert.rejects(fetchAllComments({ number: 7, repository, fetchImpl: notList.fetchImpl, restUrl }), /not a list/);
 });
+
+test('DATA-9 DATA-13: a page GitHub cannot answer in time is asked again with fewer PRs, down to five', async () => {
+  const sizes: number[] = [];
+  const scenario = REFRESH_SCENARIOS.find((s) => s.id === 'ok')!;
+  // GitHub times out on pages above 7 PRs: a 504 without CORS headers, which the browser reports as a failed fetch.
+  const fetchImpl = async (_url: string, init: RequestInit) => {
+    const variables = JSON.parse(String(init.body)).variables;
+    sizes.push(variables.first);
+    if (variables.first > 7) {
+      if (sizes.length % 2) throw new TypeError('Failed to fetch');
+      return new Response('Gateway Timeout', { status: 504 });
+    }
+    const result = scenario.respond(variables, Date.parse('2026-10-28T12:00:00Z'));
+    return new Response((result as { body: string }).body, { status: 200 });
+  };
+  const report = await fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl });
+  const full = await fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl: mockFetch('ok').fetchImpl });
+  assert.equal(report.prs.length, full.prs.length);
+  assert.deepEqual(sizes.slice(0, 3), [20, 10, 5]);
+  assert.ok(sizes.slice(3).every((size) => size === 5), 'later pages keep the size that worked');
+  const never = async () => { throw new TypeError('Failed to fetch'); };
+  await assert.rejects(fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl: never }), /Cannot reach api\.github\.com/);
+});
