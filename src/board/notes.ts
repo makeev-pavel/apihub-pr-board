@@ -31,6 +31,20 @@ export function setNote(notes: Notes, key: string, text: string, now: number): N
   return next;
 }
 
+// Changes storage did not take (NOTE-2), by key; null is a note deleted here. They stay over what is stored until a
+// save succeeds, so a failed save neither loses an edit nor brings a deleted note back.
+export type UnsavedNotes = Map<string, Note | null>;
+
+export function withUnsaved(stored: Notes, unsaved: UnsavedNotes): Notes {
+  if (!unsaved.size) return stored;
+  const next = { ...stored };
+  for (const [key, note] of unsaved) {
+    if (note) next[key] = note;
+    else delete next[key];
+  }
+  return next;
+}
+
 function isDayNote(value: unknown): value is DayNote {
   const entry = value as Partial<DayNote> | null;
   return !!entry && typeof entry === 'object' && typeof entry.date === 'string' && DAY.test(entry.date)

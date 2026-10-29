@@ -7,7 +7,9 @@ same notes for their own PRs. The next day the note shows what was promised.
 - **NOTE-2** Notes are kept in this browser (`localStorage`, under their own key) and are never sent anywhere. They
   survive reloads and Refresh, and stay after the PR is closed. A stored entry that is invalid is dropped, and the
   rest still loads. Notes written by the earlier per-day version move into the document once, one paragraph per day,
-  newest first, such as "**2026-10-28** ✓ Fixed the tests".
+  newest first, such as "**2026-10-28** ✓ Fixed the tests". A change is written over what another tab stored
+  meanwhile, and that tab picks it up. When storage refuses a change, the note says "Not saved", and the change,
+  a deleted note included, stays on this page over what is stored until a save succeeds.
 - **NOTE-3** A note icon sits after the PR title. It shows when the pointer is over the row, when it has focus, and
   always once the PR has a note, in the accent color. On touch screens it always shows.
 - **NOTE-4** Clicking the icon opens a panel along the right edge of the window with Preview and Edit. It opens in

@@ -112,4 +112,32 @@ test.describe('notes', () => {
     await expect(other.getByRole('button', { name: 'Notes for PR #206' })).toBeAttached();
     await other.close();
   });
+
+  test('NOTE-2: while storage refuses notes, a deleted note stays deleted when another note changes', async ({ page }) => {
+    await seedNotes(page, {
+      'acme/widgets#206': { text: 'Old note', updatedAt: '2026-10-27T10:00:00.000Z' },
+      'acme/widgets#203': { text: 'Other note', updatedAt: '2026-10-27T10:00:00.000Z' },
+    });
+    await openBoard(page, { report: 'typical', query: ALL });
+    // The storage is full from now on.
+    await page.evaluate((key) => {
+      const setItem = Storage.prototype.setItem;
+      Storage.prototype.setItem = function (name: string, value: string) {
+        if (name === key) throw new DOMException('full', 'QuotaExceededError');
+        setItem.call(this, name, value);
+      };
+    }, NOTES_KEY);
+    const note = page.getByRole('textbox', { name: 'Note in Markdown' });
+    await page.getByRole('button', { name: 'Notes for PR #206' }).click();
+    await page.getByRole('button', { name: 'Edit' }).click();
+    await note.fill('');
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('button', { name: 'Notes for PR #206' })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Notes for PR #203' }).click();
+    await page.getByRole('button', { name: 'Edit' }).click();
+    await note.fill('Other note, changed');
+    await expect(page.getByRole('alert')).toHaveText("Not saved: this browser's storage is full or blocked.");
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('button', { name: 'Notes for PR #206' })).toHaveCount(0);
+  });
 });

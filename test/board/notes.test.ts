@@ -1,6 +1,6 @@
 import { afterEach, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { dayNotesToText, loadNotes, MAX_NOTE_CHARS, parseNotes, readStoredNotes, saveNotes, setNote } from '../../src/board/notes.ts';
+import { dayNotesToText, loadNotes, MAX_NOTE_CHARS, parseNotes, readStoredNotes, saveNotes, setNote, withUnsaved } from '../../src/board/notes.ts';
 
 const KEY = 'acme/widgets#7';
 const NOW = Date.parse('2026-10-28T12:00:00Z');
@@ -75,4 +75,14 @@ test('NOTE-2: a note saved in another tab is read back before writing, and a fai
   useStorage(true);
   assert.equal(readStoredNotes(), null, 'blocked storage cannot be read');
   assert.equal(saveNotes({}), false);
+});
+
+test('NOTE-2: changes storage did not take stay over what is stored, a deleted note included', () => {
+  const stored = { ...setNote({}, KEY, 'old text', NOW), ...setNote({}, 'acme/widgets#8', 'from another tab', NOW) };
+  const unsaved = new Map([[KEY, null], ['acme/widgets#9', { text: 'new here', updatedAt: '2026-10-28T12:00:00.000Z' }]]);
+  assert.deepEqual(withUnsaved(stored, unsaved), {
+    'acme/widgets#8': stored['acme/widgets#8'],
+    'acme/widgets#9': { text: 'new here', updatedAt: '2026-10-28T12:00:00.000Z' },
+  });
+  assert.equal(withUnsaved(stored, new Map()), stored, 'nothing unsaved leaves the stored notes as they are');
 });
