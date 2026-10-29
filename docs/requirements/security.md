@@ -17,9 +17,8 @@
 
 ## Build and deployment
 
-- **SEC-5** The scheduled build uses the workflow's built-in `GITHUB_TOKEN` with read access to repository contents.
-  Only the step that fetches the PRs sees it; installing packages and bundling the page do not. Checkouts keep no
-  credentials in the git config, so a later step cannot read the token from there.
+- **SEC-5** The workflow reads repository contents only. No step reads `GITHUB_TOKEN`, and checkouts keep no
+  credentials in the git config, so no step can reach the token from there either.
 - **SEC-6** Only the deploy job may write to Pages and request an OIDC token. A running deploy is never cancelled
   by a newer run; the newer run waits.
 

@@ -18,10 +18,10 @@ test.describe('Refresh', () => {
   test('DATA-6 SET-13: Refresh without a token asks for one, then loads live data', async ({ page }) => {
     await openBoard(page, { report: 'typical', query: ALL });
     await page.getByRole('button', { name: 'Refresh', exact: true }).click();
-    const tokenField = page.locator('#token-input');
+    const tokenField = page.getByRole('dialog', { name: 'Add a GitHub token' }).getByLabel('Token');
     await expect(tokenField).toBeFocused();
     await tokenField.fill('mock-token');
-    await page.getByRole('button', { name: 'Save and refresh' }).click();
+    await page.getByRole('button', { name: 'Save and load' }).click();
     await expect(page.locator('.source-button')).toHaveText('live, just now');
     await expect(page.locator('.source-button')).toHaveClass(/\blive\b/);
     await expect(page.locator('.board > tbody > tr')).toHaveCount(75);
@@ -87,5 +87,17 @@ test.describe('Refresh', () => {
     await page.waitForResponse((response) => response.url().endsWith('/prs.json'));
     await page.waitForTimeout(300);
     await expect(page.locator('.source-button')).toHaveText('live, just now');
+  });
+
+  test('DATA-6: rows stay while Refresh runs, and the table keeps its scroll position when the new data arrives', async ({ page }) => {
+    await refresh(page, 'slow');
+    await expect(page.getByRole('button', { name: 'Refreshing…' })).toBeVisible();
+    const wrap = page.locator('.table-wrap');
+    await wrap.evaluate((element) => { element.scrollTop = 600; });
+    await expect(page.locator('.board > tbody > tr')).toHaveCount(36);
+    await expect(page.locator('.board .spinner')).toHaveCount(0);
+    await expect(page.locator('.source-button')).toHaveText('live, just now', { timeout: 10_000 });
+    await expect(page.locator('.board > tbody > tr')).toHaveCount(75);
+    expect(await wrap.evaluate((element) => element.scrollTop)).toBe(600);
   });
 });

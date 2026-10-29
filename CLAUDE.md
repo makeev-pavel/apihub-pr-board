@@ -9,14 +9,14 @@ A board of the open pull requests of one or more GitHub repositories, published 
 
 ## Layout
 
-- `src/github/`: the GitHub side, shared by the scheduled build and the page, so it must not use Node APIs.
+- `src/github/`: the GitHub side, shared by the snapshot script and the page, so it must not use Node APIs.
   `query.ts` (the GraphQL query), `raw.ts` (raw GraphQL and REST types), `normalize.ts` (raw nodes to `PullRequest`),
   `graphql.ts` (open PRs, page by page), `rest.ts` (all comments of one PR), `http.ts` (shared error and fetch type).
 - `src/types.ts`: the shape of `prs.json` and of derived rows. Raw GraphQL types live in `src/github/raw.ts`.
 - `src/model/`: rules without UI, one concern each: `rules.ts` (attention, bots, titles), `areas.ts`, `search.ts`,
   `derive.ts` (per-PR fields), `comments.ts`, `report.ts` (`prs.json` shape). Tests mirror it in `test/model/`.
-- `src/repository.ts` and `src/config.ts`: the target repositories from `PR_BOARD_REPO` (a list), passed to the page
-  by Vite `define`. `vite.config.ts` parses it once; with mock data the dev server always uses `acme/widgets`.
+- `src/repository.ts` and `src/config.ts`: optional default repositories from `PR_BOARD_REPO` (a list), passed to the
+  page by Vite `define`. `vite.config.ts` parses it once; with mock data the dev server always uses `acme/widgets`.
   A PR is identified by repository and number (`pullRequestKey` in `src/model/report.ts`), never by number alone.
 - `src/board/`: board logic without React: state codes (`states.ts`), columns and widths, the view and its URL,
   filtering and sorting rows (`view.ts`), the repositories and extra bots in the address (`link.ts`), authors,
@@ -36,8 +36,8 @@ A board of the open pull requests of one or more GitHub repositories, published 
   `dev/panel.ts`, the DEV panel. `dev/scenarios/`: what `/prs.json`, the GraphQL mock, and the REST mock answer.
   `dev/fixtures/`: the fictional cast, the generated typical board, the second repository (`gadgets.ts`), and the
   corner cases by topic (`cases/`; add a case to the matching topic file).
-- `scripts/build-site.ts` and `.github/workflows/pages.yml`: the hourly build and the Pages deploy. The workflow runs
-  the unit and browser tests before it builds, except on the hourly schedule.
+- `.github/workflows/pages.yml`: on a push to `main`, the unit and browser tests, then the page without data, then the
+  Pages deploy. `scripts/build-site.ts` writes an optional `prs.json` snapshot; the workflow does not run it.
 - `test/`: unit tests, one file per module, mirroring `src/`. `e2e/`: browser tests, one spec per area of the page,
   `helpers.ts`, and `screenshots.spec.ts` with its baselines in `e2e/__screenshots__`.
 - `docs/adr/`: decision records; `0001-test-stack.md` explains the three test layers.
@@ -69,6 +69,6 @@ A board of the open pull requests of one or more GitHub repositories, published 
 
 ## Status
 
-Built and tested locally, committed on `refactor/final-structure`, not pushed or deployed. Before the first deploy:
-set **Settings → Pages → Source** to **GitHub Actions** and add the `PR_BOARD_REPO` repository variable. History was
-squashed on October 28, 2026, so no commit holds real data; keep it that way.
+Pushed to GitHub (`refactor/final-structure` and `main`); Pages deploys from `main`. The published page has no
+data: viewers open it with `?repos=owner/name` and their own token. History was squashed on October 28, 2026, so no
+commit holds real data; keep it that way.

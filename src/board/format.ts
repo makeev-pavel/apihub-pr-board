@@ -9,6 +9,9 @@ const MINUTE_MS = 60 * 1000;
 
 const HEADER_REPOSITORIES = 2;
 
+// Live data loads again this often while its tab is visible (DATA-24); the data source popover says so.
+export const AUTO_REFRESH_MS = 5 * 60 * 1000;
+
 const owner = (repo: string) => repo.slice(0, repo.indexOf('/')).toLowerCase();
 
 // owner/name, or just the name when every repository on the board has the same owner.

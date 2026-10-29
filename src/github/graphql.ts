@@ -7,7 +7,7 @@ import { GitHubError } from './http.ts';
 import type { Fetch } from './http.ts';
 import { nodes, normalizePullRequest } from './normalize.ts';
 import {
-  ALL_PARTS, AVATAR_SIZE, CHECKS_PAGE_SIZE, COMMENTS_FETCHED, OPEN_PULL_REQUESTS_QUERY, PAGE_SIZE,
+  ALL_PARTS, AVATAR_SIZE, CHECKS_PAGE_SIZE, COMMENTS_FETCHED, MIN_PAGE_SIZE, OPEN_PULL_REQUESTS_QUERY, PAGE_SIZE,
 } from './query.ts';
 import type { QueryParts } from './query.ts';
 import type { RawPullRequest, RawResponse } from './raw.ts';
@@ -55,6 +55,8 @@ interface RepositoryPullRequests {
 
 type ReadOptions = Required<Omit<FetchOptions, 'repositories'>>;
 
+const TIMEOUT_STATUSES = new Set([0, 502, 503, 504]);
+
 // GitHub answers a repository it cannot give with null and errors at "repository": NOT_FOUND when it does not exist or
 // the token cannot see it, FORBIDDEN when the organization blocks the token (SAML, for one). Returns the warning.
 function unreadableRepository(body: RawResponse, repo: string): string | null {
@@ -80,11 +82,21 @@ async function readRepository(repository: Repository, several: boolean, options:
   let projectsAvailable = true;
   let after: string | null = null;
   let totalCount = 0;
-  do {
-    const body = await postQuery(fetchImpl, endpoint, token, {
-      owner: repository.owner, repo: repository.name, first: PAGE_SIZE, after, avatarSize: AVATAR_SIZE, checksPageSize: CHECKS_PAGE_SIZE, commentsFetched: COMMENTS_FETCHED,
-      withChecks: parts.checks, withComments: parts.comments,
-    });
+  let first = PAGE_SIZE;
+  for (;;) {
+    let body: RawResponse;
+    try {
+      body = await postQuery(fetchImpl, endpoint, token, {
+        owner: repository.owner, repo: repository.name, first, after, avatarSize: AVATAR_SIZE, checksPageSize: CHECKS_PAGE_SIZE, commentsFetched: COMMENTS_FETCHED,
+        withChecks: parts.checks, withComments: parts.comments,
+      });
+    } catch (error) {
+      // A timeout comes back as 502-504, or, without CORS headers, as a failed fetch (status 0). The same page is asked
+      // again with half the PRs, and later pages keep that size.
+      if (!(error instanceof GitHubError) || !TIMEOUT_STATUSES.has(error.status) || first <= MIN_PAGE_SIZE) throw error;
+      first = Math.max(MIN_PAGE_SIZE, Math.floor(first / 2));
+      continue;
+    }
     const unreadable = after ? null : unreadableRepository(body, repo);
     if (unreadable) {
       if (several) return { unreadable };
@@ -100,7 +112,8 @@ async function readRepository(repository: Repository, several: boolean, options:
     totalCount = connection.totalCount;
     rawNodes.push(...nodes(connection));
     after = connection.pageInfo.hasNextPage ? connection.pageInfo.endCursor : null;
-  } while (after);
+    if (!after) break;
+  }
   if (rawNodes.length !== totalCount) {
     warnings.add('GitHub reported ' + totalCount + ' open pull requests' + (several ? ' in ' + repo : '') + ' but returned ' + rawNodes.length + '.');
   }

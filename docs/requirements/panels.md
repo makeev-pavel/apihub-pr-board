@@ -18,8 +18,9 @@
   or requests it says so. It links to the PR.
 - **PANEL-7** Rules (in the legend): the attention rules in use (**RULE-6** to **RULE-8**) and how the states are
   read (**RULE-1** to **RULE-3**). With custom rules it also gives the team defaults.
-- **PANEL-8** Data source (in the header): whether the data is the snapshot or live, how old it is, the exact time,
-  and the workflow run link when there is one.
+- **PANEL-8** Data source (in the header): whether the data is a snapshot or live, how old it is, the exact time,
+  and the workflow run link when there is one. For live data it says that the board loads again every 5 minutes
+  (**DATA-24**).
 
 ## Comments panel
 

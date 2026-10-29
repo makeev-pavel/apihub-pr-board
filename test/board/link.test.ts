@@ -53,9 +53,11 @@ test('SET-17: extra bots saved in this browser move into the address once', () =
   assert.equal(nothing.settings, DEFAULT_SETTINGS);
 });
 
-test('DATA-22: the banner names the missing repositories and says how to load them', () => {
-  assert.equal(missingReposMessage(['acme/gizmos'], true, false), 'acme/gizmos is not in the hourly snapshot. Refresh loads it.');
-  assert.equal(missingReposMessage(['acme/gizmos', 'acme/tools'], false, false),
-    'acme/gizmos, acme/tools are not in the hourly snapshot. Add a GitHub token in Settings, then Refresh loads them.');
-  assert.equal(missingReposMessage(['acme/gizmos'], true, true), 'acme/gizmos is not in the live data. Refresh loads it.');
+test('DATA-22 DATA-23: the banner names the missing repositories and says how to load them', () => {
+  assert.equal(missingReposMessage(['acme/gizmos'], true, 'snapshot'), 'acme/gizmos is not in the snapshot. Refresh loads it.');
+  assert.equal(missingReposMessage(['acme/gizmos', 'acme/tools'], false, 'snapshot'),
+    'acme/gizmos, acme/tools are not in the snapshot. Add a GitHub token in Settings, then Refresh loads them.');
+  assert.equal(missingReposMessage(['acme/gizmos'], true, 'live'), 'acme/gizmos is not in the live data. Refresh loads it.');
+  assert.equal(missingReposMessage(['acme/gizmos'], false, 'none'),
+    'acme/gizmos is not loaded yet. Add a GitHub token in Settings, then Refresh loads it.');
 });

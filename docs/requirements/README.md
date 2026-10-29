@@ -1,8 +1,8 @@
 # PR board requirements
 
 The board lists the open pull requests of one or more GitHub repositories and shows what blocks each one: CI,
-review, merge conflicts, and the team's own rules. It is a static page on GitHub Pages with an hourly data
-snapshot, and any viewer can load live data with their own token.
+review, merge conflicts, and the team's own rules. It is a static page on GitHub Pages: the link names the
+repositories, and each viewer loads the data with their own token, which stays in their browser.
 
 These files are the spec. A change in behavior updates the matching requirement in the same change.
 
@@ -14,8 +14,8 @@ These files are the spec. A change in behavior updates the matching requirement 
 
 ## Scope
 
-- One or more repositories, chosen by configuration (**DATA-17**) or by a link (**FILTER-14**). Open pull requests
-  only, drafts included.
+- One or more repositories, chosen by a link (**FILTER-14**) or in Settings (**SET-16**). Open pull requests only,
+  drafts included.
 - Read-only: the board never changes anything on GitHub.
 - Out of scope: closed or merged PRs, history and charts, GitHub OAuth login (it would need a server).
 
@@ -47,16 +47,14 @@ These files are the spec. A change in behavior updates the matching requirement 
 
 ## Known limitations
 
-- Team review requests need read access to the organization. With the built-in `GITHUB_TOKEN` of the workflow they
-  may come back empty, and the board then shows no pending team.
+- Team review requests need read access to the organization. With a token that lacks it they may come back empty,
+  and the board then shows no pending team.
 - Images in comments load from wherever their authors host them, so opening the comments panel lets those hosts
   see the viewer's address. GitHub itself proxies such images; the board does not.
 - Without a token the comments panel shares GitHub's limit of 60 REST requests an hour per address.
 - Project sites of one owner share the `<owner>.github.io` origin, so another Pages site of the same owner can read
   the token this board keeps in `localStorage`. The token only has public read access; a custom domain removes the
   shared origin.
-- GitHub turns off scheduled workflows in a public repository after 60 days without commits. The snapshot then
-  stops updating until someone enables the workflow again or pushes a commit.
 
 ## Maintenance notes
 

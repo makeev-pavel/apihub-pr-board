@@ -4,6 +4,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Plugin } from 'vite';
 import { fetchOpenPullRequests } from '../src/github/graphql.ts';
+import { repositoryName } from '../src/repository.ts';
 import type { Repository } from '../src/repository.ts';
 import type { DevConfig } from '../src/types.ts';
 import { AVATAR_PATH, avatarSvg } from './avatars.ts';
@@ -34,6 +35,11 @@ export function devMocks({ repositories }: { repositories: Repository[] }): Plug
     if (!live) {
       const scenario = REPORT_SCENARIOS.find((s) => s.id === state.report) || REPORT_SCENARIOS[0];
       await respondMock(res, scenario.respond(now()));
+      return;
+    }
+    // Without a token and repositories there is no snapshot, as on the published page: the viewer enters both (DATA-23).
+    if (!token || !repositories.length) {
+      send(res, 404, 'No snapshot in live mode without GITHUB_TOKEN and PR_BOARD_REPO');
       return;
     }
     if (!liveCache || Date.now() - liveCache.at > LIVE_CACHE_MS) {
@@ -96,10 +102,9 @@ export function devMocks({ repositories }: { repositories: Repository[] }): Plug
     apply: 'serve',
     configResolved(config) {
       live = config.mode === LIVE_MODE;
-      if (live && !token) {
-        throw new Error('Live mode needs GITHUB_TOKEN. For example: GITHUB_TOKEN=$(gh auth token) npm run dev:live');
-      }
-      console.log(live ? 'Data: live GitHub API' : 'Data: mock scenarios (switch them in the DEV panel)');
+      const snapshot = token && repositories.length ? 'a snapshot of ' + repositories.map(repositoryName).join(', ')
+        : 'no snapshot; enter the repositories and a token on the page';
+      console.log(live ? 'Data: live GitHub API, ' + snapshot : 'Data: mock scenarios (switch them in the DEV panel)');
     },
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
