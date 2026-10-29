@@ -15,6 +15,8 @@ keep the same notes for their own PRs. The next day the notes show what was prom
   earlier notes newest first, each with its day and whether the status was asked. Today's text is saved when the
   field loses focus, on Ctrl+Enter, and when the popover closes. Checking the box or typing marks the PR as asked
   today.
+- **NOTE-8** Earlier days in the popover can be edited like today: check or uncheck "asked" and change the text, saved
+  the same way. A day with the box unchecked and the text cleared is removed from the history.
 - **NOTE-5** At midnight the checkboxes start empty for the new day; yesterday's notes become history.
 - **NOTE-6** A quick filter tile, Not asked today, shows the PRs whose status has not been asked today (**FILTER-1**).
 - **NOTE-7** The `note:` qualifier matches the text of any note of a PR, such as `note:tests`; `-note:` excludes.

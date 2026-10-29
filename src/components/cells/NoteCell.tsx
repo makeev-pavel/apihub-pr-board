@@ -30,54 +30,75 @@ export function NoteCell({ pr }: { pr: DerivedPullRequest }) {
   );
 }
 
-// Today's note and the earlier ones (NOTE-4). Today's text is saved on blur, on Ctrl+Enter, and when the popover closes.
+type NoteChange = Partial<Pick<NoteEntry, 'asked' | 'text'>>;
+
+// Today's note and the earlier ones, each editable (NOTE-4, NOTE-8).
 function NotePopover({ pr, prKey, entries, today, update, style }: {
   pr: DerivedPullRequest;
   prKey: string;
   entries: NoteEntry[];
   today: string;
-  update: (key: string, change: Partial<Pick<NoteEntry, 'asked' | 'text'>>) => void;
+  update: (key: string, change: NoteChange, day?: string) => void;
   style: CSSProperties | undefined;
 }) {
-  const current = noteFor(entries, today);
-  const [draft, setDraft] = useState(current ? current.text : '');
-  const draftRef = useRef(draft);
-  const saved = useRef(current ? current.text : '');
-  useEffect(() => { draftRef.current = draft; });
-  const commit = useCallback(() => {
-    const text = draftRef.current.trim();
-    if (text === saved.current) return;
-    saved.current = text;
-    update(prKey, { text });
-  }, [prKey, update]);
-  // Closing with Escape or a click outside unmounts the field without a blur, so the draft is saved here too.
-  useEffect(() => commit, [commit]);
   const earlier = entries.filter((entry) => entry.date < today);
-
   return (
     <div className="popover note-popover" role="dialog" aria-label={'Standup notes for PR #' + pr.number} style={style}>
       <strong className="popover-title">Today</strong>
-      <label className="note-asked">
-        <input type="checkbox" checked={!!current && current.asked} onChange={(event) => update(prKey, { asked: event.target.checked })} />
-        Status asked
-      </label>
-      <textarea className="text-field" rows={3} value={draft} placeholder="What was done or promised" aria-label="Today's note"
-        onChange={(event) => setDraft(event.target.value)} onBlur={commit}
-        onKeyDown={(event) => { if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) commit(); }} />
+      <NoteEditor entry={noteFor(entries, today)} rows={3} askedLabel="Status asked" textLabel="Today's note"
+        onChange={(change) => update(prKey, change, today)} />
       {earlier.length ? (
         <>
           <strong className="popover-title">Earlier</strong>
           <ul className="note-history">
-            {earlier.map((entry) => (
-              <li key={entry.date}>
-                <span className="when">{dayLabel(entry.date, today)}</span>
-                {entry.asked ? <span className="chip">asked</span> : null}
-                {entry.text ? <span className="note-text">{entry.text}</span> : null}
-              </li>
-            ))}
+            {earlier.map((entry) => {
+              const day = dayLabel(entry.date, today);
+              return (
+                <li key={entry.date}>
+                  <span className="when">{day}</span>
+                  <NoteEditor entry={entry} rows={2} askedLabel={'Status asked ' + day} textLabel={'Note for ' + day}
+                    onChange={(change) => update(prKey, change, entry.date)} />
+                </li>
+              );
+            })}
           </ul>
         </>
       ) : null}
+    </div>
+  );
+}
+
+// One day's checkbox and text. The text is saved on blur, on Ctrl+Enter, and when the popover closes; a day whose box is
+// unchecked and whose text is empty is removed.
+function NoteEditor({ entry, rows, askedLabel, textLabel, onChange }: {
+  entry: NoteEntry | null;
+  rows: number;
+  askedLabel: string;
+  textLabel: string;
+  onChange: (change: NoteChange) => void;
+}) {
+  const [draft, setDraft] = useState(entry ? entry.text : '');
+  const draftRef = useRef(draft);
+  const saved = useRef(entry ? entry.text : '');
+  const onChangeRef = useRef(onChange);
+  useEffect(() => { draftRef.current = draft; onChangeRef.current = onChange; });
+  const commit = useCallback(() => {
+    const text = draftRef.current.trim();
+    if (text === saved.current) return;
+    saved.current = text;
+    onChangeRef.current({ text });
+  }, []);
+  // Closing with Escape or a click outside unmounts the field without a blur, so the draft is saved here too.
+  useEffect(() => commit, [commit]);
+  return (
+    <div className="note-editor">
+      <label className="note-asked">
+        <input type="checkbox" checked={!!entry && entry.asked} onChange={(event) => onChange({ asked: event.target.checked })} />
+        {askedLabel}
+      </label>
+      <textarea className="text-field" rows={rows} value={draft} placeholder="What was done or promised" aria-label={textLabel}
+        onChange={(event) => setDraft(event.target.value)} onBlur={commit}
+        onKeyDown={(event) => { if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) commit(); }} />
     </div>
   );
 }

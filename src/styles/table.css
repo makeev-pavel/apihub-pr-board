@@ -156,7 +156,7 @@
 .note-popover { gap: 8px; }
 .note-popover textarea { resize: vertical; font: inherit; font-size: 13px; padding: 6px 8px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); color: var(--fg); }
 .note-asked { display: flex; align-items: center; gap: 6px; font-size: 13px; }
-.note-history { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-height: 240px; overflow: auto; }
-.note-history li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; font-size: 13px; }
-.note-history .when { color: var(--muted); font-size: 12px; min-width: 76px; }
-.note-history .note-text { flex-basis: 100%; overflow-wrap: anywhere; white-space: pre-wrap; }
+.note-history { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-height: 320px; overflow: auto; }
+.note-history li { display: grid; gap: 4px; font-size: 13px; padding-top: 6px; border-top: 1px solid var(--line); }
+.note-history .when { color: var(--muted); font-size: 12px; }
+.note-editor { display: grid; gap: 6px; }

@@ -7,9 +7,10 @@ import type { NoteEntry } from '../board/notes.ts';
 export function useNotes(now: number) {
   const [notes, setNotes] = useState(loadNotes);
   const today = localDay(now);
-  const update = useCallback((key: string, change: Partial<Pick<NoteEntry, 'asked' | 'text'>>) => {
+  // Today by default; an earlier day when its note is edited (NOTE-8).
+  const update = useCallback((key: string, change: Partial<Pick<NoteEntry, 'asked' | 'text'>>, day = today) => {
     setNotes((prev) => {
-      const next = setNote(prev, key, today, change);
+      const next = setNote(prev, key, day, change);
       saveNotes(next);
       return next;
     });

@@ -18,6 +18,6 @@ export const ApiContext = createContext<Api>({ token: '', restUrl: REST_URL });
 interface NotesApi {
   notes: Notes;
   today: string;
-  update: (key: string, change: Partial<Pick<NoteEntry, 'asked' | 'text'>>) => void;
+  update: (key: string, change: Partial<Pick<NoteEntry, 'asked' | 'text'>>, day?: string) => void;
 }
 export const NotesContext = createContext<NotesApi>({ notes: {}, today: '', update: () => {} });

@@ -65,11 +65,29 @@ test.describe('standup notes', () => {
     await expect(cell.locator('.note-preview')).toHaveText('Yesterday: Fix the tests by noon');
     await expect(cell.locator('.note-preview')).toHaveClass(/faded/);
     await cell.locator('.note-preview').click();
-    const history = page.getByRole('dialog', { name: 'Standup notes for PR #206' }).locator('.note-history li');
-    await expect(history).toHaveCount(1);
-    await expect(history.first()).toContainText('Yesterday');
-    await expect(history.first()).toContainText('asked');
-    await expect(history.first()).toContainText('Fix the tests by noon');
+    const popover = page.getByRole('dialog', { name: 'Standup notes for PR #206' });
+    await expect(popover.locator('.note-history li')).toHaveCount(1);
+    await expect(popover.getByRole('checkbox', { name: 'Status asked Yesterday' })).toBeChecked();
+    await expect(popover.getByRole('textbox', { name: 'Note for Yesterday' })).toHaveValue('Fix the tests by noon');
+  });
+
+  test('NOTE-8: an earlier day can be edited, and clearing it removes it from the history', async ({ page }) => {
+    await seedNotes(page, { [PR_KEY]: [{ date: YESTERDAY, asked: false, text: 'Fix the tests' }] });
+    const cell = await openPr206(page);
+    await cell.locator('.note-preview').click();
+    const popover = page.getByRole('dialog', { name: 'Standup notes for PR #206' });
+    await popover.getByRole('checkbox', { name: 'Status asked Yesterday' }).check();
+    await popover.getByRole('textbox', { name: 'Note for Yesterday' }).fill('Fixed the tests, as promised');
+    await popover.getByRole('textbox', { name: 'Note for Yesterday' }).press('Control+Enter');
+    await expect(cell.locator('.note-preview')).toHaveText('Yesterday: Fixed the tests, as promised');
+    const stored = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key)!), NOTES_KEY);
+    expect(await stored()).toEqual({ [PR_KEY]: [{ date: YESTERDAY, asked: true, text: 'Fixed the tests, as promised' }] });
+    // Unchecked and empty: the day is gone.
+    await popover.getByRole('checkbox', { name: 'Status asked Yesterday' }).uncheck();
+    await popover.getByRole('textbox', { name: 'Note for Yesterday' }).fill('');
+    await page.keyboard.press('Escape');
+    await expect(cell.locator('.note-preview')).toHaveText('Add note');
+    expect(await stored()).toEqual({});
   });
 
   test('NOTE-5: at midnight the checkbox starts empty and today\'s note becomes yesterday\'s', async ({ page }) => {
