@@ -57,11 +57,12 @@
 - **FILTER-13** Search, authors, draft status, area, quick filters, and sort live in the URL query (`q`, `authors`,
   `draft`, `area`, `quick`, `sort`, `dir`). Defaults are left out, so the default view has a clean address. Opening
   a link restores the view; unknown values fall back to the defaults.
-- **FILTER-14** The address also carries two settings: `repos`, the repositories to show
-  (`repos=acme/widgets,acme/gadgets`), and `bots`, the extra bot logins (**SET-5**). Copy link keeps them, and
-  **Reset view** leaves them alone. Without `repos` the board shows every repository of the data; without `bots`
-  there are no extra bots. Invalid entries are dropped: a repository must be `owner/name` (up to 10), and a bot a
-  GitHub login (up to 50).
+- **FILTER-14** The address also carries three settings: `repos`, the repositories to show
+  (`repos=acme/widgets,acme/gadgets`), `bots`, the extra bot logins (**SET-5**), and `hide`, the hidden columns
+  (`hide=ci,assignee`, **SET-8**). Copy link keeps them, and **Reset view** leaves them alone. Without `repos` the
+  board shows every repository of the data; without `bots` there are no extra bots; without `hide` the columns saved
+  in this browser apply, and the address then shows them. A link with `hide` wins and is saved. Invalid entries are
+  dropped: a repository must be `owner/name` (up to 10), a bot a GitHub login (up to 50), and a column a known id.
 
 ## Several repositories
 

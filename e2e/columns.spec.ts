@@ -100,4 +100,25 @@ test.describe('columns', () => {
     expect(await width(page, 'Author')).toBe(170);
     expect(await page.evaluate((key) => localStorage.getItem(key), WIDTHS_KEY)).toBeNull();
   });
+
+  test('SET-8 FILTER-14: hidden columns go into the address, and a link with them hides the same columns', async ({ page }) => {
+    await openBoard(page, { report: 'typical', query: ALL });
+    const panel = await openSettings(page);
+    await panel.getByLabel('CI', { exact: true }).uncheck();
+    await panel.getByLabel('Assignee', { exact: true }).uncheck();
+    await expect(page).toHaveURL(/[?&]hide=ci,assignee(&|$)/);
+    await page.keyboard.press('Escape');
+
+    // A fresh browser with the link alone.
+    await page.evaluate(() => localStorage.clear());
+    await page.goto('/?' + ALL + '&hide=assignee');
+    await expect(th(page, 'Assignee')).toHaveCount(0);
+    await expect(th(page, 'CI')).toHaveCount(1);
+    const settings = await page.evaluate(() => JSON.parse(localStorage.getItem('apihub-pr-board.settings')!));
+    expect(settings.hiddenColumns).toEqual(['assignee']);
+
+    await (await openSettings(page)).getByRole('button', { name: 'Reset to defaults' }).click();
+    await expect(th(page, 'Assignee')).toHaveCount(1);
+    expect(page.url()).not.toContain('hide=');
+  });
 });

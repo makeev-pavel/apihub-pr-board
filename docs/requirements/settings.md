@@ -11,7 +11,7 @@
 | **SET-5** | Attention rules | Extra bot logins, separated by commas or spaces (**RULE-10**). | Empty |
 | **SET-6** | Areas | BE and FE lists of labels and title scopes (**RULE-11**). | Monorepo modules; `ui-tests` is FE |
 | **SET-7** | View | Theme: System, Light, or Dark. Density: Comfortable or Compact rows. | System, Comfortable |
-| **SET-8** | Columns | Show or hide each column except # and Pull request; **Reset column widths**. | All shown |
+| **SET-8** | Columns | Show or hide each column except # and Pull request, kept in this browser and in the address (**FILTER-14**); **Reset column widths**. | All shown |
 | **SET-9** | GitHub token | Save, replace, or forget the token for Refresh and the comments panel. | None |
 
 - **SET-10** When an attention rule differs from its default, the gear shows a dot, the legend shows **Custom
