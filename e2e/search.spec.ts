@@ -32,14 +32,14 @@ test.describe('search', () => {
   test('FILTER-8: a leading minus excludes, and quotes keep spaces', async ({ page }) => {
     await search(page, '-is:draft "good first issue"');
     await expectAll(page, (tr) => !tr.querySelector('.chip.draft')
-      && [...tr.querySelectorAll('.label-chip')].some((c) => c.textContent === 'good first issue'));
+      && [...tr.querySelectorAll('td.c-title .label-chip')].some((c) => c.textContent === 'good first issue'));
   });
 
   const QUALIFIERS: [string, (row: Element) => boolean][] = [
     ['author:anna-dev', (tr) => tr.querySelector('td:nth-child(4) .login')?.textContent === 'anna-dev'],
     ['assignee:none', (tr) => tr.querySelector('td:nth-child(9)')!.textContent === 'Unassigned'],
-    ['label:bug', (tr) => [...tr.querySelectorAll('.label-chip')].some((c) => c.textContent === 'bug')],
-    ['label:none', (tr) => tr.querySelectorAll('.label-chip').length === 0],
+    ['label:bug', (tr) => [...tr.querySelectorAll('td.c-title .label-chip')].some((c) => c.textContent === 'bug')],
+    ['label:none', (tr) => tr.querySelectorAll('td.c-title .label-chip').length === 0],
     ['base:develop', (tr) => tr.querySelector('.chip.branch')?.textContent === '→ develop'],
     ['ci:failing', (tr) => tr.classList.contains('ci-failing')],
     ['ci:none', (tr) => tr.classList.contains('ci-none')],
@@ -52,7 +52,7 @@ test.describe('search', () => {
     ['is:stale', (tr) => !!tr.querySelector('.age.over')],
     ['is:attention', (tr) => !!tr.querySelector('.attn-icon')],
     ['no:issue', (tr) => !tr.querySelector('.issue-ref')],
-    ['no:label', (tr) => tr.querySelectorAll('.label-chip').length === 0],
+    ['no:label', (tr) => tr.querySelectorAll('td.c-title .label-chip').length === 0],
     ['no:assignee', (tr) => tr.querySelector('td:nth-child(9)')!.textContent === 'Unassigned'],
   ];
   for (const [text, check] of QUALIFIERS) {

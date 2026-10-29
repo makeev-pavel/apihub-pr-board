@@ -40,7 +40,8 @@
   - number, title, URL, draft flag, target branch, created and updated time, and mergeability;
   - the author and up to 10 assignees, with avatars, and whether the author is a GitHub bot;
   - up to 30 labels with color and description;
-  - up to 10 linked issues from the Development field (number, title, URL) and up to 10 GitHub Projects;
+  - up to 10 linked issues from the Development field (number, title, URL, issue type, and up to 10 labels) and up to
+    10 GitHub Projects;
   - the latest decision of up to 20 reviewers and up to 20 pending review requests, users and teams;
   - the overall CI state of the last commit and, for failing PRs only, the failed checks among the first 100;
   - the last 5 issue comments and the last 10 review summaries.
@@ -56,6 +57,10 @@
 - **DATA-14** A forbidden Projects field is a partial error: the data loads, the page shows a warning, and project
   membership counts as unknown instead of empty.
 - **DATA-15** When GitHub returns fewer PRs than its `totalCount`, the page shows a warning.
+- **DATA-25** For each linked issue, the query reads its items in up to 3 GitHub Projects and, in each, the fields
+  named Priority (single select: the option and its color), Estimate (number), and Sprint (iteration: its title,
+  start date, and length in days). The first project that sets a field gives its value. A forbidden project read is
+  a partial error, as in **DATA-14**: the data loads without these fields. *Planned: task P1.*
 - **DATA-16** A missing `prs.json` (HTTP 404) means there is no snapshot, which is not an error (**DATA-23**). When
   it is broken or another HTTP error comes back, the page says so and suggests Refresh with a token.
 - **DATA-23** Without a snapshot, the page loads live data by itself when it has a saved token and requested

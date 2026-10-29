@@ -83,3 +83,10 @@ test('NOTE-7: note: matches the text of any note, and -note: excludes it', () =>
   assert.ok(!search('note:tests', {}), 'a PR without notes does not match');
   assert.ok(search('-note:tests', {}));
 });
+
+test('FILTER-8: plain words match the type and labels of a linked issue', () => {
+  const fields = { issues: [{ number: 5, title: 'Typed', url: 'u', type: { name: 'Bug', color: 'red' }, labels: [{ name: 'customer', color: null, description: '' }] }] };
+  assert.ok(search('bug', fields));
+  assert.ok(search('customer', fields));
+  assert.ok(!search('feature', fields));
+});

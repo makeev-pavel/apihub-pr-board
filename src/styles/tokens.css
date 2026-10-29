@@ -27,6 +27,9 @@
   /* A neutral edge that shows on light and dark label colors in both themes. */
   --label-edge: rgba(127, 127, 127, 0.25);
   --shadow: 0 6px 24px rgba(23, 32, 38, 0.12);
+  /* GitHub's issue type colors, shown as a dot that reads on both themes. */
+  --issue-type-gray: #8c959f; --issue-type-blue: #218bff; --issue-type-green: #2da44e; --issue-type-yellow: #d4a72c;
+  --issue-type-orange: #e16f24; --issue-type-red: #e5534b; --issue-type-pink: #e85aad; --issue-type-purple: #a475f9;
   --font-sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
 }

@@ -27,6 +27,12 @@ function withLists(pr: PullRequest): PullRequest {
   const fixed: Record<string, unknown> = { ...pr };
   for (const field of LIST_FIELDS) if (!Array.isArray(pr[field])) fixed[field] = [];
   if (pr.projects !== null && !Array.isArray(pr.projects)) fixed.projects = null;
+  // Issues in a prs.json written before types and labels were collected.
+  fixed.issues = (fixed.issues as PullRequest['issues']).map((issue) => ({
+    ...issue,
+    type: issue.type && typeof issue.type.name === 'string' ? issue.type : null,
+    labels: Array.isArray(issue.labels) ? issue.labels : [],
+  }));
   return fixed as unknown as PullRequest;
 }
 

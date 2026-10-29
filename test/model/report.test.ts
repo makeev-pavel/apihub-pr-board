@@ -66,3 +66,8 @@ test('DATA-5: a PR whose lists are missing or broken gets empty lists, so it ren
   assert.deepEqual(kept.labels, [{ name: 'bug' }]);
   assert.deepEqual(kept.projects, ['Sprint']);
 });
+
+test('DATA-5: issues in a prs.json written before types and labels get none', () => {
+  const [pr] = parseReport({ repo: 'acme/widgets', prs: [{ number: 7, issues: [{ number: 1, title: 'Old', url: 'u' }, { number: 2, title: 'Odd', url: 'u', type: 'Bug', labels: 'x' }] }] }).prs;
+  assert.deepEqual(pr.issues.map((i) => [i.type, i.labels]), [[null, []], [null, []]]);
+});

@@ -19,7 +19,7 @@ test.describe('loading prs.json', () => {
 
   test('DATA-9: the corner cases render, one row each', async ({ page }) => {
     await openBoard(page, { report: 'corner', query: ALL });
-    await expect(page.locator('.board > tbody > tr')).toHaveCount(39);
+    await expect(page.locator('.board > tbody > tr')).toHaveCount(40);
     await expect(page.locator('.board .note').first()).toBeVisible();
   });
 
@@ -88,8 +88,8 @@ test.describe('loading prs.json', () => {
     const field = page.getByRole('dialog', { name: 'Settings' }).getByRole('textbox', { name: 'Repositories' });
     await field.fill('acme/gadgets acme/widgets');
     await field.press('Enter');
-    await expect(rows(page)).toHaveCount(79);
-    // One query a page and repository: gadgets, then widgets (75 PRs, four pages of 20) and gadgets. Nothing after that.
+    await expect(rows(page)).toHaveCount(80);
+    // One query a page and repository: gadgets, then widgets (76 PRs, four pages of 20) and gadgets. Nothing after that.
     expect(graphqlCalls).toBe(6);
     await page.waitForTimeout(1000);
     expect(graphqlCalls).toBe(6);

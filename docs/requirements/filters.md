@@ -23,9 +23,9 @@
 
 ## Search
 
-- **FILTER-8** Plain words match the number, title, people, labels, target branch, issue titles and numbers (`885`
-  or `#885`), projects, failed check names and workflows, both comments, and the attention reasons, without regard
-  to case. Every word must match; a leading minus excludes; quotes keep spaces.
+- **FILTER-8** Plain words match the number, title, people, labels, target branch, linked issues (title, number
+  such as `885` or `#885`, type, and labels), projects, failed check names and workflows, both comments, and the
+  attention reasons, without regard to case. Every word must match; a leading minus excludes; quotes keep spaces.
 - **FILTER-9** Qualifiers narrow the list and also take a leading minus:
 
   | Qualifier | Example |
@@ -41,6 +41,8 @@
   | `is:` | `is:draft`, `is:ready`, `is:bot`, `is:conflict`, `is:stale`, `is:attention` |
   | `no:` | `no:issue`, `no:label`, `no:assignee`, `no:review` |
   | `note:` | `note:tests`: your standup notes (**NOTE-7**) |
+  | `priority:` | `priority:high`, `priority:none` (**TABLE-28**) |
+  | `sprint:` | `sprint:current`, `sprint:42`, `sprint:none` (**TABLE-28**) |
 
 - **FILTER-10** A qualifier still being typed, such as `label:`, filters nothing yet. An unknown qualifier is a
   plain word.

@@ -63,6 +63,15 @@ export interface RawReviewRequest {
   requestedReviewer: RawRequestedReviewer | null;
 }
 
+// An issue the PR closes. The issue type is null where the organization has no issue types.
+export interface RawIssue {
+  number?: number | null;
+  title: string;
+  url: string;
+  issueType?: { name: string; color?: string | null } | null;
+  labels?: Connection<RawLabel>;
+}
+
 export interface RawPullRequest {
   number: number;
   title: string;
@@ -76,7 +85,7 @@ export interface RawPullRequest {
   assignees?: Connection<RawActor>;
   labels?: Connection<RawLabel>;
   reviewRequests?: Connection<RawReviewRequest>;
-  closingIssuesReferences?: Connection<{ number?: number | null; title: string; url: string }>;
+  closingIssuesReferences?: Connection<RawIssue>;
   projectsV2?: Connection<{ title: string }>;
   latestOpinionatedReviews?: Connection<RawReview>;
   commits?: Connection<{ commit?: { statusCheckRollup?: RawRollup | null } | null }>;

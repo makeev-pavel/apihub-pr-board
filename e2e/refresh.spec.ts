@@ -24,13 +24,13 @@ test.describe('Refresh', () => {
     await page.getByRole('button', { name: 'Save and load' }).click();
     await expect(page.locator('.source-button')).toHaveText('live, just now');
     await expect(page.locator('.source-button')).toHaveClass(/\blive\b/);
-    await expect(page.locator('.board > tbody > tr')).toHaveCount(75);
+    await expect(page.locator('.board > tbody > tr')).toHaveCount(76);
   });
 
   test('DATA-6: a saved token refreshes at once and reads all pages', async ({ page }) => {
     await refresh(page, 'paginated');
     await expect(page.locator('.source-button')).toHaveText('live, just now');
-    await expect(page.locator('.board > tbody > tr')).toHaveCount(75);
+    await expect(page.locator('.board > tbody > tr')).toHaveCount(76);
   });
 
   test('DATA-7: Refresh is disabled while it runs', async ({ page }) => {
@@ -97,7 +97,7 @@ test.describe('Refresh', () => {
     await expect(page.locator('.board > tbody > tr')).toHaveCount(36);
     await expect(page.locator('.board .spinner')).toHaveCount(0);
     await expect(page.locator('.source-button')).toHaveText('live, just now', { timeout: 10_000 });
-    await expect(page.locator('.board > tbody > tr')).toHaveCount(75);
+    await expect(page.locator('.board > tbody > tr')).toHaveCount(76);
     expect(await wrap.evaluate((element) => element.scrollTop)).toBe(600);
   });
 });

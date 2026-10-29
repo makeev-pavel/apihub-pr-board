@@ -53,7 +53,7 @@ export function derive(pr: PullRequest, now: number, rules: Rules = DEFAULT_RULE
       requestedReviewers.map((r) => r.login).join(' '),
       labels.map((l) => l.name).join(' '),
       pr.checks ? pr.checks.failed.map((c) => c.name + ' ' + (c.workflow || '')).join(' ') : '',
-      pr.issues.map((i) => (i.number ? '#' + i.number + ' ' : '') + i.title).join(' '),
+      pr.issues.map((i) => [i.number ? '#' + i.number : '', i.title, i.type ? i.type.name : '', ...(i.labels || []).map((l) => l.name)].join(' ')).join(' '),
       (pr.projects || []).join(' '),
       comments.map((c) => (c.author ? c.author.login : '') + ' ' + cleanCommentText(c.body)).join(' '),
       attention.join(' '),

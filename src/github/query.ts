@@ -40,7 +40,9 @@ query($owner: String!, $repo: String!, $first: Int!, $after: String, $avatarSize
             }
           }
         }
-        closingIssuesReferences(first: 10) { nodes { number title url } }
+        closingIssuesReferences(first: 10) {
+          nodes { number title url issueType { name color } labels(first: 10) { nodes { name color description } } }
+        }
         projectsV2(first: 10) { nodes { title } }
         latestOpinionatedReviews(first: 20) { nodes { state submittedAt author { __typename login avatarUrl(size: $avatarSize) } } }
         commits(last: 1) {

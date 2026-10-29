@@ -59,6 +59,17 @@ test.describe('table', () => {
     await expect(row.locator('td.c-issue')).toHaveText('No issue · in Widgets sprint');
   });
 
+  test('TABLE-8: a linked issue shows its type and up to three labels, then +N', async ({ page }) => {
+    const row = await onlyCase(page, 'show the issue type and labels');
+    const cell = row.locator('td.c-issue');
+    await expect(cell.locator('.issue-type')).toHaveText('Epic');
+    await expect(cell.locator('.issue-type-dot')).toHaveCSS('background-color', 'rgb(140, 149, 159)');
+    await expect(cell.locator('.issue-number')).toHaveText('#512');
+    await expect(cell.locator('.issue-labels .label-chip')).toHaveText(['ux', 'customer', 'Q4']);
+    await expect(cell.locator('.issue-labels .label-more')).toHaveText('+2');
+    await expect(cell.locator('.issue-labels .label-more')).toHaveAttribute('title', 'needs design, frontend');
+  });
+
   test('TABLE-9: people show avatars or initials, ghost for deleted accounts, and long logins move below', async ({ page }) => {
     let row = await onlyCase(page, 'author:new-contributor-42');
     await expect(row.locator('td:nth-child(4) .avatar')).toHaveText('NC');

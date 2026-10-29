@@ -37,8 +37,13 @@
 - **TABLE-7** Labels use their GitHub colors, with dark or light text picked by the brightness of the color. Chips
   are 11 px text and at most 150 px wide. The first four show; the rest fold into **+N**, which expands the list,
   and **less** folds it back. Clicking a label toggles the `label:<name>` filter in the search (**FILTER-11**).
-- **TABLE-8** The Issue column shows each linked issue as `#<number>` and its title on up to two lines, linked to the
-  issue. Without an issue but in a project, it reads `No issue · in <project>`; with neither, `No issue`.
+- **TABLE-8** The Issue column shows each linked issue as its type (a colored dot and the name, when the organization
+  uses issue types), `#<number>`, and its title on up to two lines, linked to the issue, with up to three of the
+  issue's labels below and `+N` for the rest. A type color the board does not know shows a neutral dot. Without an
+  issue but in a project, it reads `No issue · in <project>`; with neither, `No issue`.
+- **TABLE-28** Under a linked issue, the Issue column shows its project fields (**DATA-25**): the Priority option in
+  its color, the Estimate as "Est 3", and the Sprint title, marked "current" when today is inside it, with its dates
+  in the tooltip. A field that is not set does not show. *Planned: task P2.*
 - **TABLE-9** A person shows an avatar and a login. Without an avatar, or when the image fails, the cell shows the
   initials. A deleted account shows as "ghost". A login that does not fit beside the avatar moves below it.
 - **TABLE-10** The age reads "today" or "N days" and turns red past the stale limit (**RULE-7**). The activity line

@@ -1,11 +1,12 @@
 // Turns raw GraphQL nodes into the PullRequest shape of prs.json.
 
 import { stripHtmlComments } from '../model/comments.ts';
+import { ISSUE_TYPE_COLORS } from '../types.ts';
 import type {
-  Actor, Checks, CiState, Comment, FailedCheck, Label, MergeState, PullRequest, RequestedReviewer, ReviewState,
+  Actor, Checks, CiState, Comment, FailedCheck, Issue, IssueTypeColor, Label, MergeState, PullRequest, RequestedReviewer, ReviewState,
 } from '../types.ts';
 import type {
-  Connection, RawActor, RawComment, RawLabel, RawPullRequest, RawReview, RawReviewRequest, RawRollup,
+  Connection, RawActor, RawComment, RawIssue, RawLabel, RawPullRequest, RawReview, RawReviewRequest, RawRollup,
 } from './raw.ts';
 
 export const RECENT_COMMENTS = 2;
@@ -74,6 +75,19 @@ export function normalizeLabel(label: RawLabel): Label {
   };
 }
 
+// An unknown type color becomes null, and the type shows in neutral colors.
+export function normalizeIssue(issue: RawIssue): Issue {
+  const type = issue.issueType;
+  const color = type && type.color ? type.color.toLowerCase() : '';
+  return {
+    number: issue.number || null,
+    title: issue.title,
+    url: issue.url,
+    type: type ? { name: type.name, color: (ISSUE_TYPE_COLORS as readonly string[]).includes(color) ? color as IssueTypeColor : null } : null,
+    labels: nodes(issue.labels).map(normalizeLabel),
+  };
+}
+
 // Team requests need org read access; without it GitHub returns null and the request is skipped.
 function requestedReviewer(request: RawReviewRequest): RequestedReviewer | null {
   const reviewer = request.requestedReviewer;
@@ -131,7 +145,7 @@ export function normalizePullRequest(node: RawPullRequest, { repo = '', projects
     requestedReviewers: nodes(node.reviewRequests).map(requestedReviewer).filter((r) => r !== null),
     labels: nodes(node.labels).map(normalizeLabel),
     mergeable: (node.mergeable && MERGEABLE_BY_STATE[node.mergeable]) || 'unknown',
-    issues: nodes(node.closingIssuesReferences).map((i) => ({ number: i.number || null, title: i.title, url: i.url })),
+    issues: nodes(node.closingIssuesReferences).map(normalizeIssue),
     projects: projectsAvailable ? nodes(node.projectsV2).map((p) => p.title) : null,
     comments: recentComments(nodes(node.comments), nodes(node.reviews)),
   };

@@ -26,6 +26,8 @@ const AREAS = [
   { scopes: ['ci', 'docs', 'release'], tag: '', module: '' },
 ];
 const TYPES = ['feat', 'fix', 'refactor', 'test', 'perf', 'docs'];
+// The issue types of the linked issues, rotating; null stands for an organization without issue types.
+const ISSUE_TYPES = [{ name: 'Bug', color: 'RED' }, { name: 'Feature', color: 'BLUE' }, { name: 'Task', color: 'YELLOW' }, null];
 const SUBJECTS = [
   'cache resolved references between builds', 'show the version in the breadcrumbs', 'retry webhook delivery',
   'speed up the operations list', 'validate empty request bodies', 'keep filters when switching tabs',
@@ -100,7 +102,11 @@ export function typicalNodes(now: number): FixtureEntry[] {
       assignees: conn(dependabot ? [] : [user(author), ...(i % 5 === 0 ? [user(random.pick(AUTHORS))] : [])]),
       labels: conn(labels),
       closingIssuesReferences: conn(issueKind < 4 && !dependabot
-        ? [{ number: FIRST_ISSUE + i, title: (area.tag ? area.tag + ' ' : '') + 'Users ask to ' + random.pick(SUBJECTS), url: ISSUES_URL }]
+        ? [{
+          number: FIRST_ISSUE + i, title: (area.tag ? area.tag + ' ' : '') + 'Users ask to ' + random.pick(SUBJECTS), url: ISSUES_URL,
+          issueType: ISSUE_TYPES[i % ISSUE_TYPES.length],
+          labels: conn(i % 4 === 0 ? [label('customer', 'd93f0b')] : []),
+        }]
         : []),
       projectsV2: conn(issueKind === 4 ? [{ title: 'Widgets sprint' }] : []),
       commits: rollup(ci, ci === 'FAILURE' ? checks([...failed, run('build', 'SUCCESS', 'CI')]) : undefined),

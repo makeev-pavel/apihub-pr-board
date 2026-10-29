@@ -44,10 +44,17 @@ export interface Checks {
   complete: boolean;
 }
 
+// GitHub's issue type colors (IssueTypeColor), lowercased; the page maps each to a theme token.
+export const ISSUE_TYPE_COLORS = ['gray', 'blue', 'green', 'yellow', 'orange', 'red', 'pink', 'purple'] as const;
+export type IssueTypeColor = typeof ISSUE_TYPE_COLORS[number];
+
 export interface Issue {
   number: number | null;
   title: string;
   url: string;
+  // Null where the organization has no issue types, or in a prs.json written before they were collected.
+  type: { name: string; color: IssueTypeColor | null } | null;
+  labels: Label[];
 }
 
 export interface Comment {

@@ -319,3 +319,17 @@ test('DATA-9 DATA-13: a page GitHub cannot answer in time is asked again with fe
   const never = async () => { throw new TypeError('Failed to fetch'); };
   await assert.rejects(fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl: never }), /Cannot reach api\.github\.com/);
 });
+
+test('DATA-9 DATA-11: a linked issue keeps its type and labels; an unknown type color and a missing type are handled', () => {
+  const pr = normalizePullRequest({
+    ...baseNode,
+    closingIssuesReferences: { nodes: [
+      { number: 5, title: 'Typed', url: 'u', issueType: { name: 'Bug', color: 'RED' }, labels: { nodes: [{ name: 'customer', color: 'D93F0B' }, null] } },
+      { number: 6, title: 'Teal', url: 'u', issueType: { name: 'Epic', color: 'TEAL' } },
+      { number: 7, title: 'Untyped', url: 'u', issueType: null },
+    ] },
+  });
+  assert.deepEqual(pr.issues.map((i) => i.type), [{ name: 'Bug', color: 'red' }, { name: 'Epic', color: null }, null]);
+  assert.deepEqual(pr.issues[0].labels, [{ name: 'customer', color: 'd93f0b', description: '' }]);
+  assert.deepEqual(pr.issues[2].labels, []);
+});

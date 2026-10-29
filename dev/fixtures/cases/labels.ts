@@ -32,6 +32,15 @@ export function labelCases(now: number): FixtureEntry[] {
       author: user('anna-dev'), createdAt: ago(2), updatedAt: ago(1),
       closingIssuesReferences: conn([{ title: '[FE] Show a not-found page for a deleted version', url: ISSUES_URL }]),
     }),
+    node('The linked issue has a type with a color GitHub may add later (neutral dot) and five labels: three show, then +2.', {
+      title: 'feat(ui): [FE] show the issue type and labels',
+      author: user('chen-li'), createdAt: ago(3), updatedAt: ago(1),
+      closingIssuesReferences: conn([{
+        number: 512, title: 'Show the issue type and labels next to the PR', url: ISSUES_URL,
+        issueType: { name: 'Epic', color: 'TEAL' },
+        labels: conn([label('ux', 'c5def5'), label('customer', 'd93f0b'), label('Q4', '0e8a16'), label('needs design', 'fbca04'), label('frontend', '1d76db')]),
+      }]),
+    }),
     node('Area from a Dependabot path: /frontend/ counts as FE.', {
       title: 'chore: deps: bump @types/react in /frontend/api-doc-viewer',
       author: bot('dependabot'),
