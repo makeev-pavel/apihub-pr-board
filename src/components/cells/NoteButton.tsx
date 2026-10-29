@@ -1,5 +1,6 @@
 import { useContext, useEffect, useRef, useState } from 'react';
 import type { CSSProperties, MouseEvent } from 'react';
+import { MAX_NOTE_CHARS } from '../../board/notes.ts';
 import { NotesContext } from '../../context.ts';
 import { POPOVER_EDGE_PX, usePopover } from '../../hooks/usePopover.ts';
 import { renderMarkdown } from '../../markdown.ts';
@@ -36,7 +37,7 @@ function NotePanel({ pr, prKey, text, onClose }: {
   text: string;
   onClose: (event: MouseEvent<HTMLElement>) => void;
 }) {
-  const { update } = useContext(NotesContext);
+  const { update, saveFailed } = useContext(NotesContext);
   const [editing, setEditing] = useState(!text);
   const [draft, setDraft] = useState(text);
   const draftRef = useRef(draft);
@@ -63,7 +64,7 @@ function NotePanel({ pr, prKey, text, onClose }: {
         <button type="button" className="btn icon-only" aria-label="Close" onClick={onClose}>×</button>
       </div>
       {editing ? (
-        <textarea className="text-field note-editor" value={draft} autoFocus aria-label="Note in Markdown"
+        <textarea className="text-field note-editor" value={draft} autoFocus aria-label="Note in Markdown" maxLength={MAX_NOTE_CHARS}
           placeholder={'What was done or promised. Markdown works: ## headings, - [ ] tasks, links.'}
           onChange={(event) => setDraft(event.target.value)} onBlur={commit}
           onKeyDown={(event) => { if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) commit(); }} />
@@ -71,7 +72,8 @@ function NotePanel({ pr, prKey, text, onClose }: {
         // Sanitized by DOMPurify in renderMarkdown, like comments (SEC-4).
         <div className="note-preview markdown" dangerouslySetInnerHTML={{ __html: renderMarkdown(draft) }} />
       ) : <p className="muted">No note yet. Switch to Edit to write one.</p>}
-      <p className="muted note-foot">Kept in this browser only.</p>
+      {saveFailed ? <p className="note-foot note-error" role="alert">Not saved: this browser's storage is full or blocked.</p>
+        : <p className="muted note-foot">Kept in this browser only.</p>}
     </div>
   );
 }

@@ -17,8 +17,8 @@ export const PROJECT_ITEMS = 3;
 
 export const OPEN_PULL_REQUESTS_QUERY = `
 query($owner: String!, $repo: String!, $first: Int!, $after: String, $avatarSize: Int!, $checksPageSize: Int!, $commentsFetched: Int!,
-  $withChecks: Boolean!, $withComments: Boolean!, $projectItems: Int!, $priorityField: String!, $estimateField: String!,
-  $sprintField: String!) {
+  $withChecks: Boolean!, $withComments: Boolean!, $withProjectFields: Boolean!, $projectItems: Int!, $priorityField: String!,
+  $estimateField: String!, $sprintField: String!) {
   repository(owner: $owner, name: $repo) {
     pullRequests(states: OPEN, first: $first, after: $after, orderBy: {field: CREATED_AT, direction: DESC}) {
       totalCount
@@ -48,7 +48,7 @@ query($owner: String!, $repo: String!, $first: Int!, $after: String, $avatarSize
         closingIssuesReferences(first: 10) {
           nodes {
             number title url issueType { name color } labels(first: 10) { nodes { name color description } }
-            projectItems(first: $projectItems) {
+            projectItems(first: $projectItems, includeArchived: false) @include(if: $withProjectFields) {
               nodes {
                 priority: fieldValueByName(name: $priorityField) { ... on ProjectV2ItemFieldSingleSelectValue { name color } }
                 estimate: fieldValueByName(name: $estimateField) { ... on ProjectV2ItemFieldNumberValue { number } }

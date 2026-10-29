@@ -1,15 +1,23 @@
-import { useCallback, useMemo, useState } from 'react';
-import { loadNotes, saveNotes, setNote } from '../board/notes.ts';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { loadNotes, NOTES_KEY, readStoredNotes, saveNotes, setNote } from '../board/notes.ts';
 
-// Notes per PR, one Markdown document each (NOTE-1), saved in this browser on every change.
+// Notes per PR, one Markdown document each (NOTE-1). Another tab may have written since this one loaded, so a change
+// is built on what is stored now, and a storage event from another tab reloads the notes (NOTE-2).
 export function useNotes() {
   const [notes, setNotes] = useState(loadNotes);
-  const update = useCallback((key: string, text: string) => {
-    setNotes((prev) => {
-      const next = setNote(prev, key, text, Date.now());
-      saveNotes(next);
-      return next;
-    });
+  const [saveFailed, setSaveFailed] = useState(false);
+  const current = useRef(notes);
+  useEffect(() => { current.current = notes; });
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => { if (event.key === NOTES_KEY || event.key === null) setNotes(loadNotes()); };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
   }, []);
-  return useMemo(() => ({ notes, update }), [notes, update]);
+  const update = useCallback((key: string, text: string) => {
+    const next = setNote(readStoredNotes() || current.current, key, text, Date.now());
+    setSaveFailed(!saveNotes(next));
+    current.current = next;
+    setNotes(next);
+  }, []);
+  return useMemo(() => ({ notes, update, saveFailed }), [notes, update, saveFailed]);
 }

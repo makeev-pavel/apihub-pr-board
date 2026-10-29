@@ -90,4 +90,26 @@ test.describe('notes', () => {
     await expect(rows(page)).toHaveCount(1);
     await expect(rows(page).first().getByRole('link', { name: '#206', exact: true })).toBeVisible();
   });
+
+  test('NOTE-2: a note written in another tab shows here and is not lost when this tab writes', async ({ page, context }) => {
+    const row = await openPr206(page);
+    const other = await context.newPage();
+    await other.goto('/?' + ALL + '&q=' + encodeURIComponent('#203'));
+    const otherRow = other.locator('.board > tbody > tr').first();
+    await otherRow.hover();
+    await otherRow.getByRole('button', { name: 'Add a note for PR #203' }).click();
+    await other.getByRole('textbox', { name: 'Note in Markdown' }).fill('Written in the other tab');
+    await other.keyboard.press('Escape');
+    // This tab loaded before; it writes its own note, and both stay.
+    await row.hover();
+    await row.getByRole('button', { name: 'Add a note for PR #206' }).click();
+    await page.getByRole('textbox', { name: 'Note in Markdown' }).fill('Written here');
+    await page.keyboard.press('Escape');
+    const notes = await stored(page);
+    expect(Object.keys(notes).sort()).toEqual(['acme/widgets#203', 'acme/widgets#206']);
+    // The other tab hears about this tab's note.
+    await other.goto('/?' + ALL + '&q=' + encodeURIComponent('#206'));
+    await expect(other.getByRole('button', { name: 'Notes for PR #206' })).toBeAttached();
+    await other.close();
+  });
 });

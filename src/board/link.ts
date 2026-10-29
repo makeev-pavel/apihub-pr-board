@@ -80,6 +80,8 @@ export function missingReposMessage(missing: string[], hasToken: boolean, source
 // Hidden columns live in this browser and in the address (SET-8). A link that names them wins and is saved; otherwise
 // the saved ones go into the address, so a copied link carries the same columns.
 export function applyLinkColumns(settings: Settings, link: LinkSettings): { settings: Settings; link: LinkSettings; changed: boolean } {
-  if (link.hidden === undefined) return { settings, link: { ...link, hidden: settings.hiddenColumns }, changed: false };
+  // A saved id no column has any more, such as one from an older version, stays out of the address.
+  const known = settings.hiddenColumns.filter((id) => COLUMNS.some((column) => column.id === id));
+  if (link.hidden === undefined) return { settings, link: { ...link, hidden: known }, changed: false };
   return { settings: { ...settings, hiddenColumns: link.hidden }, link, changed: true };
 }

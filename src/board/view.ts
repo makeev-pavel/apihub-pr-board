@@ -132,7 +132,6 @@ export function writeView(view: View, extraQuery = '') {
   }
 }
 
-// The PRs the authors, draft status, area, and search let through. Quick filters count against this list.
 // The priorities of a PR's linked issues, lowercased.
 function prioritiesOf(pr: DerivedPullRequest): string[] {
   return pr.issues.filter((issue) => issue.priority).map((issue) => issue.priority!.name.toLowerCase());
@@ -158,6 +157,7 @@ export function collectPriorities(prs: DerivedPullRequest[]): { name: string; co
   return [...counts.values()];
 }
 
+// The PRs the authors, draft status, area, priority, and search let through. Quick filters count against this list.
 export function filterPullRequests(prs: DerivedPullRequest[], view: Pick<View, 'draft' | 'area'> & Partial<Pick<View, 'priority'>>,
   authors: Set<string>, query: ParsedQuery): DerivedPullRequest[] {
   return prs.filter((pr) => {

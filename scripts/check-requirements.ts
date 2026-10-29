@@ -26,4 +26,5 @@ console.log('Requirements with tests: ' + result.covered.length + ' of ' + total
   + (result.removed.length ? '; removed: ' + result.removed.join(', ') : ''));
 if (result.missing.length) console.error('Requirements without a test: ' + result.missing.join(', '));
 for (const { id, file } of result.unknown) console.error('Unknown requirement ' + id + ' in ' + file);
-if (result.missing.length || result.unknown.length) process.exit(1);
+for (const { id, file } of result.stale) console.error('Removed requirement ' + id + ' still named in ' + file);
+if (result.missing.length || result.unknown.length || result.stale.length) process.exit(1);

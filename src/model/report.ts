@@ -1,6 +1,7 @@
 // Reads prs.json as the page receives it from the network.
 
 import { isRepositoryName } from '../repository.ts';
+import { parseNamedColor, parseSprint } from './fields.ts';
 import type { PullRequest, Report } from '../types.ts';
 
 // A PR number repeats across repositories, so the repository is part of the identity.
@@ -28,14 +29,18 @@ function withLists(pr: PullRequest): PullRequest {
   for (const field of LIST_FIELDS) if (!Array.isArray(pr[field])) fixed[field] = [];
   if (pr.projects !== null && !Array.isArray(pr.projects)) fixed.projects = null;
   // Issues in a prs.json written before types and labels were collected.
-  fixed.issues = (fixed.issues as PullRequest['issues']).map((issue) => ({
-    ...issue,
-    type: issue.type && typeof issue.type.name === 'string' ? issue.type : null,
-    labels: Array.isArray(issue.labels) ? issue.labels : [],
-    priority: issue.priority && typeof issue.priority.name === 'string' ? issue.priority : null,
-    estimate: typeof issue.estimate === 'number' ? issue.estimate : null,
-    sprint: issue.sprint && typeof issue.sprint.title === 'string' ? issue.sprint : null,
-  }));
+  // An entry that is not an issue is dropped rather than failing the whole file.
+  fixed.issues = (fixed.issues as unknown[])
+    .filter((issue): issue is PullRequest['issues'][number] => !!issue && typeof issue === 'object'
+      && typeof (issue as { title?: unknown }).title === 'string' && typeof (issue as { url?: unknown }).url === 'string')
+    .map((issue) => ({
+      ...issue,
+      type: parseNamedColor(issue.type),
+      labels: Array.isArray(issue.labels) ? issue.labels : [],
+      priority: parseNamedColor(issue.priority),
+      estimate: typeof issue.estimate === 'number' ? issue.estimate : null,
+      sprint: parseSprint(issue.sprint),
+    }));
   return fixed as unknown as PullRequest;
 }
 

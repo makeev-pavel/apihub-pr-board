@@ -84,12 +84,14 @@ async function readRepository(repository: Repository, several: boolean, options:
   let after: string | null = null;
   let totalCount = 0;
   let first = PAGE_SIZE;
+  // projectItems is non-null, so a refusal there nulls the whole issue; the page is then asked again without them.
+  let withProjectFields = true;
   for (;;) {
     let body: RawResponse;
     try {
       body = await postQuery(fetchImpl, endpoint, token, {
         owner: repository.owner, repo: repository.name, first, after, avatarSize: AVATAR_SIZE, checksPageSize: CHECKS_PAGE_SIZE, commentsFetched: COMMENTS_FETCHED,
-        withChecks: parts.checks, withComments: parts.comments, projectItems: PROJECT_ITEMS,
+        withChecks: parts.checks, withComments: parts.comments, withProjectFields, projectItems: PROJECT_ITEMS,
         priorityField: PROJECT_FIELDS.priority, estimateField: PROJECT_FIELDS.estimate, sprintField: PROJECT_FIELDS.sprint,
       });
     } catch (error) {
@@ -105,13 +107,14 @@ async function readRepository(repository: Repository, several: boolean, options:
       throw graphqlError(body.errors![0]);
     }
     const connection = body.data && body.data.repository && body.data.repository.pullRequests;
+    const fieldsRefused = (body.errors || []).find((error) => (error.path || []).join('.').includes('projectItems'));
+    if (connection && fieldsRefused && withProjectFields) {
+      withProjectFields = false;
+      warnings.add('Project fields (Priority, Estimate, Sprint) are unavailable for this token: ' + fieldsRefused.message);
+      continue;
+    }
     for (const error of body.errors || []) {
       const path = (error.path || []).join('.');
-      // The project fields of linked issues (DATA-25) are optional too: GitHub sends null, and they show as unset.
-      if (connection && path.includes('projectItems')) {
-        warnings.add('Project fields (Priority, Estimate, Sprint) are unavailable for this token: ' + error.message);
-        continue;
-      }
       if (!connection || !path.includes('projectsV2')) throw graphqlError(error);
       projectsAvailable = false;
       warnings.add('Project membership is unavailable for this token: ' + error.message);

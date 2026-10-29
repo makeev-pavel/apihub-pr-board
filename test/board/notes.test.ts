@@ -1,6 +1,6 @@
 import { afterEach, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { dayNotesToText, loadNotes, MAX_NOTE_CHARS, parseNotes, saveNotes, setNote } from '../../src/board/notes.ts';
+import { dayNotesToText, loadNotes, MAX_NOTE_CHARS, parseNotes, readStoredNotes, saveNotes, setNote } from '../../src/board/notes.ts';
 
 const KEY = 'acme/widgets#7';
 const NOW = Date.parse('2026-10-28T12:00:00Z');
@@ -61,4 +61,18 @@ test('NOTE-2: stored notes survive a reload, old ones move once, invalid entries
   useStorage(true);
   assert.deepEqual(loadNotes(), {});
   assert.doesNotThrow(() => saveNotes(notes));
+});
+
+test('NOTE-2: a note saved in another tab is read back before writing, and a failed save says so', () => {
+  const data = useStorage();
+  saveNotes(setNote({}, 'acme/widgets#7', 'from tab B', NOW));
+  // Tab A loaded before tab B wrote; it builds its change on what is stored now, not on its own old copy.
+  const stored = readStoredNotes();
+  assert.deepEqual(Object.keys(setNote(stored!, 'acme/widgets#8', 'from tab A', NOW)), ['acme/widgets#7', 'acme/widgets#8']);
+  assert.equal(saveNotes({}), true);
+  data.set('apihub-pr-board.notes', '{broken');
+  assert.deepEqual(readStoredNotes(), {}, 'a broken entry reads as no notes');
+  useStorage(true);
+  assert.equal(readStoredNotes(), null, 'blocked storage cannot be read');
+  assert.equal(saveNotes({}), false);
 });

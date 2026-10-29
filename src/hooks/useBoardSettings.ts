@@ -21,7 +21,7 @@ export function useBoardSettings() {
     const kept = { ...next, rules: { ...next.rules, extraBots: [] } };
     saveSettings(kept);
     setStored(kept);
-    // Keeping the same link when the bots did not change spares re-deriving every PR on a theme or column change.
+    // The same link object when bots and columns did not change: a theme change then leaves the address alone.
     const bots = cleanBots(next.rules.extraBots);
     const hidden = next.hiddenColumns;
     setLink((prev) => (bots.join(',') === prev.bots.join(',') && hidden.join(',') === (prev.hidden || []).join(',') ? prev

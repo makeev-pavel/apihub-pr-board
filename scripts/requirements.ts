@@ -18,6 +18,8 @@ export interface RequirementCheck {
   planned: string[];
   manual: string[];
   removed: string[];
+  // Tests that still name a removed requirement.
+  stale: { id: string; file: string }[];
   unknown: { id: string; file: string }[];
 }
 
@@ -37,15 +39,17 @@ export function checkRequirements(specFiles: Record<string, string>, testFiles: 
   for (const text of Object.values(specFiles)) for (const [id, body] of definitions(text)) defined.set(id, body);
   const named = new Set<string>();
   const unknown: { id: string; file: string }[] = [];
+  const stale: { id: string; file: string }[] = [];
   for (const [file, text] of Object.entries(testFiles)) {
     for (const title of text.matchAll(TEST_TITLE)) {
       for (const [id] of title[1].matchAll(ID)) {
-        if (defined.has(id) && !defined.get(id)!.includes(REMOVED)) named.add(id);
-        else unknown.push({ id, file });
+        if (!defined.has(id)) unknown.push({ id, file });
+        else if (defined.get(id)!.includes(REMOVED)) stale.push({ id, file });
+        else named.add(id);
       }
     }
   }
-  const result: RequirementCheck = { covered: [], missing: [], planned: [], manual: [], removed: [], unknown };
+  const result: RequirementCheck = { covered: [], missing: [], planned: [], manual: [], removed: [], stale, unknown };
   const order = (a: string, b: string) => a.localeCompare(b, 'en', { numeric: true });
   for (const [id, body] of [...defined].sort(([a], [b]) => order(a, b))) {
     if (body.includes(REMOVED)) result.removed.push(id);

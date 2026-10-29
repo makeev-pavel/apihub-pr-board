@@ -80,5 +80,7 @@ test('SET-8 SET-17: a link with hidden columns wins and is kept; without one, th
   const fromStorage = applyLinkColumns(stored, { repos: [], bots: [] });
   assert.equal(fromStorage.settings, stored);
   assert.deepEqual(fromStorage.link.hidden, ['ci']);
+  assert.deepEqual(applyLinkColumns({ ...stored, hiddenColumns: ['standup', 'ci'] }, { repos: [], bots: [] }).link.hidden, ['ci'],
+    'an id no column has stays out of the address');
   assert.equal(fromStorage.changed, false);
 });

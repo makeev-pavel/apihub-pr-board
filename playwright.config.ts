@@ -14,6 +14,9 @@ export default defineConfig({
     // A common wide screen, wide enough that every column is in view: a click on a hidden cell scrolls the table, and
     // scrolling closes popovers by design (PANEL-1).
     viewport: { width: 1920, height: 900 },
+    // Times on the page follow the browser's zone and locale; pinning them keeps text and screenshots the same anywhere.
+    timezoneId: 'UTC',
+    locale: 'en-US',
     trace: 'retain-on-failure',
   },
   // Screenshots freeze animations and hide the caret, so the same state gives the same pixels. Fonts ship with the

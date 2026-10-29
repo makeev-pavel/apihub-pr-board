@@ -25,9 +25,10 @@ test('S2: requirements without a test, planned ones, manual ones, and removed on
   assert.deepEqual(result.unknown, []);
 });
 
-test('S2: a test that still names a removed requirement is reported', () => {
+test('S2: a test that still names a removed requirement is reported as stale, not unknown', () => {
   const result = checkRequirements(SPEC, { 'x.test.ts': "test('DATA-1 SET-2 DATA-4: old behavior', () => {});" });
-  assert.deepEqual(result.unknown, [{ id: 'DATA-4', file: 'x.test.ts' }]);
+  assert.deepEqual(result.stale, [{ id: 'DATA-4', file: 'x.test.ts' }]);
+  assert.deepEqual(result.unknown, []);
 });
 
 test('S2: a requirement with no test is missing, and an id no requirement defines is unknown', () => {

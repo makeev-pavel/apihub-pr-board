@@ -12,11 +12,26 @@ export function daysBetween(fromIso: string, now: number): number {
   return Math.max(0, Math.floor((now - Date.parse(fromIso)) / DAY_MS));
 }
 
-// A sprint is current from its start date until its last day, in UTC dates as GitHub stores them (TABLE-28).
+const pad = (n: number) => String(n).padStart(2, '0');
+
+// The viewer's local calendar day as YYYY-MM-DD.
+function localDay(time: number): string {
+  const date = new Date(time);
+  return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate());
+}
+
+// Calendar arithmetic on a YYYY-MM-DD date, in UTC so daylight saving never shifts it.
+function addDays(day: string, days: number): string {
+  const [year, month, date] = day.split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1, date + days)).toISOString().slice(0, 10);
+}
+
+// Iteration dates have no time zone, so a sprint is current while the viewer's local day is between its start date
+// and its last day (TABLE-28).
 export function isCurrentSprint(sprint: Sprint | null, now: number): boolean {
   if (!sprint) return false;
-  const start = Date.parse(sprint.startDate + 'T00:00:00Z');
-  return now >= start && now < start + sprint.duration * DAY_MS;
+  const today = localDay(now);
+  return today >= sprint.startDate && today <= addDays(sprint.startDate, sprint.duration - 1);
 }
 
 export function derive(pr: PullRequest, now: number, rules: Rules = DEFAULT_RULES): DerivedPullRequest {

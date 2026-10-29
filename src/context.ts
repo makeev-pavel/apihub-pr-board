@@ -18,5 +18,7 @@ export const ApiContext = createContext<Api>({ token: '', restUrl: REST_URL });
 interface NotesApi {
   notes: Notes;
   update: (key: string, text: string) => void;
+  // The last change could not be written to this browser's storage.
+  saveFailed: boolean;
 }
-export const NotesContext = createContext<NotesApi>({ notes: {}, update: () => {} });
+export const NotesContext = createContext<NotesApi>({ notes: {}, update: () => {}, saveFailed: false });

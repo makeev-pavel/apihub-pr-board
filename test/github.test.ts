@@ -354,15 +354,28 @@ test('DATA-25: the project fields come from the first project that sets each one
   ]);
 });
 
-test('DATA-25 DATA-14: project fields the token cannot read are a warning, and the PRs still load', async () => {
+test('DATA-25 DATA-14: project fields the token cannot read are a warning, the page is asked again without them, and issues stay', async () => {
   const scenario = REFRESH_SCENARIOS.find((s) => s.id === 'ok')!;
+  const asked: boolean[] = [];
   const fetchImpl = async (_url: string, init: RequestInit) => {
-    const result = scenario.respond(JSON.parse(String(init.body)).variables, Date.parse('2026-10-28T12:00:00Z'));
+    const variables = JSON.parse(String(init.body)).variables;
+    asked.push(variables.withProjectFields);
+    const result = scenario.respond(variables, Date.parse('2026-10-28T12:00:00Z'));
     const body = JSON.parse((result as { body: string }).body);
-    body.errors = [{ type: 'FORBIDDEN', path: ['repository', 'pullRequests', 'nodes', 0, 'closingIssuesReferences', 'nodes', 0, 'projectItems'], message: 'Resource not accessible by integration' }];
+    if (variables.withProjectFields) {
+      // projectItems is non-null, so GitHub nulls the issue that holds the refused field.
+      for (const node of body.data.repository.pullRequests.nodes) {
+        if (node.closingIssuesReferences) node.closingIssuesReferences.nodes = node.closingIssuesReferences.nodes.map(() => null);
+      }
+      body.errors = [{ type: 'FORBIDDEN', path: ['repository', 'pullRequests', 'nodes', 0, 'closingIssuesReferences', 'nodes', 0, 'projectItems'], message: 'Resource not accessible by integration' }];
+    }
     return new Response(JSON.stringify(body), { status: 200 });
   };
   const report = await fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl });
-  assert.ok(report.prs.length > 0);
+  const full = await fetchOpenPullRequests({ token: 't', repositories: [repository], fetchImpl: mockFetch('ok').fetchImpl });
+  assert.deepEqual(report.prs.map((pr) => pr.issues.length), full.prs.map((pr) => pr.issues.length), 'no issue is lost');
+  assert.ok(report.prs.every((pr) => pr.issues.every((issue) => issue.priority === null && issue.sprint === null)));
+  assert.deepEqual(asked.slice(0, 2), [true, false]);
+  assert.ok(asked.slice(1).every((value) => value === false), 'later pages skip the fields too');
   assert.deepEqual(report.warnings, ['Project fields (Priority, Estimate, Sprint) are unavailable for this token: Resource not accessible by integration']);
 });

@@ -10,6 +10,8 @@ export interface GraphqlVariables {
   repo: string;
   first: number;
   after: string | null;
+  // The @include switch of the project fields; only false leaves them out.
+  withProjectFields?: boolean;
 }
 
 export interface ReportScenario {

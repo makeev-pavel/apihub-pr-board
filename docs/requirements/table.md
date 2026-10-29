@@ -41,8 +41,8 @@
   issue's labels below and `+N` for the rest. A type color the board does not know shows a neutral dot. Without an
   issue but in a project, it reads `No issue · in <project>`; with neither, `No issue`.
 - **TABLE-28** Under a linked issue, the Issue column shows its project fields (**DATA-25**): the Priority option in
-  its color, the Estimate as "Est 3", and the Sprint title, marked "current" when today is inside it, with its dates
-  in the tooltip. A field that is not set does not show.
+  its color, the Estimate as "Est 3", and the Sprint title, marked "current" while the viewer's local day is inside
+  it, with its dates in the tooltip. A field that is not set does not show.
 - **TABLE-9** A person shows an avatar and a login. Without an avatar, or when the image fails, the cell shows the
   initials. A deleted account shows as "ghost". A login that does not fit beside the avatar moves below it.
 - **TABLE-10** The age reads "today" or "N days" and turns red past the stale limit (**RULE-7**). The activity line

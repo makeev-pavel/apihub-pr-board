@@ -72,7 +72,11 @@ test('DATA-5: issues in a prs.json written before types and labels get none', ()
   assert.deepEqual(pr.issues.map((i) => [i.type, i.labels]), [[null, []], [null, []]]);
 });
 
-test('DATA-5 DATA-25: issues in a prs.json written before the project fields get none', () => {
-  const [pr] = parseReport({ repo: 'acme/widgets', prs: [{ number: 7, issues: [{ number: 1, title: 'Old', url: 'u', estimate: '3', sprint: 'S' }] }] }).prs;
-  assert.deepEqual([pr.issues[0].priority, pr.issues[0].estimate, pr.issues[0].sprint], [null, null, null]);
+test('DATA-5 DATA-25: issues in a prs.json written before the project fields get none, and broken issues are dropped', () => {
+  const [pr] = parseReport({ repo: 'acme/widgets', prs: [{ number: 7, issues: [
+    { number: 1, title: 'Old', url: 'u', estimate: '3', sprint: { title: 'S' }, priority: { name: 'High', color: 'NEON' } },
+    null, 'x', { title: 'No url' },
+  ] }] }).prs;
+  assert.equal(pr.issues.length, 1);
+  assert.deepEqual([pr.issues[0].priority, pr.issues[0].estimate, pr.issues[0].sprint], [{ name: 'High', color: null }, null, null]);
 });

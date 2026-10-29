@@ -14,7 +14,12 @@ const MISSING_PRS = 3;
 
 function graphqlPage(entries: FixtureEntry[], variables: GraphqlVariables, { pageSize = variables.first, totalExtra = 0, projectsError = false } = {}): MockResponse {
   const offset = variables.after ? Number(variables.after) : 0;
-  const slice = entries.slice(offset, offset + pageSize).map(({ node }) => (projectsError ? { ...node, projectsV2: null } : node));
+  // Like GitHub, the mock leaves out what the query's @include switches off.
+  const withoutFields = (node: FixtureEntry['node']) => (variables.withProjectFields === false && node.closingIssuesReferences
+    ? { ...node, closingIssuesReferences: { nodes: (node.closingIssuesReferences.nodes || []).map((issue) => (issue ? { ...issue, projectItems: undefined } : issue)) } }
+    : node);
+  const slice = entries.slice(offset, offset + pageSize)
+    .map(({ node }) => withoutFields(projectsError ? { ...node, projectsV2: null } : node));
   const next = offset + slice.length;
   const body: RawResponse = {
     data: {

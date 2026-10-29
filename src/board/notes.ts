@@ -19,7 +19,7 @@ interface DayNote {
 }
 
 export const MAX_NOTE_CHARS = 20000;
-const NOTES_KEY = 'apihub-pr-board.notes';
+export const NOTES_KEY = 'apihub-pr-board.notes';
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
 // Typing a note and clearing it: an empty document is removed.
@@ -61,9 +61,12 @@ export function parseNotes(value: unknown): { notes: Notes; migrated: boolean } 
   return { notes, migrated };
 }
 
-export function loadNotes(): Notes {
+// The notes as stored now, or null when storage cannot be read at all. A broken entry reads as no notes.
+export function readStoredNotes(): Notes | null {
+  let raw: string | null;
+  try { raw = localStorage.getItem(NOTES_KEY); } catch { return null; }
   try {
-    const { notes, migrated } = parseNotes(JSON.parse(localStorage.getItem(NOTES_KEY) || 'null'));
+    const { notes, migrated } = parseNotes(JSON.parse(raw || 'null'));
     if (migrated) saveNotes(notes);
     return notes;
   } catch {
@@ -71,6 +74,16 @@ export function loadNotes(): Notes {
   }
 }
 
-export function saveNotes(notes: Notes) {
-  try { localStorage.setItem(NOTES_KEY, JSON.stringify(notes)); } catch { /* storage is blocked; notes live only for this page load */ }
+export function loadNotes(): Notes {
+  return readStoredNotes() || {};
+}
+
+// False when storage is blocked or full, so the page can say the note was not saved.
+export function saveNotes(notes: Notes): boolean {
+  try {
+    localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+    return true;
+  } catch {
+    return false;
+  }
 }
