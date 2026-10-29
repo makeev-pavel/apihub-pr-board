@@ -48,6 +48,8 @@ npm install
 npm run dev          # http://localhost:5173 with mock data and hot reload
 npm test
 npm run typecheck
+npm run test:e2e          # browser tests
+npm run test:screenshots  # screenshots against the Windows baselines
 ```
 
 The dev server injects a **DEV** panel in the bottom-right corner. Use it to switch scenarios:

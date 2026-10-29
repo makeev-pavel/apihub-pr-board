@@ -16,7 +16,15 @@ export default defineConfig({
     viewport: { width: 1800, height: 900 },
     trace: 'retain-on-failure',
   },
-  projects: [{ name: 'e2e', use: { browserName: 'chromium' } }],
+  // Screenshots freeze animations and hide the caret, so the same state gives the same pixels. Fonts ship with the
+  // page and the clock is pinned, so the per-pixel threshold can be strict enough to catch a changed text color.
+  expect: { toHaveScreenshot: { animations: 'disabled', caret: 'hide', threshold: 0.05 } },
+  // Baselines live in e2e/__screenshots__ with the platform in the name; only Windows ones are committed.
+  snapshotPathTemplate: '{testDir}/__screenshots__/{arg}-{platform}{ext}',
+  projects: [
+    { name: 'e2e', use: { browserName: 'chromium' }, testIgnore: /screenshots\.spec\.ts$/ },
+    { name: 'screenshots', use: { browserName: 'chromium' }, testMatch: /screenshots\.spec\.ts$/ },
+  ],
   webServer: {
     command: 'npx vite --port ' + E2E_PORT + ' --strictPort',
     url: 'http://localhost:' + E2E_PORT,

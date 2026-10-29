@@ -56,6 +56,8 @@ A board of the open pull requests of one or more GitHub repositories, published 
   starts its own Vite on port 5174 with `PR_BOARD_MOCK_NOW`, so it does not touch the dev server on 5173.
 - A new browser test must be seen failing once (break its expectation, run, restore): it is written against code
   that already works.
+- Screenshot baselines (`e2e/__screenshots__`) are Windows-only. A visual change needs
+  `npm run test:screenshots:update`, a look at every changed image, and the images in the same commit.
 - `core.autocrlf` is on for this machine; `.gitattributes` keeps LF in the repository.
 - Shell heredocs here turn `\\n` into a real newline; edit escape sequences in source with the Edit tool.
 

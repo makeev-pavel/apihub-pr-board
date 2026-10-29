@@ -370,14 +370,15 @@ off animations, so the same state renders the same pixels.
 panel, the settings panel, empty and error states, a narrow window, and hidden columns.
 
 **Acceptance criteria:**
-- [ ] `npm run test:screenshots` compares against committed Windows baselines;
-  `npm run test:screenshots:update` refreshes them.
+- [x] `npm run test:screenshots` compares against committed Windows baselines;
+  `npm run test:screenshots:update` refreshes them. 16 tests, 18 images; passed twice in a row; a changed text
+  color fails 13 of them.
 
 **Verification:** the suite passes twice in a row on Windows. **Dependencies:** Task 21.
 **Files:** `e2e/screenshots.spec.ts`, baseline images, `package.json`. **Scope:** S.
 
 ### Checkpoint: tests
-- [ ] Coverage gate passes; browser and screenshot suites pass twice in a row.
+- [x] Coverage gate passes; browser (129) and screenshot (16) suites pass twice in a row.
 
 ## Phase 6: CI, docs, review
 

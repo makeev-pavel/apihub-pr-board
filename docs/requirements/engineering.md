@@ -21,10 +21,9 @@ npm run test:e2e          # browser tests (Playwright) on the mock server, port 
 npm run test:requirements # every requirement in docs/requirements/ has a test
 npm run test:coverage     # unit tests with coverage of src/**/*.ts: lines 95%, branches and functions 90%
 npm run build             # vite build into _site/, then prs.json; needs GITHUB_TOKEN and PR_BOARD_REPO
+npm run test:screenshots  # screenshots against the Windows baselines in e2e/__screenshots__
+npm run test:screenshots:update  # capture new baselines after an intended visual change
 ```
-
-*Planned:* `npm run test:screenshots`
-and `npm run test:screenshots:update` (task 22).
 
 ## Project structure
 
@@ -71,8 +70,12 @@ export const COMMENT_BODY_LIMIT = 4000;
   `e2e/helpers.ts` pins the clock, resets the scenarios, and collects page errors; tests run one at a time because
   the server keeps the chosen scenario. Test titles start with the requirement ids they cover. Each test was seen
   failing in a mutation pass before it was kept.
-- **Screenshot tests** (Playwright, Windows baselines, run locally) cover the visual states in both themes and both
-  densities. *Planned: tasks 21–22.*
+- **Screenshot tests** (Playwright, `e2e/screenshots.spec.ts`, run locally on Windows) cover the board in both themes
+  and both densities, two repositories, every popover and menu, the comments and settings panels, the empty and
+  error states, a narrow window, and hidden columns. Baselines are committed for Windows only (`-win32` in the
+  name), so CI skips them. The fonts ship with the page and the clock is pinned, so the comparison threshold is
+  strict (0.05): a changed text color fails. After an intended change, run `test:screenshots:update`, look at every
+  changed image, and commit them with the change.
 - All test data is mock data: a seeded typical board and topic-sorted corner cases on fictional people, with a fixed
   clock. No real repository, person, or PR appears in tests or fixtures.
 - Every test names the requirement ids it covers, and `npm run test:requirements` fails when a requirement has no
