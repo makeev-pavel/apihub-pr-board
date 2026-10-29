@@ -41,10 +41,11 @@ test('TABLE-7: light label colors get dark text and dark ones light text', () =>
   assert.equal(labelTextColor('1d76db'), 'var(--label-ink-light)');
 });
 
-test('TABLE-26: the Repository cell leaves out the owner when every repository shares one', () => {
+test('TABLE-26: the Repository cell shows the name alone, and the owner only when two names are the same', () => {
   assert.equal(repositoryLabel('acme/gadgets', ['acme/widgets', 'acme/gadgets']), 'gadgets');
-  assert.equal(repositoryLabel('acme/gadgets', ['ACME/widgets', 'acme/gadgets']), 'gadgets', 'owners compare without case');
+  assert.equal(repositoryLabel('acme/gadgets', ['globex/widgets', 'acme/gadgets']), 'gadgets', 'different owners need no owner');
   assert.equal(repositoryLabel('acme/gadgets', ['acme/widgets', 'globex/gadgets', 'acme/gadgets']), 'acme/gadgets');
+  assert.equal(repositoryLabel('acme/gadgets', ['acme/widgets', 'globex/Gadgets', 'acme/gadgets']), 'acme/gadgets', 'names compare without case');
 });
 
 test('TABLE-27: the header names one or two repositories, and more as the first one and +N more', () => {

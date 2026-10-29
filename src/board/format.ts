@@ -12,12 +12,13 @@ const HEADER_REPOSITORIES = 2;
 // Live data loads again this often while its tab is visible (DATA-24); the data source popover says so.
 export const AUTO_REFRESH_MS = 5 * 60 * 1000;
 
-const owner = (repo: string) => repo.slice(0, repo.indexOf('/')).toLowerCase();
+const nameOf = (repo: string) => repo.slice(repo.indexOf('/') + 1);
 
-// owner/name, or just the name when every repository on the board has the same owner.
+// The repository name alone, or owner/name when another repository on the board has the same name.
 export function repositoryLabel(repo: string, repos: string[]): string {
-  const shared = repos.every((other) => owner(other) === owner(repo));
-  return shared ? repo.slice(repo.indexOf('/') + 1) : repo;
+  const name = nameOf(repo).toLowerCase();
+  const clash = repos.some((other) => other.toLowerCase() !== repo.toLowerCase() && nameOf(other).toLowerCase() === name);
+  return clash ? repo : nameOf(repo);
 }
 
 // The repositories named in the header: one or two in full, more as the first one and a count.
