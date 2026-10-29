@@ -3,8 +3,9 @@
 ## Popovers
 
 - **PANEL-1** A popover opens on click and closes on a second click, a click outside it, Escape, scrolling the page
-  outside it, or resizing the window. It stays inside the window: near the bottom edge it opens upward, and near
-  the right edge it opens leftward. Only the comments panel works differently (**PANEL-9**).
+  outside it, or resizing the window. It stays inside the window: near the bottom edge it opens upward, near the right
+  edge it opens leftward, it is never wider than the window, and when it is taller than the room on its side it scrolls.
+  Only the comments panel works differently (**PANEL-9**).
 - **PANEL-2** Attention: the list of reasons (**RULE-5**).
 - **PANEL-3** Failed checks (CI **F**): each failed check with its name linked to its log, its workflow, the failure
   kind when it is not a plain failure (timed out, did not start, action required, error), and the description of an
@@ -33,7 +34,8 @@
   number of comments.
 - **PANEL-11** The panel loads with the viewer's token when there is one. When the load fails, it keeps the two
   comments, says why, and for a used-up anonymous limit says to add a token in Settings.
-- **PANEL-12** Each PR's list loads once per page load, and again after the PR changes.
+- **PANEL-12** Each PR's list loads once per page load, and again after the PR changes; the list on screen stays while
+  the new one loads, so the viewer keeps their place.
 - **PANEL-13** Each comment shows its author, its time, and a link to it on GitHub. A comment cut in the data says
   so and points to GitHub.
 - **PANEL-14** Comments render as GitHub Markdown: GFM tables, task lists, code, quotes, images, kept single line

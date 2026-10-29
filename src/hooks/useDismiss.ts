@@ -1,5 +1,8 @@
 import { useEffect, useRef } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
+import { onEscape } from './escapeStack.ts';
+
+// Closes a menu or popover on a click outside it, or on Escape when it is the innermost open layer.
 
 export function useDismiss(open: boolean, setOpen: Dispatch<SetStateAction<boolean>>) {
   const ref = useRef<HTMLDivElement>(null);
@@ -8,12 +11,11 @@ export function useDismiss(open: boolean, setOpen: Dispatch<SetStateAction<boole
     const onDoc = (event: globalThis.MouseEvent) => {
       if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
     };
-    const onKey = (event: globalThis.KeyboardEvent) => { if (event.key === 'Escape') setOpen(false); };
     document.addEventListener('mousedown', onDoc);
-    document.addEventListener('keydown', onKey);
+    const removeLayer = onEscape(() => setOpen(false));
     return () => {
       document.removeEventListener('mousedown', onDoc);
-      document.removeEventListener('keydown', onKey);
+      removeLayer();
     };
   }, [open, setOpen]);
   return ref;

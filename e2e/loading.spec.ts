@@ -141,7 +141,9 @@ test.describe('loading prs.json', () => {
     await expect(addToken).toBeFocused();
   });
 
-  test('SET-18 DATA-23: Save and load in the dialog stores the token and loads the board', async ({ page }) => {
+  test('SET-18 DATA-23: Save and load in the dialog stores the token and loads the board once', async ({ page }) => {
+    let loads = 0;
+    page.on('request', (request) => { if (request.url().endsWith('/__dev/graphql')) loads += 1; });
     await openBoard(page, { report: 'missing', refresh: 'ok', query: ALL + '&repos=acme/gadgets' });
     const dialog = page.getByRole('dialog', { name: 'Add a GitHub token' });
     const save = dialog.getByRole('button', { name: 'Save and load' });
@@ -153,6 +155,19 @@ test.describe('loading prs.json', () => {
     await expect(page.getByRole('button', { name: /^Settings/ })).toBeFocused();
     await expect(rows(page)).toHaveCount(4);
     expect(await page.evaluate((key) => localStorage.getItem(key), TOKEN_KEY)).toBe('mock-token');
+    // The automatic load knows this load ran, so it does not read the same repositories again.
+    await page.clock.runFor(2000);
+    expect(loads).toBe(1);
+  });
+
+  test('SET-18: forgetting the token in Settings does not open the token dialog', async ({ page }) => {
+    await page.addInitScript((key) => localStorage.setItem(key, 'mock-token'), TOKEN_KEY);
+    await openBoard(page, { report: 'missing', refresh: 'ok', query: ALL + '&repos=acme/gadgets' });
+    await expect(rows(page)).toHaveCount(4);
+    await page.getByRole('button', { name: /^Settings/ }).click();
+    await page.getByRole('dialog', { name: 'Settings' }).getByRole('button', { name: 'Forget token' }).click();
+    await page.clock.runFor(1000);
+    await expect(page.getByRole('dialog', { name: 'Add a GitHub token' })).toHaveCount(0);
   });
 
   test('TABLE-19 QUAL-5: an empty table shows the spinner while a load without a snapshot runs, still with reduced motion', async ({ page }) => {

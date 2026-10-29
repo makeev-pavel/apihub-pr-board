@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
+import { onEscape } from './escapeStack.ts';
 
 const FOCUSABLE = 'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], '
   + 'summary, [tabindex]:not([tabindex="-1"])';
@@ -8,11 +9,10 @@ const FOCUSABLE = 'button:not([disabled]), input:not([disabled]), select:not([di
 // was, or to the element with fallbackId when that is gone (a panel that closed when the dialog opened).
 export function useModal(onClose: () => void, fallbackId: string) {
   const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const onKey = (event: globalThis.KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  // Registered once, so a new onClose does not move the dialog above a popover opened inside it.
+  const close = useRef(onClose);
+  useEffect(() => { close.current = onClose; });
+  useEffect(() => onEscape(() => close.current()), []);
   // Read while rendering, before an autoFocus inside the dialog takes focus.
   const [opener] = useState(() => document.activeElement as HTMLElement | null);
   useEffect(() => {
@@ -31,7 +31,8 @@ export function useModal(onClose: () => void, fallbackId: string) {
   }, [fallbackId, opener]);
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key !== 'Tab' || !ref.current) return;
-    const items = [...ref.current.querySelectorAll<HTMLElement>(FOCUSABLE)];
+    // Only what can take focus: an element that is hidden, or inside a closed <details>, has no boxes.
+    const items = [...ref.current.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((item) => item.getClientRects().length > 0);
     if (!items.length) return;
     const first = items[0];
     const last = items[items.length - 1];

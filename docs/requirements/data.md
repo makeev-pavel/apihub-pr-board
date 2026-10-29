@@ -30,7 +30,9 @@
 - **DATA-6** **Refresh** queries GitHub from the browser with the viewer's fine-grained token (public repository
   read access) and replaces the data on the page. The page then marks the data as live. While a load runs, the rows
   already on the page stay, and the new data updates them in one pass without moving the table's scroll position.
-- **DATA-7** A second Refresh cannot start while one is running.
+- **DATA-7** A second Refresh cannot start while one is running. A load that starts another way, such as after a token
+  is saved, replaces the running one, which stops reading. A load without a snapshot that already ran for the same
+  repositories and token does not run again by itself.
 - **DATA-8** Refresh skips the parts of the query that only hidden columns show: failed check details when CI is
   hidden, and comment and review bodies when Last comment is hidden. Search cannot match comment text until a
   refresh with the column shown. The snapshot is shared and always complete.
@@ -84,8 +86,9 @@
   a link with `?repos=owner/name`; with repository groups and none checked, it says to check one in the Repositories
   menu.
 - **DATA-24** While the page shows live data and its tab is visible, it loads again at the interval set in Settings
-  (**SET-22**), 5 minutes by default, counted from the last load or attempt, so a failure is retried after the same
-  interval. A hidden tab pauses the countdown, and a tab that comes back after the interval loads at once. With the
+  (**SET-22**), 5 minutes by default, counted from the end of the last load or attempt, so a failure is retried after
+  the same interval and a slow load is never followed at once by the next. It waits while Refresh cannot start
+  (**DATA-18**). A hidden tab pauses the countdown, and a tab that comes back after the interval loads at once. With the
   setting Off, live data loads again only on **Refresh**. A snapshot is replaced only on **Refresh** or by loading
   without one.
 - **DATA-26** A live load also reads the login and avatar of the token's owner, the viewer (**RULE-12**), and shows

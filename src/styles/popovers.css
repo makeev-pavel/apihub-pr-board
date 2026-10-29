@@ -1,6 +1,7 @@
 /* Popovers and the comments panel. */
 .popover {
-  position: fixed; z-index: 40; max-width: calc(100vw - 32px); text-align: left;
+  /* --popover-room is the height left on the side it opens to (PANEL-1); a popover with its own cap takes the smaller. */
+  position: fixed; z-index: 40; max-width: calc(100vw - 32px); max-height: var(--popover-room, none); overflow: auto; text-align: left;
   background: var(--surface); border: 1px solid var(--line-strong); border-radius: 8px; box-shadow: var(--shadow);
   padding: 10px 12px; display: grid; gap: 6px; font-size: 13px; color: var(--fg);
 }
@@ -19,7 +20,7 @@
 .comment-cut { font-size: 12px; color: var(--muted); font-style: italic; }
 .rules-popover code { font-family: var(--font-mono); font-size: 12px; }
 
-.checks-popover { max-height: min(420px, 70vh); overflow: auto; }
+.checks-popover { max-height: min(420px, 70vh, var(--popover-room, 100vh)); }
 .check-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .check-list li { display: grid; gap: 2px; padding-left: 14px; position: relative; }
 .check-list li::before { content: ""; position: absolute; left: 0; top: 7px; width: 7px; height: 7px; border-radius: 50%; background: var(--bad); }

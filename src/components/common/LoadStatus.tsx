@@ -1,16 +1,6 @@
 import { useEffect, useState } from 'react';
 import { describeFinished, describeProgress, formatElapsed } from '../../board/progress.ts';
-import type { RepoProgress } from '../../board/progress.ts';
-
-// A live load in progress, or the one that just finished (DATA-27).
-export interface LoadState {
-  startedAt: number;
-  repos: RepoProgress[];
-  // Tells this load from the next one, so late events of an old load are dropped.
-  id: number;
-  // Set once the data is in.
-  finished?: { at: number; prs: number; repos: number };
-}
+import type { LoadState } from '../../board/progress.ts';
 
 const TICK_MS = 100;
 

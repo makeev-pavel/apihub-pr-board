@@ -215,6 +215,24 @@ test.describe('several repositories', () => {
     expect(page.url()).not.toContain('repos=');
   });
 
+  test('DATA-18: a reason Refresh cannot start shows on Refresh and goes once the reason does', async ({ page }) => {
+    await page.addInitScript((key) => localStorage.setItem(key, 'mock-token'), TOKEN_KEY);
+    await openBoard(page, { report: 'two-repos', refresh: 'ok', query: ALL + '&groups=&repogroups=Gadgets:acme/gadgets;Widgets:acme/widgets' });
+    await expect(page.getByRole('alert')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+    const reason = page.getByRole('alert');
+    await expect(reason).toHaveText('Check a repository group in the Repositories menu first.');
+    await expect(reason).toHaveClass(/\bwarn\b/);
+    await page.getByRole('button', { name: /^Repositories:/ }).click();
+    const gadgets = page.getByRole('group', { name: 'Repositories' }).getByRole('checkbox', { name: 'Gadgets' });
+    await gadgets.check();
+    await expect(reason).toHaveCount(0);
+    // The reason comes back, but nobody asked for Refresh since, so it waits for the next one.
+    await gadgets.uncheck();
+    await page.clock.runFor(500);
+    await expect(reason).toHaveCount(0);
+  });
+
   test('DATA-18: groups with more than 40 repositories stop Refresh with the reason', async ({ page }) => {
     await page.addInitScript((key) => localStorage.setItem(key, 'mock-token'), TOKEN_KEY);
     const many = (prefix: string) => Array.from({ length: 21 }, (_, i) => 'acme/' + prefix + i);
@@ -225,7 +243,7 @@ test.describe('several repositories', () => {
     await openBoard(page, { report: 'two-repos', refresh: 'ok', query: ALL });
     await page.getByRole('button', { name: 'Refresh', exact: true }).click();
     // Ungrouped is checked too and adds the two repositories of the data in no group.
-    await expect(page.getByRole('alert')).toHaveText('Refresh failed. The checked groups name 44 repositories; the board reads at most 40.'
+    await expect(page.getByRole('alert')).toHaveText('The checked groups name 44 repositories; the board reads at most 40.'
       + ' Uncheck a group in the Repositories menu.');
   });
 
@@ -291,7 +309,7 @@ test.describe('several repositories', () => {
     await expect(page.getByText('No repository group is checked')).toBeVisible();
     expect(loads).toEqual([]);
     await page.getByRole('button', { name: 'Refresh', exact: true }).click();
-    await expect(page.getByRole('alert')).toHaveText('Refresh failed. Check a repository group in the Repositories menu first.');
+    await expect(page.getByRole('alert')).toHaveText('Check a repository group in the Repositories menu first.');
 
     const button = page.getByRole('button', { name: /^Repositories:/ });
     await button.click();

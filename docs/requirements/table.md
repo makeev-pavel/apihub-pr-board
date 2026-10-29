@@ -7,9 +7,10 @@
   with live data, the viewer (**DATA-26**).
 - **TABLE-2** The data source is a dot with a short age next to it, such as "updated 12 min ago": gray for the
   snapshot, green and "live" for data loaded by Refresh. A click opens the details (**PANEL-8**).
-- **TABLE-3** Banners under the header report a failed refresh, a failed load (**DATA-16**), requested repositories the
-  data lacks (**DATA-22**, **DATA-23**), with an **Add token** button when there is no token, and data warnings
-  (**DATA-14**, **DATA-15**, **DATA-18**).
+- **TABLE-3** Banners under the header report a failed refresh, why a Refresh cannot start (**DATA-18**), shown after
+  Refresh is asked for and gone with the reason, a failed load (**DATA-16**), requested repositories the data lacks
+  (**DATA-22**, **DATA-23**), with an **Add token** button when there is no token, and data warnings (**DATA-14**,
+  **DATA-15**, **DATA-18**).
 
 ## Columns
 

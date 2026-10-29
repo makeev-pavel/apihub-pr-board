@@ -29,7 +29,8 @@ export function useAllComments(pr: DerivedPullRequest, open: boolean): AllCommen
       allCommentsCache.set(key, request);
       request.catch(() => allCommentsCache.delete(key));
     }
-    setState({ status: 'loading' });
+    // A list on screen stays while a newer version of the PR loads, so the viewer keeps their place in it.
+    setState((prev) => (prev.status === 'ready' ? prev : { status: 'loading' }));
     request.then(
       (result) => { if (!cancelled) setState({ status: 'ready', ...result }); },
       (error: Error) => { if (!cancelled) setState({ status: 'error', error: error.message }); },

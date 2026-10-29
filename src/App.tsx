@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { collectAuthors, selectedAuthors } from './board/authors.ts';
-import { boardColumns, DEFAULT_WIDTHS, isColumnShown, REVIEWERS_LIST_WIDTHS } from './board/columns.ts';
-import { repositoriesSummary } from './board/format.ts';
-import {
-  checkedGroups, checkedRepositories, groupCounts, groupFilter, groupOptions, groupsSelection, repositoryColors,
-} from './board/groups.ts';
-import { boardRepos, linkSettingsQuery, missingReposMessage } from './board/link.ts';
+import { boardColumns, isColumnShown, REVIEWERS_LIST_WIDTHS } from './board/columns.ts';
+import { HEADER_REPOSITORIES, MINUTE_MS, repositoriesSummary } from './board/format.ts';
+import { groupCounts, groupFilter, groupsSelection, repositoryColors } from './board/groups.ts';
+import { linkSettingsQuery } from './board/link.ts';
+import { emptyTableKind, loadTargets, missingReposMessage, planRepositories } from './board/repositories.ts';
 import { readToken, readWizardDone, storeToken, storeWizardDone } from './board/storage.ts';
 import {
-  AREA_OPTIONS, collectPriorities, DEFAULT_VIEW, DRAFT_OPTIONS, filterPullRequests, firstDirection, readView, visibleRows, writeView,
+  AREA_OPTIONS, collectPriorities, countWithoutPriority, DEFAULT_VIEW, DRAFT_OPTIONS, filterPullRequests, firstDirection, readView,
+  viewQuery, visibleRows, writeView,
 } from './board/view.ts';
 import type { SortKey, View } from './board/view.ts';
 import { RefreshControl } from './components/header/RefreshControl.tsx';
@@ -30,77 +30,61 @@ import { SearchHelp } from './components/toolbar/SearchHelp.tsx';
 import { REPOSITORIES } from './config.ts';
 import { ApiContext, NotesContext, RulesContext, ReviewViewContext } from './context.ts';
 import { REST_URL } from './github/rest.ts';
-import { useBoardSettings } from './hooks/useBoardSettings.ts';
-import { MINUTE_MS } from './board/format.ts';
 import { useAutoRefresh } from './hooks/useAutoRefresh.ts';
+import { useBoardSettings } from './hooks/useBoardSettings.ts';
+import { useClock } from './hooks/useClock.ts';
 import { useColumnWidths } from './hooks/useColumnWidths.ts';
 import { useLiveLoad } from './hooks/useLiveLoad.ts';
 import { useNotes } from './hooks/useNotes.ts';
 import { useNoteText } from './hooks/useNoteText.ts';
 import { useReportData } from './hooks/useReportData.ts';
+import { useTheme } from './hooks/useTheme.ts';
 import { derive } from './model/derive.ts';
 import { pullRequestKey } from './model/report.ts';
 import { activeLabelFilters, parseQuery, toggleLabelFilter } from './model/search.ts';
-import { MAX_REPOSITORIES, parseRepository, repositoryName } from './repository.ts';
-import type { DevConfig } from './types.ts';
+import { parseRepository, repositoryName } from './repository.ts';
 
-declare global {
-  interface Window {
-    PR_BOARD_DEV?: DevConfig;
-  }
-}
+// The dev server's mocks (DEV); a production build drops the branch, so the token only ever goes to GitHub (SEC-1).
+const DEV = import.meta.env.DEV ? window.PR_BOARD_DEV || null : null;
+const BUILD_REPOS = REPOSITORIES.map(repositoryName);
 
-const CLOCK_TICK_MS = 60 * 1000;
-
-const DEV = window.PR_BOARD_DEV || null;
+// Each set of repositories and token loads once by itself (DATA-23).
+const loadKey = (names: string[], token: string) => names.join(',').toLowerCase() + '|' + token;
 
 export function App() {
-  const [data, setData] = useReportData();
+  const { data, showLive } = useReportData();
   const report = data.report;
   const [view, setView] = useState(readView);
   const [token, setTokenState] = useState(readToken);
-  const { start, refreshing, load, error: refreshError, setError: setRefreshError, lastAttempt } = useLiveLoad();
-  const [now, setNow] = useState(Date.now);
+  const { start, refreshing, load, error: refreshError, lastAttempt } = useLiveLoad();
+  const { now, tick } = useClock();
   const { settings, setSettings, link, setRepos } = useBoardSettings();
   const notesApi = useNotes();
+  useTheme(settings.theme, settings.density);
 
   useEffect(() => writeView(view, linkSettingsQuery(link)), [view, link]);
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), CLOCK_TICK_MS);
-    return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    const root = document.documentElement;
-    if (settings.theme === 'system') delete root.dataset.theme; else root.dataset.theme = settings.theme;
-    root.dataset.density = settings.density;
-  }, [settings.theme, settings.density]);
 
   const rules = settings.rules;
-  const dataRepos = useMemo(() => (report ? report.repos : REPOSITORIES.map(repositoryName)), [report]);
-  // The address may narrow the board to some repositories, or ask for ones the data does not have.
-  const repos = useMemo(() => boardRepos(dataRepos, link.repos).shown, [dataRepos, link.repos]);
-  // The repositories to load: those of the address, or else those of the checked repository groups (DATA-18).
-  // Without a snapshot they come only from there, as on the published page (DATA-23).
   const groups = settings.repoGroups;
-  const groupNames = useMemo(() => groupOptions(groups, repos), [groups, repos]);
-  const checked = useMemo(() => checkedGroups(view.groups, groups, groupNames), [view.groups, groups, groupNames]);
-  const groupRepos = useMemo(() => (groups.length ? checkedRepositories(groups, checked, repos) : []), [groups, checked, repos]);
-  const wanted = link.repos.length ? link.repos : groupRepos;
-  // Groups decide what loads, and the checked ones have nothing to load.
-  const noGroupChecked = !link.repos.length && groups.length > 0 && !groupRepos.length;
-  const missing = useMemo(() => boardRepos(dataRepos, wanted).missing, [dataRepos, wanted]);
-  const notLoaded = data.noSnapshot && !report;
-  const headerRepos = link.repos.length ? link.repos : notLoaded ? wanted : dataRepos;
-  const pending = notLoaded ? wanted : missing;
+  const notLoaded = data.status === 'none';
+  const dataRepos = useMemo(() => (report ? report.repos : BUILD_REPOS), [report]);
+  const plan = useMemo(() => planRepositories({ dataRepos, linkRepos: link.repos, groups, viewGroups: view.groups, notLoaded }),
+    [dataRepos, link.repos, groups, view.groups, notLoaded]);
+  const { shown: repos, groupNames, checked, wanted, pending } = plan;
+  const targets = useMemo(() => loadTargets(plan, report ? report.repos : [], BUILD_REPOS), [plan, report]);
+  const problem = 'problem' in targets ? targets.problem : null;
+  // A reason Refresh cannot start shows once Refresh is asked for, and goes as soon as the reason does.
+  const [showProblem, setShowProblem] = useState(false);
+  useEffect(() => { if (!problem) setShowProblem(false); }, [problem]);
+
   const offeredColumns = useMemo(() => boardColumns(repos.length), [repos.length]);
   const columns = useMemo(() => offeredColumns.filter((c) => isColumnShown(c, settings.hiddenColumns)), [offeredColumns, settings.hiddenColumns]);
-  const { tableWrapRef, widths, tableWidth, resize, canResetWidths, resetWidths } = useColumnWidths(columns, settings.reviewColumn === 'list' ? REVIEWERS_LIST_WIDTHS : DEFAULT_WIDTHS);
+  const { tableWrapRef, widths, tableWidth, resize, canResetWidths, resetWidths } =
+    useColumnWidths(columns, settings.reviewColumn === 'list' ? REVIEWERS_LIST_WIDTHS : undefined);
   const patch = useCallback((changes: Partial<View>) => setView((prev) => ({ ...prev, ...changes })), []);
   const onToggleLabel = useCallback((name: string) => {
     setView((prev) => ({ ...prev, q: toggleLabelFilter(prev.q, name) }));
   }, []);
-  const setToken = (value: string) => { storeToken(value); setTokenState(value); };
   // Each Review layout starts at its own default width (SET-20), so a width dragged for one does not squeeze the other.
   const changeSettings = (next: typeof settings) => {
     if (next.reviewColumn !== settings.reviewColumn) resize.onReset('review');
@@ -109,51 +93,46 @@ export function App() {
   // The setup wizard (SET-21) opens by itself until it is closed once in this browser.
   const [wizardOpen, setWizardOpen] = useState(() => !readWizardDone());
   const closeWizard = useCallback(() => { storeWizardDone(); setWizardOpen(false); }, []);
-  // The token dialog (SET-18). After Not now it does not open by itself again until the page reloads.
+  // The token dialog (SET-18). After Not now, or after the token is forgotten, it does not open by itself again until
+  // the page reloads.
   const [askingToken, setAskingToken] = useState(false);
   const tokenDismissed = useRef(false);
   const closeTokenDialog = useCallback(() => { tokenDismissed.current = true; setAskingToken(false); }, []);
+  const setToken = (value: string) => {
+    if (!value) tokenDismissed.current = true;
+    storeToken(value);
+    setTokenState(value);
+  };
 
+  // The load that ran for each set of repositories and token, so the automatic load never repeats one (DATA-23).
+  const autoLoaded = useRef({ key: '', token: '' });
   const refresh = (withToken: string) => {
-    // Refresh reads the repositories the address asks for, or else those of the checked groups, or else those on the
-    // page; the build's list only counts before the data loads.
-    if (noGroupChecked) {
-      setRefreshError('Check a repository group in the Repositories menu first.');
-      return;
-    }
-    const names = wanted.length ? wanted : report && report.repos.length ? report.repos : REPOSITORIES.map(repositoryName);
-    if (!names.length) {
-      setRefreshError('Choose the repositories to show in Settings first.');
-      return;
-    }
-    if (names.length > MAX_REPOSITORIES) {
-      setRefreshError('The checked groups name ' + names.length + ' repositories; the board reads at most ' + MAX_REPOSITORIES
-        + '. Uncheck a group in the Repositories menu.');
+    if (!('names' in targets)) {
+      setShowProblem(true);
       return;
     }
     // Skip the heavy parts of the query that only hidden columns would show.
     const parts = { checks: columns.some((c) => c.id === 'ci'), comments: columns.some((c) => c.id === 'comment') };
-    const options = { token: withToken, repositories: names.map(parseRepository), parts };
+    const options = { token: withToken, repositories: targets.names.map(parseRepository), parts };
+    autoLoaded.current = { key: loadKey(targets.names, withToken), token: withToken };
     start(DEV ? { ...options, endpoint: DEV.graphqlUrl } : options, (loaded) => {
-      setData((prev) => ({ ...prev, status: 'ready', report: loaded, source: 'live', error: null }));
-      setNow(Date.now());
+      showLive(loaded);
+      tick();
     });
   };
 
-  // Without a snapshot the page loads live data itself, once for each set of repositories and token (DATA-23). Fewer
-  // repositories than the data holds need no load: their rows are already there, and the next load reads only these.
-  const autoLoaded = useRef({ key: '', token: '' });
+  // Without a snapshot the page loads live data itself (DATA-23). Fewer repositories than the data holds need no load:
+  // their rows are already there, and the next load reads only these.
   useEffect(() => {
-    const key = wanted.join(',').toLowerCase() + '|' + token;
+    const key = loadKey(wanted, token);
     if (!data.noSnapshot || !token || !wanted.length || refreshing || autoLoaded.current.key === key) return;
-    const covered = !!report && autoLoaded.current.token === token && !missing.length;
+    const covered = !!report && autoLoaded.current.token === token && !pending.length;
     autoLoaded.current = { key, token };
     if (!covered) refresh(token);
   });
-  // Live data loads again at the chosen interval while the tab is visible (DATA-24, SET-22).
-  const autoRefresh = settings.refreshMinutes > 0;
-  useAutoRefresh(data.source === 'live' && !!token && !refreshing && autoRefresh, lastAttempt, settings.refreshMinutes * MINUTE_MS,
-    () => refresh(token));
+  // Live data loads again at the chosen interval while the tab is visible and a load can start (DATA-24, SET-22).
+  const autoRefresh = data.source === 'live' && !!token && !refreshing && settings.refreshMinutes > 0 && !problem;
+  useAutoRefresh(autoRefresh, lastAttempt, settings.refreshMinutes * MINUTE_MS, () => refresh(token));
   useEffect(() => {
     // It waits for the setup wizard, so the two dialogs never stack.
     if (data.noSnapshot && !token && wanted.length && !tokenDismissed.current && !wizardOpen) setAskingToken(true);
@@ -181,7 +160,7 @@ export function App() {
 
   const authors = useMemo(() => collectAuthors(prs), [prs]);
   const priorities = useMemo(() => collectPriorities(prs), [prs]);
-  const noPriority = useMemo(() => prs.filter((pr) => !pr.issues.some((issue) => issue.priority)).length, [prs]);
+  const noPriority = useMemo(() => countWithoutPriority(prs), [prs]);
   const selected = useMemo(() => selectedAuthors(view.authors, authors), [view.authors, authors]);
 
   const parsedQuery = useMemo(() => parseQuery(view.q), [view.q]);
@@ -202,16 +181,18 @@ export function App() {
     else patch({ sort: key, dir: firstDirection(key) });
   };
   const resetView = () => setView({ ...DEFAULT_VIEW });
-  const isDefault = JSON.stringify(view) === JSON.stringify(DEFAULT_VIEW);
+  // The same test that keeps defaults out of the address.
+  const isDefault = viewQuery(view) === '';
 
   const api = useMemo(() => ({ token, restUrl: DEV ? DEV.restUrl : REST_URL }), [token]);
   const reviewView = useMemo(() => ({ list: settings.reviewColumn === 'list', viewer }), [settings.reviewColumn, viewer]);
+  const headerRepos = plan.headerRepos;
 
   return (
     <ApiContext.Provider value={api}><RulesContext.Provider value={rules}><NotesContext.Provider value={notesApi}><ReviewViewContext.Provider value={reviewView}>
       <header className="masthead">
         <h1>
-          <span className="repo" title={headerRepos.length > 2 ? headerRepos.join(', ') : undefined}>{repositoriesSummary(headerRepos)}</span>
+          <span className="repo" title={headerRepos.length > HEADER_REPOSITORIES ? headerRepos.join(', ') : undefined}>{repositoriesSummary(headerRepos)}</span>
           Open pull requests
         </h1>
         <div className="masthead-side">
@@ -227,6 +208,7 @@ export function App() {
       </header>
 
       {refreshError ? <div className="banner bad" role="alert">Refresh failed. {refreshError}</div> : null}
+      {showProblem && problem ? <div className="banner warn" role="alert">{problem}</div> : null}
       {data.status === 'error' ? (
         <div className="banner bad" role="alert">
           {data.error} Use Refresh with a token to load live data.
@@ -276,9 +258,7 @@ export function App() {
             {rows.length ? rows.map((pr) => <Row key={pullRequestKey(pr)} pr={pr} now={now} columns={columns} repos={repos}
               groupColor={rowColors.get(pr.repo.toLowerCase())} activeLabels={activeLabels} onToggleLabel={onToggleLabel} />)
               : <TableMessage colSpan={columns.length} onResetView={resetView} progress={load && !load.finished ? <LoadStatus load={load} /> : null}
-                kind={data.status === 'loading' || refreshing ? 'loading'
-                  : notLoaded ? (wanted.length ? 'not-loaded' : noGroupChecked ? 'no-groups' : 'no-repos')
-                    : data.status === 'error' ? 'not-loaded' : 'no-match'} />}
+                kind={emptyTableKind({ loading: data.status === 'loading' || refreshing, notLoaded, failed: data.status === 'error', plan })} />}
           </tbody>
         </table>
       </div>

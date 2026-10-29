@@ -14,7 +14,8 @@ interface Api {
 }
 export const ApiContext = createContext<Api>({ token: '', restUrl: REST_URL });
 
-// Notes per PR (NOTE-1); only the note buttons read them, so a note re-renders only those buttons.
+// Notes per PR (NOTE-1), for the note buttons and panels. A change renders those buttons again, and only the row
+// of that note, since the other rows keep their identity (useNoteText).
 interface NotesApi {
   notes: Notes;
   update: (key: string, text: string) => void;

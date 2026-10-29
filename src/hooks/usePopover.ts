@@ -33,14 +33,17 @@ export function usePopover(width: number) {
       setOpen(false);
       return;
     }
+    // It stays inside the window (PANEL-1): never wider than the window, and never taller than the room on its side.
     const rect = event.currentTarget.getBoundingClientRect();
-    const horizontal = rect.left + width > window.innerWidth - POPOVER_EDGE_PX
+    const fitWidth = Math.min(width, window.innerWidth - 2 * POPOVER_EDGE_PX);
+    const horizontal = rect.left + fitWidth > window.innerWidth - POPOVER_EDGE_PX
       ? { right: Math.max(POPOVER_EDGE_PX, window.innerWidth - rect.right) }
       : { left: Math.max(POPOVER_EDGE_PX, rect.left) };
-    const vertical = window.innerHeight - rect.bottom < POPOVER_FLIP_PX
-      ? { bottom: window.innerHeight - rect.top + POPOVER_GAP_PX }
-      : { top: rect.bottom + POPOVER_GAP_PX };
-    setPosition({ ...horizontal, ...vertical, width });
+    const upward = window.innerHeight - rect.bottom < POPOVER_FLIP_PX;
+    const room = (upward ? rect.top : window.innerHeight - rect.bottom) - POPOVER_GAP_PX - POPOVER_EDGE_PX;
+    const vertical = upward ? { bottom: window.innerHeight - rect.top + POPOVER_GAP_PX } : { top: rect.bottom + POPOVER_GAP_PX };
+    const roomVariable = { '--popover-room': room + 'px' } as CSSProperties;
+    setPosition({ ...horizontal, ...vertical, width: fitWidth, ...roomVariable });
     setOpen(true);
   };
   return { open, position, ref, toggle };

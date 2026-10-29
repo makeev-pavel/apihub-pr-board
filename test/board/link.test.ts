@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  applyLinkColumns, boardRepos, cleanBots, groupsToSave, linkSettingsQuery, MAX_BOTS, missingReposMessage, linkWithGroups, moveStoredBots, parseLinkSettings,
+  applyLinkColumns, cleanBots, groupsToSave, linkSettingsQuery, MAX_BOTS, linkWithGroups, moveStoredBots, parseLinkSettings,
 } from '../../src/board/link.ts';
 import { DEFAULT_SETTINGS } from '../../src/settings.ts';
 
@@ -34,13 +34,6 @@ test('FILTER-14: the address keeps repos and bots readable, leaves them out when
   assert.ok(linkSettingsQuery({ repos: forty, bots: [] }).length < 1600, 'forty repositories still make a usable link');
 });
 
-test('FILTER-14 DATA-22: requested repositories narrow the board, and the ones the data lacks are missing', () => {
-  const data = ['acme/widgets', 'acme/gadgets'];
-  assert.deepEqual(boardRepos(data, []), { shown: data, missing: [] });
-  assert.deepEqual(boardRepos(data, ['ACME/Gadgets']), { shown: ['acme/gadgets'], missing: [] });
-  assert.deepEqual(boardRepos(data, ['acme/gizmos', 'acme/widgets']), { shown: ['acme/widgets'], missing: ['acme/gizmos'] });
-});
-
 test('SET-17: extra bots saved in this browser move into the address once', () => {
   const stored = { ...DEFAULT_SETTINGS, rules: { ...DEFAULT_SETTINGS.rules, extraBots: ['acme-release-bot'] } };
   const moved = moveStoredBots(stored, { repos: ['acme/widgets'], bots: [] });
@@ -53,15 +46,6 @@ test('SET-17: extra bots saved in this browser move into the address once', () =
   const nothing = moveStoredBots(DEFAULT_SETTINGS, { repos: [], bots: [] });
   assert.equal(nothing.moved, false);
   assert.equal(nothing.settings, DEFAULT_SETTINGS);
-});
-
-test('DATA-22 DATA-23: the banner names the missing repositories and says how to load them', () => {
-  assert.equal(missingReposMessage(['acme/gizmos'], true, 'snapshot'), 'acme/gizmos is not in the snapshot. Refresh loads it.');
-  assert.equal(missingReposMessage(['acme/gizmos', 'acme/tools'], false, 'snapshot'),
-    'acme/gizmos, acme/tools are not in the snapshot. Add a GitHub token in Settings, then Refresh loads them.');
-  assert.equal(missingReposMessage(['acme/gizmos'], true, 'live'), 'acme/gizmos is not in the live data. Refresh loads it.');
-  assert.equal(missingReposMessage(['acme/gizmos'], false, 'none'),
-    'acme/gizmos is not loaded yet. Add a GitHub token in Settings, then Refresh loads it.');
 });
 
 test('FILTER-14 SET-8: hidden columns travel in the address, and invalid ids are dropped', () => {

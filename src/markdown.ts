@@ -5,7 +5,8 @@ import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import { stripHtmlComments } from './model/comments.ts';
 
-// Rendering is cached per comment body; the board holds at most a few hundred comments.
+// Rendering is cached per body. The comments panel can hold 500 entries per PR and notes share the cache, so the
+// oldest entry makes room for a new one rather than the whole cache going.
 const MAX_CACHED = 1000;
 const htmlCache = new Map<string, string>();
 const textCache = new Map<string, string>();
@@ -16,17 +17,25 @@ const BLOCK_END = /<\/(p|h[1-6]|li|tr|td|th|pre|blockquote|summary|div)>|<br\s*\
 // new-tab rule below, so they are removed.
 const FORBID_TAGS = ['style', 'form', 'svg', 'math', 'map', 'area'];
 
-DOMPurify.addHook('afterSanitizeAttributes', (node) => {
-  if (node.nodeName.toLowerCase() === 'a' && node.hasAttribute('href')) {
-    node.setAttribute('target', '_blank');
-    node.setAttribute('rel', 'noopener noreferrer');
+// An instance of its own, so the new-tab hook changes only comment and note rendering, not other sanitizing.
+let purifier: ReturnType<typeof DOMPurify> | null = null;
+function sanitizer() {
+  if (!purifier) {
+    purifier = DOMPurify(window);
+    purifier.addHook('afterSanitizeAttributes', (node) => {
+      if (node.nodeName.toLowerCase() === 'a' && node.hasAttribute('href')) {
+        node.setAttribute('target', '_blank');
+        node.setAttribute('rel', 'noopener noreferrer');
+      }
+    });
   }
-});
+  return purifier;
+}
 
 function cached(cache: Map<string, string>, key: string, compute: () => string): string {
   let value = cache.get(key);
   if (value === undefined) {
-    if (cache.size >= MAX_CACHED) cache.clear();
+    if (cache.size >= MAX_CACHED) cache.delete(cache.keys().next().value!);
     value = compute();
     cache.set(key, value);
   }
@@ -38,7 +47,7 @@ export function renderMarkdown(body: string): string {
   return cached(htmlCache, body, () => {
     const html = marked.parse(stripHtmlComments(body), { gfm: true, breaks: true, async: false });
     // Page classes and ids are dropped too, so a comment cannot borrow the board's own styles or anchors.
-    return DOMPurify.sanitize(html, { FORBID_TAGS, FORBID_ATTR: ['style', 'class', 'id', 'usemap'] });
+    return sanitizer().sanitize(html, { FORBID_TAGS, FORBID_ATTR: ['style', 'class', 'id', 'usemap'] });
   });
 }
 

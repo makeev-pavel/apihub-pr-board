@@ -148,3 +148,9 @@ export interface DevConfig {
   graphqlUrl: string;
   restUrl: string;
 }
+
+declare global {
+  interface Window {
+    PR_BOARD_DEV?: DevConfig;
+  }
+}

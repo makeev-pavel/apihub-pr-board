@@ -18,6 +18,16 @@ export interface RepoProgress {
   note: string;
 }
 
+// A live load in progress, or the one that just finished (DATA-27).
+export interface LoadState {
+  startedAt: number;
+  repos: RepoProgress[];
+  // Tells this load from the next one, so late events of an old load are dropped.
+  id: number;
+  // Set once the data is in.
+  finished?: { at: number; prs: number; repos: number };
+}
+
 export function startProgress(repos: string[]): RepoProgress[] {
   return repos.map((repo) => ({ repo, status: 'waiting', read: 0, total: null, note: '' }));
 }

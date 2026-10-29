@@ -55,12 +55,12 @@
   the address. Extra bots that an earlier version saved in this browser move into the address on the first visit,
   checked like the bots of a link. When that visit comes through a link with its own bots, the link's bots apply and the
   saved ones are dropped.
-- **SET-18** When the page needs a token and has none, a dialog explains how to create one: a link to GitHub's page
-  for a new fine-grained token and short steps (any name and expiry; Repository access: Public repositories, read
-  only; no extra permissions; copy the `github_pat_…` value). It has a token field with **Save and load** and **Not
-  now**. Saving stores the token (**SET-9**) and loads the data. The dialog opens by itself on a page without a
-  snapshot whose link names repositories (**DATA-23**), and from **Refresh** without a token. After **Not now** it
-  does not open by itself again until the page reloads; the banner's **Add token** button opens it. Focus starts in
+- **SET-18** When the page needs a token and has none, a dialog explains how to create one: a link to GitHub's page for
+  a new fine-grained token and short steps (any name and expiry; Repository access: Public repositories, read only; no
+  extra permissions; copy the `github_pat_…` value). It has a token field with **Save and load** and **Not now**. Saving
+  stores the token (**SET-9**) and loads the data. The dialog opens by itself on a page without a snapshot whose link
+  names repositories (**DATA-23**), and from **Refresh** without a token. After **Not now**, or after **Forget token**,
+  it does not open by itself again until the page reloads; the banner's **Add token** button opens it. Focus starts in
   the token field, stays in the dialog, and returns to what opened it when it closes, or to the Settings button when
   that is gone. A dialog that opens right after another one closes keeps the focus.
 - **SET-19** A Repository groups section, under Repositories, defines named groups in a text field, one per line:

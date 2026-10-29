@@ -1,9 +1,8 @@
 import type { ReactNode } from 'react';
+import type { TableMessageKind } from '../../board/repositories.ts';
 
 // What the table body says when it has no rows: loading, no repositories chosen, no group checked, nothing loaded
 // yet, or no match.
-
-export type TableMessageKind = 'loading' | 'no-repos' | 'no-groups' | 'not-loaded' | 'no-match';
 
 export function TableMessage({ kind, colSpan, onResetView, progress }: {
   kind: TableMessageKind;

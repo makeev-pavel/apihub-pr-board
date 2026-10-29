@@ -1,13 +1,13 @@
-// Loads prs.json once; Refresh replaces the data through the returned setter. The published page has no prs.json
+// Loads prs.json once; a live load replaces the data through showLive. The published page has no prs.json
 // (DATA-3): a 404 means no snapshot, and the page then loads live data itself (DATA-23).
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { parseReport } from '../model/report.ts';
 import type { Report } from '../types.ts';
 
 const DATA_URL = 'prs.json';
 
-interface ReportData {
+export interface ReportData {
   // 'none': no snapshot is published; the data, if any, comes from Refresh.
   status: 'loading' | 'ready' | 'none' | 'error';
   report: Report | null;
@@ -43,5 +43,8 @@ export function useReportData() {
       });
     return () => controller.abort();
   }, []);
-  return [state, setState] as const;
+  const showLive = useCallback((report: Report) => {
+    setState((prev) => ({ ...prev, status: 'ready', report, source: 'live', error: null }));
+  }, []);
+  return { data: state, showLive };
 }

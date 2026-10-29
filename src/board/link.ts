@@ -3,7 +3,7 @@
 // leaves them alone.
 
 import { isRepositoryName, MAX_REPOSITORIES } from '../repository.ts';
-import { parseList, sameName, splitList, uniqueNames } from '../names.ts';
+import { parseList, splitList, uniqueNames } from '../names.ts';
 import { COLUMNS } from './columns.ts';
 import { groupsToText, parseGroupLines } from './groups.ts';
 import type { RepoGroup } from './groups.ts';
@@ -68,15 +68,6 @@ export function readLinkSettings(): LinkSettings {
   return parseLinkSettings(window.location.search);
 }
 
-// The repositories the board shows, spelled as the data spells them, and the requested ones the data lacks.
-export function boardRepos(dataRepos: string[], requested: string[]): { shown: string[]; missing: string[] } {
-  if (!requested.length) return { shown: dataRepos, missing: [] };
-  return {
-    shown: dataRepos.filter((repo) => requested.some((r) => sameName(r, repo))),
-    missing: requested.filter((repo) => !dataRepos.some((r) => sameName(r, repo))),
-  };
-}
-
 // Extra bots used to be saved in this browser. They move into the address once, unless the link names its own.
 export function moveStoredBots(settings: Settings, link: LinkSettings): { settings: Settings; link: LinkSettings; moved: boolean } {
   const stored = settings.rules.extraBots;
@@ -86,16 +77,6 @@ export function moveStoredBots(settings: Settings, link: LinkSettings): { settin
     link: link.bots.length ? link : { ...link, bots: cleanBots(stored) },
     moved: true,
   };
-}
-
-const WHERE = { snapshot: 'not in the snapshot', live: 'not in the live data', none: 'not loaded yet' };
-
-// The banner for requested repositories that the page has no data for; only Refresh can load them. 'none' is a page
-// without a snapshot before its first load (DATA-23).
-export function missingReposMessage(missing: string[], hasToken: boolean, source: keyof typeof WHERE): string {
-  const one = missing.length === 1;
-  const action = (hasToken ? 'Refresh' : 'Add a GitHub token in Settings, then Refresh') + ' loads ' + (one ? 'it' : 'them') + '.';
-  return missing.join(', ') + (one ? ' is ' : ' are ') + WHERE[source] + '. ' + action;
 }
 
 // Hidden columns live in this browser and in the address (SET-8). A link that names them wins and is saved; otherwise
