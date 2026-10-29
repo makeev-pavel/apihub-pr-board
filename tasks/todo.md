@@ -575,6 +575,8 @@ menu filters the rows of the loaded data instead of filling `repos`, with Ungrou
   say to check a group; unchecking loads nothing new; Ungrouped loads the repositories of the data in no group; an
   empty `repogroups` keeps the saved groups; a group name cannot start with `*` (FILTER-14, DATA-18, DATA-23,
   SET-19). About 1 hour.
+- [x] **G7. Group colors:** repository names and Repositories menu entries take their group's tint, six tints in turn, in both
+  themes (TABLE-31); unit and browser tests, screenshots. About 45 min.
 
 ## Backlog: your reviews
 

@@ -123,6 +123,25 @@ export function groupCounts(groups: RepoGroup[], options: string[], dataRepos: s
   return counts;
 }
 
+export const GROUP_COLORS = 6;
+
+// The color of a group, by its place in Settings: the six tints in turn (TABLE-31).
+export function groupColor(groups: RepoGroup[], name: string): number | null {
+  const index = groups.findIndex((group) => group.name === name);
+  return index < 0 ? null : index % GROUP_COLORS;
+}
+
+// The color of a repository's rows: that of the first group that lists it, or none for a repository in no group.
+export function repositoryColors(groups: RepoGroup[]): Map<string, number> {
+  const colors = new Map<string, number>();
+  groups.forEach((group, index) => {
+    for (const repo of group.repos) {
+      if (!colors.has(repo.toLowerCase())) colors.set(repo.toLowerCase(), index % GROUP_COLORS);
+    }
+  });
+  return colors;
+}
+
 // The button text: All, None, up to two names, or how many are checked.
 export function groupsSummary(checked: string[], options: string[]): string {
   if (checked.length === options.length) return 'All';

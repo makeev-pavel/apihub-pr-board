@@ -32,6 +32,8 @@
   /* GitHub's issue type colors, shown as a dot that reads on both themes. */
   --issue-type-gray: #8c959f; --issue-type-blue: #218bff; --issue-type-green: #2da44e; --issue-type-yellow: #d4a72c;
   --issue-type-orange: #e16f24; --issue-type-red: #e5534b; --issue-type-pink: #e85aad; --issue-type-purple: #a475f9;
+  /* Tints of the repository groups (TABLE-31), one per group in turn. */
+  --group-0: #e8f1fc; --group-1: #fcf3dc; --group-2: #e4f3e8; --group-3: #fbe8ec; --group-4: #efeafb; --group-5: #def2f2;
   --font-sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
 }
@@ -42,6 +44,7 @@
     --bad: #ff8a7a; --bad-soft: #3a1c19; --warn: #f2c063; --warn-soft: #36290f; --running: #ffd21f; --running-soft: #3d3205; --running-ink: #ffd21f;
     --good: #6fd58f; --good-soft: #15301f; --idle: #93a2ab; --idle-soft: #212b30;
     --example-ink: #b9a9f0; --shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+    --group-0: #172538; --group-1: #2f2812; --group-2: #16301f; --group-3: #361e25; --group-4: #262140; --group-5: #13302f;
     color-scheme: dark;
   }
 }
@@ -51,5 +54,6 @@
   --bad: #ff8a7a; --bad-soft: #3a1c19; --warn: #f2c063; --warn-soft: #36290f; --running: #ffd21f; --running-soft: #3d3205; --running-ink: #ffd21f;
   --good: #6fd58f; --good-soft: #15301f; --idle: #93a2ab; --idle-soft: #212b30;
   --example-ink: #b9a9f0; --shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+  --group-0: #172538; --group-1: #2f2812; --group-2: #16301f; --group-3: #361e25; --group-4: #262140; --group-5: #13302f;
   color-scheme: dark;
 }

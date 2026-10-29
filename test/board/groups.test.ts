@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  checkedGroups, checkedRepositories, groupCounts, groupFilter, groupOptions, groupRepositories, groupsSelection, groupsSummary, groupsToText, parseGroupLines, UNGROUPED,
+  checkedGroups, checkedRepositories, groupColor, groupCounts, groupFilter, groupOptions, groupRepositories, groupsSelection, groupsSummary, groupsToText, parseGroupLines, repositoryColors, UNGROUPED,
 } from '../../src/board/groups.ts';
 import type { RepoGroup } from '../../src/board/groups.ts';
 
@@ -101,4 +101,15 @@ test('DATA-18: the checked entries load their groups, and Ungrouped loads the re
   assert.deepEqual(checkedRepositories(GROUPS, ['Core', UNGROUPED], DATA), ['acme/widgets', 'acme/gadgets', 'acme/misc']);
   assert.deepEqual(checkedRepositories(GROUPS, [UNGROUPED], []), [], 'nothing loaded, nothing known to be ungrouped');
   assert.deepEqual(checkedRepositories(GROUPS, [], DATA), []);
+});
+
+test('TABLE-31: groups take the six tints in turn, and a repository the tint of the first group that lists it', () => {
+  const many = Array.from({ length: 8 }, (_, i) => ({ name: 'G' + i, repos: ['acme/r' + i] }));
+  assert.deepEqual(many.map((group) => groupColor(many, group.name)), [0, 1, 2, 3, 4, 5, 0, 1]);
+  assert.equal(groupColor(many, UNGROUPED), null);
+  const colors = repositoryColors(GROUPS);
+  assert.equal(colors.get('acme/widgets'), 0);
+  assert.equal(colors.get('acme/gadgets'), 0, 'in Core and Tools, Core comes first');
+  assert.equal(colors.get('acme/tools'), 1);
+  assert.equal(colors.has('acme/misc'), false);
 });

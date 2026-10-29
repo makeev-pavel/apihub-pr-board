@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { groupsSummary } from '../../board/groups.ts';
+import { groupColor, groupsSummary } from '../../board/groups.ts';
 import type { RepoGroup } from '../../board/groups.ts';
 import { useDismiss } from '../../hooks/useDismiss.ts';
 
@@ -31,7 +31,7 @@ export function RepositoriesMenu({ groups, options, checked, counts, setChecked 
             <button type="button" className="btn" onClick={() => setChecked([])}>None</button>
           </div>
           {options.map((name) => (
-            <label key={name} title={title(name)}>
+            <label key={name} title={title(name)} className={groupColor(groups, name) === null ? undefined : 'group-' + groupColor(groups, name)}>
               <input type="checkbox" checked={checked.includes(name)} onChange={() => toggle(name)} />
               <span>{name}</span>
               <span className="n">{counts.has(name) ? counts.get(name) : ''}</span>

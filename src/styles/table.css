@@ -129,6 +129,14 @@
 /* A long name is cut at its start, so the distinctive end shows, such as "…apihub-ui" (TABLE-26). The name itself
    stays left to right inside its bdi. */
 .c-repo a { direction: rtl; text-align: left; }
+/* The name of a repository in a group sits on the group's tint (TABLE-31). */
+.c-repo a[class*="group-"] { display: inline-block; max-width: 100%; vertical-align: top; padding: 1px 6px; border-radius: 4px; color: var(--fg); }
+.c-repo a.group-0 { background: var(--group-0); }
+.c-repo a.group-1 { background: var(--group-1); }
+.c-repo a.group-2 { background: var(--group-2); }
+.c-repo a.group-3 { background: var(--group-3); }
+.c-repo a.group-4 { background: var(--group-4); }
+.c-repo a.group-5 { background: var(--group-5); }
 .c-repo a:hover { color: var(--fg); }
 .board > thead > tr > th.c-state > button, .board > thead > tr > th.c-state > span:not(.col-resizer) { justify-content: center; }
 /* QUAL-11: a code that opens a popover shows an outline and a ▾ at rest, so it reads as a button before hover. */

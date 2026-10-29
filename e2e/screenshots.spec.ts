@@ -122,6 +122,16 @@ test.describe('screenshots', () => {
     await expect(page.getByRole('dialog', { name: 'Settings' })).toHaveScreenshot('panel-settings.png');
   });
 
+  for (const theme of ['light', 'dark'] as const) {
+    test(`TABLE-31 FILTER-17: repository names tinted by group, with the Repositories menu open, ${theme} theme`, async ({ page }) => {
+      await withSettings(page, { theme });
+      await openBoard(page, { report: 'two-repos', query: ALL + '&sort=repo&dir=asc&repogroups=Gadgets:acme/gadgets;Widgets:acme/widgets' });
+      await page.getByRole('button', { name: /^Repositories:/ }).click();
+      await settle(page);
+      await expect(page).toHaveScreenshot(`board-groups-${theme}.png`);
+    });
+  }
+
   test('TABLE-20: no PR matches the view', async ({ page }) => {
     await openBoard(page, { report: 'typical', query: 'q=nothing-matches-this' });
     await settle(page);

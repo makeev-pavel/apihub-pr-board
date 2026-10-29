@@ -118,5 +118,9 @@
   tooltip; a name too long for the column is cut at its start, such as `…apihub-ui`; the owner shows only when two
   repositories on the board have the same name. It sorts A to Z first, with ties by PR number, newest first. It can be
   hidden in Settings (**SET-8**). With one repository the column and its Settings entry are absent.
+- **TABLE-31** With repository groups (**SET-19**), each group takes one of six soft tints in turn, by its place in
+  Settings, in both themes. The repository name in the Repository column (**TABLE-26**) sits on the tint of its group,
+  or of the first group that lists it; a repository in no group has none. The group's entry in the Repositories menu
+  (**FILTER-17**) has the same tint, so the colors read without a legend.
 - **TABLE-27** With several repositories the header names them in place of one repository name. More than two
   show as the first one and "+N more", with the full list in the tooltip.

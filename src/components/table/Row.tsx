@@ -14,12 +14,14 @@ import { LabelList } from '../common/LabelList.tsx';
 import { Person } from '../common/Person.tsx';
 import { Pill } from '../common/Pill.tsx';
 
-export const Row = memo(function Row({ pr, now, columns, repos, activeLabels, onToggleLabel }: {
+export const Row = memo(function Row({ pr, now, columns, repos, groupColor, activeLabels, onToggleLabel }: {
   pr: DerivedPullRequest;
   now: number;
   columns: Column[];
   // Every repository on the board, so the Repository cell can leave out a shared owner.
   repos: string[];
+  // The tint of the repository name's group (TABLE-31), or undefined outside any group.
+  groupColor?: number;
   activeLabels: Set<string>;
   onToggleLabel: (name: string) => void;
 }) {
@@ -29,7 +31,8 @@ export const Row = memo(function Row({ pr, now, columns, repos, activeLabels, on
   const cells: Record<string, ReactNode> = {
     repo: (
       <td key="repo" className="c-repo mono">
-        {pr.repo ? <a href={'https://github.com/' + pr.repo} target="_blank" rel="noopener" title={pr.repo}><bdi>{repositoryLabel(pr.repo, repos)}</bdi></a>
+        {pr.repo ? <a href={'https://github.com/' + pr.repo} target="_blank" rel="noopener" title={pr.repo}
+          className={groupColor === undefined ? undefined : 'group-' + groupColor}><bdi>{repositoryLabel(pr.repo, repos)}</bdi></a>
           : <span className="dash">—</span>}
       </td>
     ),

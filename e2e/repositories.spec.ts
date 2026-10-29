@@ -256,6 +256,20 @@ test.describe('several repositories', () => {
     await expect(page).toHaveURL(/[?&]repogroups=Gadgets:acme\/gadgets(&|$)/);
   });
 
+  test('TABLE-31: repository names and menu entries take the tint of their group, and a repository in no group has none', async ({ page }) => {
+    await openBoard(page, { report: 'two-repos', query: ALL + '&repogroups=Gadgets:acme/gadgets' });
+    const names = page.locator('td.c-repo a');
+    const tinted = names.filter({ hasText: 'gadgets' });
+    await expect(tinted).toHaveCount(4);
+    for (const name of await tinted.all()) await expect(name).toHaveClass(/\bgroup-0\b/);
+    await expect(names.filter({ hasText: 'widgets' }).first()).not.toHaveClass(/\bgroup-/);
+    await expect(rows(page).first()).not.toHaveClass(/\bgroup-/);
+    await page.getByRole('button', { name: /^Repositories:/ }).click();
+    const menu = page.getByRole('group', { name: 'Repositories' });
+    await expect(menu.locator('label').filter({ hasText: 'Gadgets' })).toHaveClass(/\bgroup-0\b/);
+    await expect(menu.locator('label').filter({ hasText: 'Ungrouped' })).not.toHaveClass(/\bgroup-/);
+  });
+
   test('DATA-18 FILTER-17: Refresh with Ungrouped checked reads the repositories in no group too', async ({ page }) => {
     await page.addInitScript((key) => localStorage.setItem(key, 'mock-token'), TOKEN_KEY);
     await openBoard(page, { report: 'two-repos', refresh: 'ok', query: ALL + '&repogroups=Gadgets:acme/gadgets' });

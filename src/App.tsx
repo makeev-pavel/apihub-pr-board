@@ -2,7 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { collectAuthors, selectedAuthors } from './board/authors.ts';
 import { boardColumns, DEFAULT_WIDTHS, isColumnShown, REVIEWERS_LIST_WIDTHS } from './board/columns.ts';
 import { repositoriesSummary } from './board/format.ts';
-import { checkedGroups, checkedRepositories, groupCounts, groupFilter, groupOptions, groupsSelection } from './board/groups.ts';
+import {
+  checkedGroups, checkedRepositories, groupCounts, groupFilter, groupOptions, groupsSelection, repositoryColors,
+} from './board/groups.ts';
 import { boardRepos, linkSettingsQuery, missingReposMessage } from './board/link.ts';
 import { readToken, readWizardDone, storeToken, storeWizardDone } from './board/storage.ts';
 import {
@@ -167,6 +169,7 @@ export function App() {
   const allPrs = useNoteText(derived, notesApi.notes);
 
   // Repository groups narrow the rows before every other filter, so the menus count only what the groups show.
+  const rowColors = useMemo(() => repositoryColors(groups), [groups]);
   const perGroup = useMemo(() => groupCounts(groups, groupNames, repos, allPrs.map((pr) => pr.repo)), [groups, groupNames, repos, allPrs]);
   const prs = useMemo(() => {
     if (!groups.length) return allPrs;
@@ -268,7 +271,8 @@ export function App() {
           <colgroup>{columns.map((col) => <col key={col.id} style={{ width: widths[col.id] + 'px' }} />)}</colgroup>
           <thead><tr>{columns.map((col, index) => <HeaderCell key={col.id} col={col} index={index} view={view} onSort={onSort} width={widths[col.id]} resize={resize} />)}</tr></thead>
           <tbody>
-            {rows.length ? rows.map((pr) => <Row key={pullRequestKey(pr)} pr={pr} now={now} columns={columns} repos={repos} activeLabels={activeLabels} onToggleLabel={onToggleLabel} />)
+            {rows.length ? rows.map((pr) => <Row key={pullRequestKey(pr)} pr={pr} now={now} columns={columns} repos={repos}
+              groupColor={rowColors.get(pr.repo.toLowerCase())} activeLabels={activeLabels} onToggleLabel={onToggleLabel} />)
               : <TableMessage colSpan={columns.length} onResetView={resetView} progress={load && !load.finished ? <LoadStatus load={load} /> : null}
                 kind={data.status === 'loading' || refreshing ? 'loading'
                   : notLoaded ? (wanted.length ? 'not-loaded' : noGroupChecked ? 'no-groups' : 'no-repos')
