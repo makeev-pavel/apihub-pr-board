@@ -108,6 +108,8 @@ export interface PullRequest {
 }
 
 export interface Report {
+  // The login of the token owner, on live loads only (DATA-26).
+  viewer?: string;
   // owner/name of every repository the report covers.
   repos: string[];
   generatedAt: string;
@@ -126,6 +128,8 @@ export interface DerivedPullRequest extends PullRequest {
   stale: boolean;
   // A linked issue is in the sprint that runs now (TABLE-28).
   inCurrentSprint: boolean;
+  // The viewer's review is requested, or requested again after an earlier one (RULE-12).
+  myReview: 'requested' | 'again' | null;
   attention: string[];
   commentText: string;
   searchText: string;

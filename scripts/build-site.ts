@@ -36,7 +36,8 @@ try {
   process.exit(1);
 }
 
-writeFileSync(path.join(outDir, 'prs.json'), JSON.stringify({ ...report, runUrl }));
+// The workflow's token is not the viewer's, so the snapshot names no viewer (DATA-26).
+writeFileSync(path.join(outDir, 'prs.json'), JSON.stringify({ ...report, viewer: undefined, runUrl }));
 
 console.log('Wrote ' + report.prs.length + ' open PRs to ' + path.join(outDir, 'prs.json'));
 for (const warning of report.warnings) console.warn('Warning: ' + warning);

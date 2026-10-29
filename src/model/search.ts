@@ -41,7 +41,10 @@ export const SEARCH_QUALIFIERS: Record<string, SearchQualifier> = {
   note: { hint: 'note:tests (your notes)', test: (pr, v) => !!pr.noteText && pr.noteText.includes(v) },
   area: { hint: 'area:be, area:fe, area:other', test: (pr, v) => (v === 'other' ? !pr.areas.length : pr.areas.includes(v as AreaId)) },
   ci: { hint: 'ci:failing, ci:running, ci:passing, ci:none', test: (pr, v) => pr.ci.startsWith(v) },
-  review: { hint: 'review:approved, review:changes, review:none', test: (pr, v) => pr.review.startsWith(v) },
+  review: {
+    hint: 'review:approved, review:changes, review:none, review:requested (you), review:again',
+    test: (pr, v) => (v === 'requested' ? pr.myReview !== null : v === 'again' ? pr.myReview === 'again' : pr.review.startsWith(v)),
+  },
   is: {
     hint: 'is:draft, is:ready, is:bot, is:conflict, is:stale, is:attention',
     test: (pr, v) => ({

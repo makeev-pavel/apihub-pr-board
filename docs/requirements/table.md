@@ -64,6 +64,8 @@
 - **TABLE-13** The Review code shows a small number when more than one reviewer stands behind the decision, such as
   **✓2** for two approvals. A gray **◷N** next to it counts requested reviewers who have not answered.
 - **TABLE-14** The CI code **F** shows a small number when more than one distinct check failed.
+- **TABLE-29** Next to the Review code, a PR waiting for the viewer's review (**RULE-12**) shows "you", and a
+  re-requested one "↻ you", with a tooltip that says which.
 - **TABLE-15** A 3 px stripe on the left edge of a row mirrors CI: red when checks failed, yellow while they run,
   green when they passed, and none without checks.
 

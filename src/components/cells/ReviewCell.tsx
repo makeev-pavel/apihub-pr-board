@@ -38,6 +38,11 @@ export function ReviewCell({ pr, now }: { pr: DerivedPullRequest; now: number })
         {state.short}{decided > 1 ? <sup>{decided}</sup> : null}
       </button>
       {waiting.length ? <span className="pending" aria-hidden="true" title={'Waiting for ' + plural(waiting.length, 'reviewer')}>◷{waiting.length}</span> : null}
+      {pr.myReview ? (
+        <span className={'mine ' + pr.myReview} title={pr.myReview === 'again' ? 'Your review is requested again: you reviewed this PR before' : 'Your review is requested'}>
+          {pr.myReview === 'again' ? '↻ you' : 'you'}
+        </span>
+      ) : null}
       {open ? (
         <div className="popover review-popover" role="dialog" aria-label={'Reviewers of PR #' + pr.number} style={position}>
           {REVIEW_SECTIONS.map(({ state: s, title }) => {

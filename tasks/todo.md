@@ -560,3 +560,12 @@ filter menu. Spec: SET-19, FILTER-17, and up to 40 repositories read four at a t
 - [x] **G0. 40 repositories, four at a time:** raise the limit and read repositories in parallel. About 30 min.
 - [x] **G1. Groups in Settings:** parse and validate the group lines, keep them in this browser. About 45 min.
 - [x] **G2. Repositories menu:** check groups to fill `repos`; unit and browser tests, screenshots. About 1 hour.
+
+## Backlog: your reviews
+
+Requested on October 29, 2026, for developers: the PRs that wait for your review, and those where it is asked
+again. Decisions taken without an answer: the tile shows for anyone with a token, and only personal requests count.
+
+- [x] **V1. Your reviews:** read the viewer's login with live loads (DATA-26), work out requested and re-requested
+  PRs (RULE-12), mark them in the Review cell (TABLE-29), and add the tile and `review:requested`, `review:again`
+  (FILTER-18); unit and browser tests, a corner case, screenshots. About 2 hours.

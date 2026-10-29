@@ -44,7 +44,7 @@ export function devMocks({ repositories }: { repositories: Repository[] }): Plug
     }
     if (!liveCache || Date.now() - liveCache.at > LIVE_CACHE_MS) {
       const report = await fetchOpenPullRequests({ token, repositories });
-      liveCache = { at: Date.now(), body: JSON.stringify({ ...report, runUrl: null }) };
+      liveCache = { at: Date.now(), body: JSON.stringify({ ...report, viewer: undefined, runUrl: null }) };
       console.log('Fetched ' + report.prs.length + ' open PRs from GitHub');
     }
     send(res, 200, liveCache.body, JSON_TYPE);

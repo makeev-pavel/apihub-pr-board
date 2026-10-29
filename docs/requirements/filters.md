@@ -4,6 +4,9 @@
 
 - **FILTER-1** Tiles in the header: Open PRs, CI failing, Without approval, Merge conflicts, Need attention. Each
   shows how many PRs of the current view (authors, draft status, area, and search) match it.
+- **FILTER-18** With a known viewer, a Review requested tile counts the PRs waiting for the viewer's review
+  (**RULE-12**) and adds how many of them are re-requested, such as "5 Review requested · 2 again". The `review:`
+  qualifier also takes `requested` and `again`.
 - **FILTER-2** Clicking a tile turns its filter on or off; active tiles combine with AND. Open PRs turns them all
   off. A tile with no matching PRs is dimmed.
 
@@ -47,7 +50,7 @@
   | `base:` | `base:develop` |
   | `area:` | `area:be`, `area:fe`, `area:other` |
   | `ci:` | `ci:failing`, `ci:running`, `ci:passing`, `ci:none` |
-  | `review:` | `review:approved`, `review:changes`, `review:none` |
+  | `review:` | `review:approved`, `review:changes`, `review:none`, `review:requested`, `review:again` (**FILTER-18**) |
   | `is:` | `is:draft`, `is:ready`, `is:bot`, `is:conflict`, `is:stale`, `is:attention` |
   | `no:` | `no:issue`, `no:label`, `no:assignee`, `no:review` |
   | `note:` | `note:tests`: your notes (**NOTE-7**) |

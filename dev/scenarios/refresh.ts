@@ -3,7 +3,7 @@
 import type { RawResponse } from '../../src/github/raw.ts';
 import type { FixtureEntry } from '../fixtures/builders.ts';
 import { gadgetsEntries } from '../fixtures/gadgets.ts';
-import { DEV_REPOSITORY, FORBIDDEN_REPOSITORY, GADGETS_REPOSITORY } from '../fixtures/people.ts';
+import { DEV_REPOSITORY, DEV_VIEWER, FORBIDDEN_REPOSITORY, GADGETS_REPOSITORY } from '../fixtures/people.ts';
 import { typicalNodes } from '../fixtures/typical.ts';
 import { mixedEntries } from './entries.ts';
 import type { GraphqlVariables, MockResponse, RefreshScenario } from './types.ts';
@@ -23,6 +23,7 @@ function graphqlPage(entries: FixtureEntry[], variables: GraphqlVariables, { pag
   const next = offset + slice.length;
   const body: RawResponse = {
     data: {
+      viewer: { login: DEV_VIEWER },
       repository: {
         pullRequests: {
           totalCount: entries.length + totalExtra,

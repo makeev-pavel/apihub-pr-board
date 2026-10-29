@@ -45,6 +45,9 @@ The requirements are in [docs/requirements/](docs/requirements/README.md).
   and how old it is. Click it for the exact time and the workflow run.
 - Click **F** in the CI column to see which checks failed, with links to their logs.
 - Click the Review code to see who approved or requested changes and whose review is still pending.
+- **Your reviews:** with live data, a Review requested tile counts the PRs that wait for your review, the ones asked
+  again after your earlier review included (`↻ you` in the Review column). `review:requested` and `review:again`
+  search them.
   A small number on the code counts the reviewers behind that decision, for example ✓2 for two approvals.
   A gray ◷ counter next to it shows how many requested reviewers have not answered yet.
 - The table always fills the window: spare width goes to the Pull request and Last comment columns.

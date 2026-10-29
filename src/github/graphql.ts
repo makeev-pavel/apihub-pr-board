@@ -50,6 +50,7 @@ async function postQuery(fetchImpl: Fetch, endpoint: string, token: string, vari
 
 interface RepositoryPullRequests {
   repo: string;
+  viewer: string;
   prs: PullRequest[];
   warnings: string[];
 }
@@ -87,6 +88,7 @@ async function readRepository(repository: Repository, several: boolean, options:
   let first = PAGE_SIZE;
   // projectItems is non-null, so a refusal there nulls the whole issue; the page is then asked again without them.
   let withProjectFields = true;
+  let viewer = '';
   for (;;) {
     let body: RawResponse;
     try {
@@ -107,6 +109,7 @@ async function readRepository(repository: Repository, several: boolean, options:
       if (several) return { unreadable };
       throw graphqlError(body.errors![0]);
     }
+    if (body.data && body.data.viewer && typeof body.data.viewer.login === 'string') viewer = body.data.viewer.login;
     const connection = body.data && body.data.repository && body.data.repository.pullRequests;
     const fieldsRefused = (body.errors || []).find((error) => (error.path || []).join('.').includes('projectItems'));
     if (connection && fieldsRefused && withProjectFields) {
@@ -129,7 +132,7 @@ async function readRepository(repository: Repository, several: boolean, options:
   if (rawNodes.length !== totalCount) {
     warnings.add('GitHub reported ' + totalCount + ' open pull requests' + (several ? ' in ' + repo : '') + ' but returned ' + rawNodes.length + '.');
   }
-  return { repo, prs: rawNodes.map((node) => normalizePullRequest(node, { repo, projectsAvailable })), warnings: [...warnings] };
+  return { repo, viewer, prs: rawNodes.map((node) => normalizePullRequest(node, { repo, projectsAvailable })), warnings: [...warnings] };
 }
 
 // A missing repository only costs a warning, and four reads at a time keep GitHub from seeing a burst.
@@ -165,7 +168,9 @@ export async function fetchOpenPullRequests({
   for (const result of read) for (const warning of result.warnings) warnings.add(warning);
   const prs = read.flatMap((result) => result.prs);
   prs.sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0));
+  const viewer = read.map((result) => result.viewer).find(Boolean);
   return {
+    ...(viewer ? { viewer } : {}),
     repos: read.map((result) => result.repo),
     generatedAt: new Date().toISOString(),
     warnings: [...warnings],

@@ -21,3 +21,17 @@ test('derive computes age, ghost authors, and search text', () => {
   assert.equal(result.authorKey, 'ghost');
   assert.ok(result.searchText.includes('#1'));
 });
+
+test('RULE-12: a PR waits for the viewer when they are requested in person, and is re-requested when they reviewed before', () => {
+  const base = { author: { login: 'anna-dev', avatarUrl: null, bot: false }, reviewers: [], requestedReviewers: [] };
+  const person = (login: string) => ({ login, avatarUrl: null, bot: false, team: false });
+  const review = (login: string, state: string) => ({ login, avatarUrl: null, bot: false, state, at: null });
+  const mine = (fields: Record<string, unknown>, viewer = 'boris-k') => derive(pr(fields), NOW, undefined, viewer).myReview;
+  assert.equal(mine({ ...base, requestedReviewers: [person('Boris-K')] }), 'requested', 'logins compare without case');
+  assert.equal(mine({ ...base, requestedReviewers: [person('boris-k')], reviewers: [review('boris-k', 'CHANGES_REQUESTED')] }), 'again');
+  assert.equal(mine({ ...base, requestedReviewers: [person('boris-k')], reviewers: [review('boris-k', 'DISMISSED')] }), 'again');
+  assert.equal(mine({ ...base, reviewers: [review('boris-k', 'APPROVED')] }), null, 'reviewed and not asked again');
+  assert.equal(mine({ ...base, requestedReviewers: [{ ...person('boris-k'), team: true }] }), null, 'a team of that name is not the viewer');
+  assert.equal(mine({ ...base, author: { login: 'boris-k', avatarUrl: null, bot: false }, requestedReviewers: [person('boris-k')] }), null, 'own PR');
+  assert.equal(mine({ ...base, requestedReviewers: [person('boris-k')] }, ''), null, 'no viewer');
+});

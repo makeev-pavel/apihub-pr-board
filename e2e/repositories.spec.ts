@@ -29,7 +29,7 @@ test.describe('several repositories', () => {
     await page.getByRole('button', { name: 'Refresh', exact: true }).click();
     await expect(page.locator('.source-button')).toHaveText('live, just now');
     // The mixed board of acme/widgets and the four PRs of acme/gadgets.
-    await expect(rows(page)).toHaveCount(80);
+    await expect(rows(page)).toHaveCount(81);
     await expect(page.locator('h1 .repo')).toHaveText('acme/widgets, acme/gadgets');
   });
 
@@ -113,12 +113,12 @@ test.describe('several repositories', () => {
     await openBoard(page, { report: 'mixed', refresh: 'ok', query: ALL + '&repos=acme/widgets,acme/gadgets' });
     const banner = page.locator('.banner.warn');
     await expect(banner).toContainText('acme/gadgets is not in the snapshot. Add a GitHub token in Settings, then Refresh loads it.');
-    await expect(rows(page)).toHaveCount(76);
+    await expect(rows(page)).toHaveCount(77);
     await page.getByRole('button', { name: 'Refresh', exact: true }).click();
     await page.getByRole('dialog', { name: 'Add a GitHub token' }).getByLabel('Token').fill('mock-token');
     await page.getByRole('button', { name: 'Save and load' }).click();
     await expect(page.locator('.source-button')).toHaveText('live, just now');
-    await expect(rows(page)).toHaveCount(80);
+    await expect(rows(page)).toHaveCount(81);
     await expect(banner).toHaveCount(0);
   });
 

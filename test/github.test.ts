@@ -416,3 +416,8 @@ test('DATA-18 DATA-13: when one repository fails, the other reads stop instead o
   await new Promise((resolve) => setTimeout(resolve, 50));
   assert.ok(fetches <= 8, 'only the reads already started finish; got ' + fetches);
 });
+
+test('DATA-26: a live load names the viewer, the login of the token owner', async () => {
+  const report = await fetchOpenPullRequests({ token: 't', repositories: [repository, gadgets], fetchImpl: mockFetch('ok').fetchImpl });
+  assert.equal(report.viewer, 'boris-k');
+});

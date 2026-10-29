@@ -131,11 +131,12 @@ export function App() {
     if (data.noSnapshot && !token && wanted.length && !tokenDismissed.current) setAskingToken(true);
   }, [data.noSnapshot, token, wanted.length]);
 
+  const viewer = data.source === 'live' && report && report.viewer ? report.viewer : '';
   const derived = useMemo(() => {
     const shown = new Set(repos.map((repo) => repo.toLowerCase()));
     const inView = (report ? report.prs : []).filter((pr) => !link.repos.length || shown.has(pr.repo.toLowerCase()));
-    return inView.map((pr) => derive(pr, now, rules));
-  }, [report, repos, link.repos, now, rules]);
+    return inView.map((pr) => derive(pr, now, rules, viewer));
+  }, [report, repos, link.repos, now, rules, viewer]);
   const prs = useNoteText(derived, notesApi.notes);
 
   const authors = useMemo(() => collectAuthors(prs), [prs]);
@@ -173,7 +174,7 @@ export function App() {
           Open pull requests
         </h1>
         <div className="masthead-side">
-          <Tiles base={base} active={view.quick} setQuick={(quick) => patch({ quick })} />
+          <Tiles base={base} active={view.quick} setQuick={(quick) => patch({ quick })} viewer={viewer} />
           {report ? <UpdateInfo report={report} live={data.source === 'live'} now={now} /> : null}
           <RefreshControl token={token} setToken={setToken} refreshing={refreshing} onRefresh={refresh} onAskToken={() => setAskingToken(true)}
             settings={settings} onSettingsChange={setSettings} columns={offeredColumns}

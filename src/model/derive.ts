@@ -34,7 +34,16 @@ export function isCurrentSprint(sprint: Sprint | null, now: number): boolean {
   return today >= sprint.startDate && today <= addDays(sprint.startDate, sprint.duration - 1);
 }
 
-export function derive(pr: PullRequest, now: number, rules: Rules = DEFAULT_RULES): DerivedPullRequest {
+const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+
+// RULE-12: on a PR the viewer did not open, a personal review request is new, or again after an earlier review.
+export function myReview(pr: PullRequest, viewer: string): DerivedPullRequest['myReview'] {
+  if (!viewer || (pr.author && same(pr.author.login, viewer))) return null;
+  if (!(pr.requestedReviewers || []).some((r) => !r.team && same(r.login, viewer))) return null;
+  return (pr.reviewers || []).some((r) => same(r.login, viewer)) ? 'again' : 'requested';
+}
+
+export function derive(pr: PullRequest, now: number, rules: Rules = DEFAULT_RULES, viewer = ''): DerivedPullRequest {
   const ageDays = daysBetween(pr.createdAt, now);
   const comments = pr.comments || [];
   const latestComment = comments[0] || null;
@@ -58,6 +67,7 @@ export function derive(pr: PullRequest, now: number, rules: Rules = DEFAULT_RULE
     ageDays,
     stale: ageDays > rules.staleDays,
     inCurrentSprint: pr.issues.some((issue) => isCurrentSprint(issue.sprint, now)),
+    myReview: myReview(pr, viewer),
     attention,
     commentText,
     searchText: [

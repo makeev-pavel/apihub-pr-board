@@ -24,13 +24,13 @@ test.describe('Refresh', () => {
     await page.getByRole('button', { name: 'Save and load' }).click();
     await expect(page.locator('.source-button')).toHaveText('live, just now');
     await expect(page.locator('.source-button')).toHaveClass(/\blive\b/);
-    await expect(page.locator('.board > tbody > tr')).toHaveCount(76);
+    await expect(page.locator('.board > tbody > tr')).toHaveCount(77);
   });
 
   test('DATA-6: a saved token refreshes at once and reads all pages', async ({ page }) => {
     await refresh(page, 'paginated');
     await expect(page.locator('.source-button')).toHaveText('live, just now');
-    await expect(page.locator('.board > tbody > tr')).toHaveCount(76);
+    await expect(page.locator('.board > tbody > tr')).toHaveCount(77);
   });
 
   test('DATA-7: Refresh is disabled while it runs', async ({ page }) => {
@@ -97,7 +97,31 @@ test.describe('Refresh', () => {
     await expect(page.locator('.board > tbody > tr')).toHaveCount(36);
     await expect(page.locator('.board .spinner')).toHaveCount(0);
     await expect(page.locator('.source-button')).toHaveText('live, just now', { timeout: 10_000 });
-    await expect(page.locator('.board > tbody > tr')).toHaveCount(76);
+    await expect(page.locator('.board > tbody > tr')).toHaveCount(77);
     expect(await wrap.evaluate((element) => element.scrollTop)).toBe(600);
+  });
+
+  test('DATA-26 RULE-12 TABLE-29 FILTER-18: live data names the viewer, marks the PRs that wait for their review, and counts them', async ({ page }) => {
+    await withToken(page);
+    await openBoard(page, { report: 'mixed', refresh: 'ok', query: ALL });
+    // The snapshot names no viewer, so the tile is not there yet.
+    const tile = page.getByRole('group', { name: 'Quick filters' }).getByRole('button', { name: /Review requested/ });
+    await expect(tile).toHaveCount(0);
+    await expect(page.locator('.review-wrap .mine')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+    await expect(page.locator('.source-button')).toHaveText('live, just now');
+
+    const marked = await page.locator('.review-wrap .mine').count();
+    const again = await page.locator('.review-wrap .mine.again').count();
+    expect(again).toBeGreaterThan(0);
+    await expect(tile.locator('.count')).toHaveText(String(marked));
+    await expect(tile).toContainText(again + ' again');
+    const row = page.locator('.board > tbody > tr').filter({ hasText: 'validate package names on import' });
+    await expect(row.locator('.mine')).toHaveText('↻ you');
+    await expect(row.locator('.mine')).toHaveAttribute('title', 'Your review is requested again: you reviewed this PR before');
+    await tile.click();
+    await expect(page.locator('.board > tbody > tr')).toHaveCount(marked);
+    await page.getByRole('searchbox').fill('review:again');
+    await expect(page.locator('.board > tbody > tr')).toHaveCount(again);
   });
 });

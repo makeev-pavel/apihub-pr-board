@@ -104,3 +104,13 @@ test('TABLE-28: priority: and sprint: match the project fields of linked issues'
   assert.ok(search('sprint:none', { issues: [{ ...issue, sprint: null }] }));
   assert.ok(search('high', fields), 'plain words match the priority too');
 });
+
+test('FILTER-18: review:requested and review:again find the PRs that wait for the viewer', () => {
+  const asked = derive(pr({ requestedReviewers: [{ login: 'boris-k', team: false }], reviewers: [] }), NOW, undefined, 'boris-k');
+  const again = derive(pr({ requestedReviewers: [{ login: 'boris-k', team: false }], reviewers: [{ login: 'boris-k', state: 'APPROVED' }] }), NOW, undefined, 'boris-k');
+  const other = derive(pr({ requestedReviewers: [], reviewers: [] }), NOW, undefined, 'boris-k');
+  const hits = (query: string) => [asked, again, other].map((p) => matchesQuery(p, parseQuery(query)));
+  assert.deepEqual(hits('review:requested'), [true, true, false]);
+  assert.deepEqual(hits('review:again'), [false, true, false]);
+  assert.deepEqual(hits('-review:requested'), [false, false, true]);
+});
