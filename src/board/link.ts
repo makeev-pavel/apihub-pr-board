@@ -2,11 +2,11 @@
 // bot logins, the hidden columns, and the repository groups. They sit beside the view in the query, but Reset view
 // leaves them alone.
 
-import { isRepositoryName, MAX_REPOSITORIES, sameName, splitList, uniqueNames } from '../repository.ts';
+import { isRepositoryName, MAX_REPOSITORIES } from '../repository.ts';
+import { parseList, sameName, splitList, uniqueNames } from '../names.ts';
 import { COLUMNS } from './columns.ts';
 import { groupsToText, parseGroupLines } from './groups.ts';
 import type { RepoGroup } from './groups.ts';
-import { parseList } from '../settings.ts';
 import type { Settings } from '../settings.ts';
 
 export const MAX_BOTS = 50;
@@ -44,7 +44,10 @@ export function parseLinkSettings(search: string): LinkSettings {
   const params = new URLSearchParams(search);
   const repos = uniqueNames(splitList(params.get('repos') || '').filter(isRepositoryName)).slice(0, MAX_REPOSITORIES);
   const hide = params.get('hide');
-  const hidden = hide === null ? undefined : uniqueNames(splitList(hide).filter((id) => COLUMNS.some((column) => column.id === id)));
+  const hiddenIds = hide === null ? [] : splitList(hide);
+  const known = uniqueNames(hiddenIds.filter((id) => COLUMNS.some((column) => column.id === id)));
+  // An empty hide= shows every column; a list of only unknown ids, such as one from a newer version, names nothing.
+  const hidden = hide === null || (hiddenIds.length && !known.length) ? undefined : known;
   const groupsValue = params.get('repogroups');
   // An empty list names no groups, so the saved ones apply, as the address then shows.
   const groups = groupsValue ? parseLinkGroups(groupsValue) : undefined;
@@ -80,7 +83,7 @@ export function moveStoredBots(settings: Settings, link: LinkSettings): { settin
   if (!stored.length) return { settings, link, moved: false };
   return {
     settings: { ...settings, rules: { ...settings.rules, extraBots: [] } },
-    link: link.bots.length ? link : { ...link, bots: stored },
+    link: link.bots.length ? link : { ...link, bots: cleanBots(stored) },
     moved: true,
   };
 }
@@ -98,9 +101,7 @@ export function missingReposMessage(missing: string[], hasToken: boolean, source
 // Hidden columns live in this browser and in the address (SET-8). A link that names them wins and is saved; otherwise
 // the saved ones go into the address, so a copied link carries the same columns.
 export function applyLinkColumns(settings: Settings, link: LinkSettings): { settings: Settings; link: LinkSettings; changed: boolean } {
-  // A saved id no column has any more, such as one from an older version, stays out of the address.
-  const known = settings.hiddenColumns.filter((id) => COLUMNS.some((column) => column.id === id));
-  if (link.hidden === undefined) return { settings, link: { ...link, hidden: known }, changed: false };
+  if (link.hidden === undefined) return { settings, link: { ...link, hidden: settings.hiddenColumns }, changed: false };
   return { settings: { ...settings, hiddenColumns: link.hidden }, link, changed: true };
 }
 

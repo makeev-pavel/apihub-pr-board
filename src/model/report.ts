@@ -1,6 +1,7 @@
 // Reads prs.json as the page receives it from the network.
 
-import { isRepositoryName, sameName } from '../repository.ts';
+import { isRepositoryName } from '../repository.ts';
+import { sameName } from '../names.ts';
 import { CI_STATES, MERGE_STATES, REVIEW_STATES } from '../types.ts';
 import type { PullRequest, Report } from '../types.ts';
 import { parseNamedColor, parseSprint } from './fields.ts';

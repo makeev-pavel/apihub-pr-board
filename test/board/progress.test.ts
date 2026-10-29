@@ -13,7 +13,7 @@ test('DATA-27: several repositories report how many are done and what each one b
   let progress = startProgress(['acme/widgets', 'acme/gadgets', 'acme/tools']);
   progress = applyProgress(progress, { repo: 'acme/gadgets', status: 'done', read: 4, total: 4 });
   progress = applyProgress(progress, { repo: 'acme/widgets', status: 'reading', read: 20, total: 80 });
-  progress = applyProgress(progress, { repo: 'acme/widgets', note: 'GitHub timed out; asking for 10 pull requests a page' });
+  progress = applyProgress(progress, { repo: 'acme/widgets', status: 'reading', read: 20, total: 80, note: 'GitHub timed out; asking for 10 pull requests a page' });
   progress = applyProgress(progress, { repo: 'acme/tools', status: 'reading', read: 0, total: null });
   assert.deepEqual(describeProgress(progress), {
     headline: 'Reading repositories: 1 of 3 done, 24 pull requests so far',
@@ -28,7 +28,7 @@ test('DATA-27: several repositories report how many are done and what each one b
 
 test('DATA-27: an event for a repository not in the load changes nothing', () => {
   const progress = startProgress(['acme/widgets']);
-  assert.equal(applyProgress(progress, { repo: 'acme/other', status: 'done' }), progress);
+  assert.equal(applyProgress(progress, { repo: 'acme/other', status: 'done', read: 0, total: 0 }), progress);
 });
 
 test('DATA-27: the summary counts the pull requests, and the repositories when there are several', () => {

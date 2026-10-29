@@ -80,8 +80,6 @@ test('SET-8 SET-17: a link with hidden columns wins and is kept; without one, th
   const fromStorage = applyLinkColumns(stored, { repos: [], bots: [] });
   assert.equal(fromStorage.settings, stored);
   assert.deepEqual(fromStorage.link.hidden, ['ci']);
-  assert.deepEqual(applyLinkColumns({ ...stored, hiddenColumns: ['standup', 'ci'] }, { repos: [], bots: [] }).link.hidden, ['ci'],
-    'an id no column has stays out of the address');
   assert.equal(fromStorage.changed, false);
 });
 
@@ -108,4 +106,11 @@ test('SET-19: a link with groups shows them without saving; without one, the sav
   assert.deepEqual(groupsToSave(GROUPS, GROUPS, saved), saved);
   // The viewer edits the groups: the edit is saved.
   assert.deepEqual(groupsToSave([GROUPS[0]], GROUPS, saved), [GROUPS[0]]);
+});
+
+test('FILTER-14 SET-17: a hide list of only unknown ids keeps the saved columns, and bots moved from storage are cleaned', () => {
+  assert.equal(parseLinkSettings('?hide=bogus,standup').hidden, undefined);
+  assert.deepEqual(parseLinkSettings('?hide=').hidden, []);
+  const stored = { ...DEFAULT_SETTINGS, rules: { ...DEFAULT_SETTINGS.rules, extraBots: ['ci-bot', 'CI-Bot', 'not a login', 'release_bot'] } };
+  assert.deepEqual(moveStoredBots(stored, { repos: [], bots: [] }).link.bots, ['ci-bot']);
 });

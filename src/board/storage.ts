@@ -33,7 +33,7 @@ export function readColumnWidths(): Widths {
     const saved: Record<string, unknown> = JSON.parse(localStorage.getItem(COLUMNS_KEY) || '{}');
     return Object.fromEntries(Object.entries(saved).filter((pair): pair is [string, number] => {
       const [id, w] = pair;
-      return id in DEFAULT_WIDTHS && typeof w === 'number' && Number.isFinite(w) && w >= MIN_COLUMN_PX;
+      return Object.hasOwn(DEFAULT_WIDTHS, id) && typeof w === 'number' && Number.isFinite(w) && w >= MIN_COLUMN_PX;
     }));
   } catch {
     return {};

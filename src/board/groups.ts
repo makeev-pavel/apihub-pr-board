@@ -1,7 +1,8 @@
 // Repository groups (SET-19, FILTER-17): named lists of repositories defined in Settings. The Repositories menu checks
 // groups to show only the rows of their repositories; the data itself does not change.
 
-import { checkRepositoryList, uniqueNames } from '../repository.ts';
+import { checkRepositoryList } from '../repository.ts';
+import { uniqueNames } from '../names.ts';
 
 export interface RepoGroup {
   name: string;
@@ -17,7 +18,8 @@ export const UNGROUPED = 'Ungrouped';
 
 // Group names go into the address in lists split by commas and semicolons, so they hold neither.
 export function groupNameError(name: string): string | null {
-  if (/[,;]/.test(name)) return 'the group name "' + name + '" has a comma or a semicolon.';
+  // A colon ends the name in a Settings line and in the address, and control characters would break a line.
+  if (/[,;:\p{Cc}]/u.test(name)) return 'the group name "' + name + '" has a comma, a semicolon, or a colon.';
   if (name.startsWith('*')) return 'the group name "' + name + '" starts with *; one * before the name marks a default group.';
   if (name.toLowerCase() === UNGROUPED.toLowerCase()) return '"' + UNGROUPED + '" names the repositories in no group; choose another name.';
   return null;

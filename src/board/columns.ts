@@ -35,8 +35,9 @@ export const COLUMNS: Column[] = [
   { id: 'attention', sort: 'attention', label: 'Attention', cls: 'c-attn', width: 104, hint: 'Click an icon to see why the PR needs attention' },
 ];
 export const DEFAULT_WIDTHS: Widths = Object.fromEntries(COLUMNS.map((c) => [c.id, c.width]));
-// The Review column as a list of reviewers (TABLE-30) starts wide enough for a login.
-export const REVIEWERS_LIST_WIDTHS: Widths = { ...DEFAULT_WIDTHS, review: 180 };
+// The Review column as a list of reviewers (TABLE-30) starts wide enough for an avatar, a login, and an icon.
+const REVIEWERS_LIST_PX = 180;
+export const REVIEWERS_LIST_WIDTHS: Widths = { ...DEFAULT_WIDTHS, review: REVIEWERS_LIST_PX };
 
 // Columns that absorb spare width so the table always fills the window.
 export const FLEX_COLUMNS = ['title', 'comment'];
@@ -51,8 +52,9 @@ export function isColumnShown(column: Column, hiddenColumns: string[]): boolean 
 }
 
 // Widen flexible columns until the table fills the available width. The column being resized is left alone so it
-// follows the pointer, and saved widths stay as the user set them. When the flexible columns are hidden or being
-// resized, the last visible column takes the spare width.
+// follows the pointer, and saved widths stay as the user set them. Pull request is always shown, so the last visible
+// column takes the spare width only while Pull request is being resized and Last comment is hidden; the last column
+// is never Pull request, so the one being resized still stays as dragged.
 export function fitToWidth(base: Widths, available: number, resizingId: string | null, columns: Column[]): Widths {
   const total = columns.reduce((sum, c) => sum + base[c.id], 0);
   if (!available || total >= available) return base;

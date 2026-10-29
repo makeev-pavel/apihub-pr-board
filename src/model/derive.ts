@@ -1,6 +1,6 @@
 // Adds the fields the board computes for each PR: age, areas, attention, bot authorship, and the search text.
 
-import { sameName } from '../repository.ts';
+import { sameName } from '../names.ts';
 import { GHOST_LOGIN } from '../types.ts';
 import type { DerivedPullRequest, PullRequest, Sprint } from '../types.ts';
 import { areasOf } from './areas.ts';

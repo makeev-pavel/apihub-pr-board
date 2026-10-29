@@ -1,7 +1,12 @@
 // What a live load is doing, repository by repository, in words for the loading status (DATA-27).
 
 import type { RepositoryProgress } from '../github/graphql.ts';
-import { plural } from './format.ts';
+import { MINUTE_MS, plural } from './format.ts';
+
+// How long the summary of a finished live load stays on screen (DATA-27).
+export const LOAD_SUMMARY_MS = 5000;
+const SECOND_MS = 1000;
+const TENTH_MS = 100;
 
 export interface RepoProgress {
   repo: string;
@@ -18,10 +23,11 @@ export function startProgress(repos: string[]): RepoProgress[] {
 }
 
 // Merges one event in. The repositories keep their order; an unknown one is ignored.
-export function applyProgress(progress: RepoProgress[], event: Partial<RepositoryProgress> & { repo: string }): RepoProgress[] {
+export function applyProgress(progress: RepoProgress[], event: RepositoryProgress): RepoProgress[] {
   const key = event.repo.toLowerCase();
   if (!progress.some((p) => p.repo.toLowerCase() === key)) return progress;
-  return progress.map((p) => (p.repo.toLowerCase() === key ? { ...p, ...event, repo: p.repo, note: event.note ?? p.note } : p));
+  return progress.map((p) => (p.repo.toLowerCase() === key
+    ? { ...p, status: event.status, read: event.read, total: event.total, note: event.note ?? p.note } : p));
 }
 
 function repoLine(p: RepoProgress): string {
@@ -35,7 +41,7 @@ export function describeProgress(progress: RepoProgress[]): { headline: string; 
   const done = progress.filter((p) => p.status === 'done' || p.status === 'unreadable').length;
   const read = progress.reduce((sum, p) => sum + p.read, 0);
   return {
-    headline: 'Reading repositories: ' + done + ' of ' + progress.length + ' done, ' + read + ' pull requests so far',
+    headline: 'Reading repositories: ' + done + ' of ' + progress.length + ' done, ' + plural(read, 'pull request') + ' so far',
     lines: progress.filter((p) => p.status === 'reading').map((p) => ({ repo: p.repo, text: repoLine(p) })),
   };
 }
@@ -44,8 +50,10 @@ export function describeFinished(prs: number, repos: number): string {
   return 'Loaded ' + plural(prs, 'pull request') + (repos > 1 ? ' from ' + repos + ' repositories' : '');
 }
 
+// Tenths of a second for the first minute, whole seconds after it.
 export function formatElapsed(ms: number): string {
-  if (ms < 60_000) return (Math.floor(ms / 100) / 10).toFixed(1) + ' s';
-  const seconds = Math.floor(ms / 1000);
-  return Math.floor(seconds / 60) + ' min ' + (seconds % 60) + ' s';
+  if (ms < MINUTE_MS) return (Math.floor(ms / TENTH_MS) / 10).toFixed(1) + ' s';
+  const seconds = Math.floor(ms / SECOND_MS);
+  const perMinute = MINUTE_MS / SECOND_MS;
+  return Math.floor(seconds / perMinute) + ' min ' + (seconds % perMinute) + ' s';
 }

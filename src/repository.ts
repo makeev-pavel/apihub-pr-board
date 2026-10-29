@@ -1,6 +1,7 @@
-// Repository names and the list helpers shared by repositories, logins, and Settings fields. The repositories are
-// configuration, not code: they come from the link, Settings, repository groups, or PR_BOARD_REPO, so nothing in git
-// names the organization that owns them.
+// Repository names. The repositories are configuration, not code: they come from the link, Settings, repository
+// groups, or PR_BOARD_REPO, so nothing in git names the organization that owns them.
+
+import { splitList, uniqueNames } from './names.ts';
 
 export const REPO_VARIABLE = 'PR_BOARD_REPO';
 export const MAX_REPOSITORIES = 40;
@@ -33,27 +34,6 @@ export function parseRepository(value: string | undefined): Repository {
     throw new Error(REPO_VARIABLE + ' must be "owner/name", such as acme/widgets, not "' + value + '".');
   }
   return { owner: match[1], name: match[2] };
-}
-
-// The entries of a list separated by commas, spaces, or new lines.
-export function splitList(text: string): string[] {
-  return text.split(/[\s,]+/).filter(Boolean);
-}
-
-// GitHub logins and repository names ignore case.
-export function sameName(a: string, b: string): boolean {
-  return a.toLowerCase() === b.toLowerCase();
-}
-
-// Keeps the first of names that differ only in case, as GitHub treats them as one repository.
-export function uniqueNames(names: string[]): string[] {
-  const seen = new Set<string>();
-  return names.filter((name) => {
-    const key = name.toLowerCase();
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
 }
 
 export function parseRepositories(value: string | undefined): Repository[] {

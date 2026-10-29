@@ -48,3 +48,14 @@ test('FILTER-4: checking or unchecking an author keeps a list, or becomes the pr
   assert.equal(toggleAuthor('dependabot', new Set(), AUTHORS), 'bots');
   assert.deepEqual(toggleAuthor('anna-dev', new Set(['anna-dev']), AUTHORS), []);
 });
+
+test('FILTER-4: checking an author keeps chosen logins without open PRs, and clearing the last author means nobody', () => {
+  // gone-person has no open PR now, but stays chosen in the address.
+  assert.deepEqual(toggleAuthor('boris-k', new Set(['anna-dev']), AUTHORS, ['anna-dev', 'gone-person']), ['anna-dev', 'boris-k', 'gone-person']);
+  assert.deepEqual(toggleAuthor('anna-dev', new Set(['anna-dev']), AUTHORS, ['anna-dev', 'gone-person']), ['gone-person']);
+  // With only bots on the board, clearing the last one is Nobody, not the People preset.
+  const onlyBots = [AUTHORS[2]];
+  assert.deepEqual(toggleAuthor('dependabot', new Set(['dependabot']), onlyBots, 'bots'), []);
+  // A login chosen in another case still counts as chosen.
+  assert.deepEqual([...selectedAuthors(['Boris-K'], AUTHORS)], ['boris-k']);
+});

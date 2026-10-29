@@ -63,3 +63,8 @@ test('SET-21: the wizard counts as done once closed, and blocked storage never m
   assert.equal(readWizardDone(), true);
   assert.doesNotThrow(() => storeWizardDone());
 });
+
+test('SET-11: stored widths keep only own column ids, never inherited names', () => {
+  useStorage().set('apihub-pr-board.columns', JSON.stringify({ toString: 200, constructor: 200, ci: 90 }));
+  assert.deepEqual(readColumnWidths(), { ci: 90 });
+});

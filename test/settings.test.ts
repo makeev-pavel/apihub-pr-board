@@ -2,7 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { areasOf } from '../src/model/areas.ts';
 import { attentionReasons, DEFAULT_RULES, isBot } from '../src/model/rules.ts';
-import { DEFAULT_SETTINGS, loadSettings, parseList, parseSettings, rulesAreDefault, saveSettings } from '../src/settings.ts';
+import { parseList } from '../src/names.ts';
+import { DEFAULT_SETTINGS, loadSettings, parseSettings, rulesAreDefault, saveSettings } from '../src/settings.ts';
 import type { PullRequest } from '../src/types.ts';
 
 test('SET-11: missing or invalid stored settings fall back to the defaults', () => {

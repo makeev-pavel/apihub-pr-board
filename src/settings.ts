@@ -5,7 +5,8 @@ import { groupNameError, MAX_GROUPS } from './board/groups.ts';
 import type { RepoGroup } from './board/groups.ts';
 import { AREAS } from './model/areas.ts';
 import { COLUMNS } from './board/columns.ts';
-import { isRepositoryName, MAX_REPOSITORIES, uniqueNames } from './repository.ts';
+import { isRepositoryName, MAX_REPOSITORIES } from './repository.ts';
+import { parseList, uniqueNames } from './names.ts';
 import { DEFAULT_RULES } from './model/rules.ts';
 import type { Rules } from './model/rules.ts';
 
@@ -43,10 +44,6 @@ export function isValidStaleDays(value: unknown): value is number {
 }
 
 // Splits a comma- or space-separated list of logins or labels.
-export function parseList(text: string): string[] {
-  return Array.from(new Set(text.split(/[\s,]+/).filter(Boolean)));
-}
-
 function pick<T extends string | number>(value: unknown, options: [T, string][], fallback: T): T {
   const option = options.find(([id]) => id === value);
   return option ? option[0] : fallback;

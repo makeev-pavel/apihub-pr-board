@@ -77,9 +77,10 @@
 ## View in the URL
 
 - **FILTER-13** Search, authors, draft status, area, priority, repository groups, quick filters, and sort live in the
-  URL query (`q`, `authors`, `draft`, `area`, `priority`, `groups`, `quick`, `sort`, `dir`). Defaults are left out,
-  so the default view has a clean address. Opening a link restores the view; unknown values fall back to the
-  defaults.
+  URL query (`q`, `authors`, `draft`, `area`, `priority`, `groups`, `quick`, `sort`, `dir`). Defaults are left out, so
+  the default view has a clean address. Opening a link restores the view; unknown values fall back to the defaults, and
+  a value given twice counts once. Logins match without regard to case. A choice of one login spelled like a preset,
+  such as a person called `bots`, keeps a trailing comma (`authors=bots,`), so it reads back as that person.
 - **FILTER-14** The address also carries four settings: `repos`, the repositories to show
   (`repos=acme/widgets,acme/gadgets`), `bots`, the extra bot logins (**SET-5**), `hide`, the hidden columns
   (`hide=ci,assignee`, **SET-8**), and `repogroups`, the repository groups (**SET-19**), as
@@ -88,7 +89,8 @@
   saved ones go into the address. An empty list or a list with a wrong group is ignored. Copy link keeps them, and
   **Reset view** leaves them alone. Without `repos` the board shows every repository of the data; without `bots` there
   are no extra bots; without `hide` the columns saved in this browser apply, and the address then shows them. A link
-  with `hide` wins and is saved. Invalid entries are dropped: a repository must be `owner/name` (up to 40), a bot a
+  with `hide` wins and is saved; an empty `hide=` shows every column, and a list of only unknown ids, such as one from a
+  newer version, counts as no list. Invalid entries are dropped: a repository must be `owner/name` (up to 40), a bot a
   GitHub login (up to 50), and a column a known id.
 
 ## Several repositories

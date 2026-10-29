@@ -1,6 +1,6 @@
 // The Reviewers list of a PR as GitHub's sidebar shows it (TABLE-30): each person once, with where their review stands.
 
-import { sameName } from '../repository.ts';
+import { sameName } from '../names.ts';
 import type { Actor, PullRequest } from '../types.ts';
 
 export type ReviewerStatus = 'pending' | 'again' | 'changes' | 'approved' | 'commented' | 'dismissed';

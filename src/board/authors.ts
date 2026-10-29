@@ -1,5 +1,6 @@
 // The author menu: who opened the shown PRs and which of them are chosen.
 
+import { sameName } from '../names.ts';
 import type { Actor, DerivedPullRequest } from '../types.ts';
 import type { AuthorsFilter } from './view.ts';
 
@@ -24,7 +25,7 @@ export function selectedAuthors(mode: AuthorsFilter, authors: AuthorEntry[]): Se
   if (mode === 'all') return new Set(authors.map((a) => a.login));
   if (mode === 'bots') return new Set(authors.filter((a) => a.bot).map((a) => a.login));
   // A chosen login without open PRs in the current data is left out, so counts match what is shown.
-  if (mode) return new Set(authors.map((a) => a.login).filter((login) => mode.includes(login)));
+  if (mode) return new Set(authors.map((a) => a.login).filter((login) => mode.some((chosen) => sameName(chosen, login))));
   return new Set(authors.filter((a) => !a.bot).map((a) => a.login));
 }
 
@@ -38,16 +39,20 @@ export function authorsSummary(mode: AuthorsFilter, selected: Set<string>): stri
   return selected.size + ' selected';
 }
 
-// The choice after one author is checked or unchecked. A choice that equals a preset becomes that preset.
-export function toggleAuthor(login: string, selected: Set<string>, authors: AuthorEntry[]): AuthorsFilter {
+// The choice after one author is checked or unchecked. Chosen logins without open PRs stay chosen (FILTER-4), and a
+// choice that equals a preset, with nothing else chosen, becomes that preset.
+export function toggleAuthor(login: string, selected: Set<string>, authors: AuthorEntry[], mode: AuthorsFilter = null): AuthorsFilter {
   const next = new Set(selected);
   if (next.has(login)) next.delete(login); else next.add(login);
+  const away = Array.isArray(mode) ? mode.filter((chosen) => !authors.some((a) => sameName(a.login, chosen))) : [];
+  const everyone = authors.map((a) => a.login);
+  const chosen = [...everyone.filter((l) => next.has(l)), ...away];
+  if (away.length || !next.size) return chosen;
   const people = authors.filter((a) => !a.bot).map((a) => a.login);
   const bots = authors.filter((a) => a.bot).map((a) => a.login);
-  const everyone = authors.map((a) => a.login);
   const same = (list: string[]) => list.length === next.size && list.every((l) => next.has(l));
   if (same(people)) return null;
   if (same(everyone)) return 'all';
   if (bots.length && same(bots)) return 'bots';
-  return everyone.filter((l) => next.has(l));
+  return chosen;
 }

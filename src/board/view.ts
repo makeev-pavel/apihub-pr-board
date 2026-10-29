@@ -1,6 +1,7 @@
 // The view (search, filters, quick filters, and sort), its URL query, and the rows it lets through.
 
 import { AREAS } from '../model/areas.ts';
+import { commaList } from '../names.ts';
 import { MAX_GROUPS } from './groups.ts';
 import { matchesQuery } from '../model/search.ts';
 import type { ParsedQuery } from '../model/search.ts';
@@ -27,17 +28,18 @@ export type SortKey = 'repo' | 'number' | 'title' | 'author' | 'ci' | 'review' |
 type SortDir = 'asc' | 'desc';
 
 const SORTS: Record<SortKey, (pr: DerivedPullRequest) => number | string> = {
-  repo: (pr) => pr.repo.toLowerCase(),
+  repo: (pr) => pr.repo,
   number: (pr) => pr.number,
-  title: (pr) => pr.title.toLowerCase(),
-  author: (pr) => pr.authorKey.toLowerCase(),
+  title: (pr) => pr.title,
+  author: (pr) => pr.authorKey,
   ci: (pr) => CI[pr.ci].rank,
   review: (pr) => REVIEW[pr.review].rank,
   merge: (pr) => MERGE[pr.mergeable].rank,
   age: (pr) => -Date.parse(pr.createdAt),
   attention: (pr) => pr.attention.length,
 };
-const isSortKey = (value: string | null): value is SortKey => value !== null && value in SORTS;
+// Own keys only, so ?sort=__proto__ or ?sort=toString falls back to the default sort.
+const isSortKey = (value: string | null): value is SortKey => value !== null && Object.hasOwn(SORTS, value);
 
 // Text columns sort A to Z first; the others start with the highest value.
 export function firstDirection(key: SortKey): SortDir {
@@ -68,19 +70,18 @@ export interface View {
 
 export const NO_PRIORITY = 'none';
 const MAX_PRIORITIES = 20;
+// The groups and the Ungrouped entry (FILTER-17).
+const MAX_GROUP_ENTRIES = MAX_GROUPS + 1;
+const AUTHOR_PRESETS = ['all', 'bots'];
+
+// A list of one login spelled like a preset keeps a trailing comma, so a person called "bots" reads back as a person.
+function authorsValue(authors: NonNullable<AuthorsFilter>): string {
+  if (typeof authors === 'string') return authors;
+  const value = authors.join(',');
+  return authors.length === 1 && AUTHOR_PRESETS.includes(value.toLowerCase()) ? value + ',' : value;
+}
 
 export const DEFAULT_VIEW: View = { q: '', authors: null, draft: 'ready', area: 'all', quick: [], priority: [], groups: null, sort: 'attention', dir: 'desc' };
-
-// The names of a comma-separated list, trimmed, without blanks or repeats in any case.
-function uniqueValues(list: string): string[] {
-  const seen = new Set<string>();
-  return list.split(',').map((name) => name.trim()).filter((name) => {
-    const key = name.toLowerCase();
-    if (!name || seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
 
 // The view a URL query describes; unknown or missing values fall back to the defaults.
 export function parseView(search: string): View {
@@ -89,21 +90,17 @@ export function parseView(search: string): View {
   const q = params.get('q');
   if (q !== null) view.q = q;
   const authors = params.get('authors');
-  if (authors !== null) {
-    view.authors = authors === 'all' || authors === 'bots' ? authors : authors.split(',').filter(Boolean);
-  }
+  if (authors !== null) view.authors = AUTHOR_PRESETS.includes(authors) ? authors as 'all' | 'bots' : commaList(authors);
   const draft = DRAFT_OPTIONS.find(([id]) => id === params.get('draft'));
   if (draft) view.draft = draft[0];
   const area = AREA_OPTIONS.find(([id]) => id === params.get('area'));
   if (area) view.area = area[0];
   const quick = params.get('quick');
-  if (quick !== null) {
-    view.quick = quick.split(',').filter((id) => QUICK.some((f) => f.id === id));
-  }
+  if (quick !== null) view.quick = [...new Set(quick.split(','))].filter((id) => QUICK.some((f) => f.id === id));
   const priority = params.get('priority');
-  if (priority !== null) view.priority = uniqueValues(priority).slice(0, MAX_PRIORITIES);
+  if (priority !== null) view.priority = commaList(priority).slice(0, MAX_PRIORITIES);
   const groups = params.get('groups');
-  if (groups !== null) view.groups = uniqueValues(groups).slice(0, MAX_GROUPS + 1);
+  if (groups !== null) view.groups = commaList(groups).slice(0, MAX_GROUP_ENTRIES);
   const sort = params.get('sort');
   if (isSortKey(sort)) view.sort = sort;
   const dir = params.get('dir');
@@ -114,7 +111,7 @@ export function parseView(search: string): View {
 export function viewQuery(view: View): string {
   const params = new URLSearchParams();
   if (view.q) params.set('q', view.q);
-  if (view.authors) params.set('authors', typeof view.authors === 'string' ? view.authors : view.authors.join(','));
+  if (view.authors) params.set('authors', authorsValue(view.authors));
   if (view.draft !== DEFAULT_VIEW.draft) params.set('draft', view.draft);
   if (view.area !== DEFAULT_VIEW.area) params.set('area', view.area);
   if (view.quick.length) params.set('quick', view.quick.join(','));
@@ -155,6 +152,11 @@ export function matchesPriority(pr: DerivedPullRequest, selected: string[]): boo
   return own.length ? own.some((name) => wanted.includes(name)) : wanted.includes(NO_PRIORITY);
 }
 
+// The number of PRs whose linked issues have no priority, for No priority in the menu (FILTER-16).
+export function countWithoutPriority(prs: DerivedPullRequest[]): number {
+  return prs.filter((pr) => !prioritiesOf(pr).length).length;
+}
+
 // Every priority on the board with its number of PRs, in the order they first appear (FILTER-16).
 export function collectPriorities(prs: DerivedPullRequest[]): { name: string; count: number }[] {
   const counts = new Map<string, { name: string; count: number }>();
@@ -169,10 +171,10 @@ export function collectPriorities(prs: DerivedPullRequest[]): { name: string; co
 }
 
 // The PRs the authors, draft status, area, priority, and search let through. Quick filters count against this list.
-export function filterPullRequests(prs: DerivedPullRequest[], view: Pick<View, 'draft' | 'area'> & Partial<Pick<View, 'priority'>>,
+export function filterPullRequests(prs: DerivedPullRequest[], view: Pick<View, 'draft' | 'area' | 'priority'>,
   authors: Set<string>, query: ParsedQuery): DerivedPullRequest[] {
   return prs.filter((pr) => {
-    if (!matchesPriority(pr, view.priority || [])) return false;
+    if (!matchesPriority(pr, view.priority)) return false;
     if (!authors.has(pr.authorKey)) return false;
     if (view.draft === 'ready' && pr.draft) return false;
     if (view.draft === 'draft' && !pr.draft) return false;
@@ -190,8 +192,8 @@ export function visibleRows(prs: DerivedPullRequest[], view: Pick<View, 'quick' 
   return prs.filter((pr) => tests.every((q) => q.test(pr))).sort((a, b) => {
     const ka = key(a);
     const kb = key(b);
-    if (ka < kb) return -sign;
-    if (ka > kb) return sign;
-    return b.number - a.number || a.repo.localeCompare(b.repo);
+    // Text compares as the Authors menu does, so accented names sort among the others.
+    const order = typeof ka === 'string' ? ka.localeCompare(kb as string, 'en', { sensitivity: 'base' }) : ka - (kb as number);
+    return sign * Math.sign(order) || b.number - a.number || a.repo.localeCompare(b.repo);
   });
 }

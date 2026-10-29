@@ -16,7 +16,7 @@ export function AuthorMenu({ authors, selected, mode, setAuthors }: {
   const ref = useDismiss(open, setOpen);
 
   const summary = authorsSummary(mode, selected);
-  const toggle = (login: string) => setAuthors(toggleAuthor(login, selected, authors));
+  const toggle = (login: string) => setAuthors(toggleAuthor(login, selected, authors, mode));
   const group = (title: string, list: AuthorEntry[]) => list.length ? (
     <>
       <div className="group">{title}</div>

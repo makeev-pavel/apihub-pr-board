@@ -8,10 +8,8 @@ const LIGHT_LABEL_LUMINANCE = 0.45;
 // Also the unit of the live load interval (SET-22).
 export const MINUTE_MS = 60 * 1000;
 
-const HEADER_REPOSITORIES = 2;
-
-// How long the summary of a finished live load stays on screen (DATA-27).
-export const LOAD_SUMMARY_MS = 5000;
+// The header names up to this many repositories, then "+N more" (TABLE-27).
+export const HEADER_REPOSITORIES = 2;
 
 const nameOf = (repo: string) => repo.slice(repo.indexOf('/') + 1);
 
@@ -46,8 +44,9 @@ export function displayLogin(actor: Actor): string {
   return actor.login.replace(/\[bot\]$/, '');
 }
 export function initials(login: string): string {
-  const parts = login.replace(/\[bot\]$/, '').split(/[-_.\s]+/).filter(Boolean);
-  return (parts.length > 1 ? parts[0][0] + parts[1][0] : login.slice(0, 2)).toUpperCase();
+  const name = login.replace(/\[bot\]$/, '');
+  const parts = name.split(/[-_.\s]+/).filter(Boolean);
+  return (parts.length > 1 ? parts[0][0] + parts[1][0] : name.slice(0, 2)).toUpperCase();
 }
 
 export function labelTextColor(hex: string): string {

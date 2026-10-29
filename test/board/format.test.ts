@@ -30,6 +30,7 @@ test('TABLE-9: logins drop the [bot] suffix, and initials come from the parts of
   assert.equal(displayLogin({ login: 'renovate[bot]', avatarUrl: null, bot: true }), 'renovate');
   assert.equal(displayLogin({ login: 'anna-dev', avatarUrl: null, bot: false }), 'anna-dev');
   assert.equal(initials('new-contributor-42'), 'NC');
+  assert.equal(initials('x[bot]'), 'X', 'the [bot] suffix never reaches the initials');
   assert.equal(initials('dependabot'), 'DE');
   assert.equal(initials('renovate[bot]'), 'RE');
 });

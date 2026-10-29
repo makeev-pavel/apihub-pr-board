@@ -1,6 +1,7 @@
 // Reads every open pull request through the GraphQL API, page by page.
 
-import { repositoryName, sameName } from '../repository.ts';
+import { repositoryName } from '../repository.ts';
+import { sameName } from '../names.ts';
 import type { Repository } from '../repository.ts';
 import type { Actor, PullRequest, Report } from '../types.ts';
 import { GitHubError } from './http.ts';

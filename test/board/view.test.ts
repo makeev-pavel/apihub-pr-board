@@ -44,13 +44,13 @@ test('FILTER-5 FILTER-6: authors, draft status, area, and the search narrow the 
   const everyone = new Set(['anna-dev', 'boris-k']);
   const ids = (list: DerivedPullRequest[]) => list.map((p) => p.number);
   const query = parseQuery('');
-  assert.deepEqual(ids(filterPullRequests(prs, { draft: 'all', area: 'all' }, everyone, query)), [1, 2, 3, 4, 5]);
-  assert.deepEqual(ids(filterPullRequests(prs, { draft: 'ready', area: 'all' }, everyone, query)), [1, 3, 4, 5]);
-  assert.deepEqual(ids(filterPullRequests(prs, { draft: 'draft', area: 'all' }, everyone, query)), [2]);
-  assert.deepEqual(ids(filterPullRequests(prs, { draft: 'all', area: 'fe' }, everyone, query)), [5]);
-  assert.deepEqual(ids(filterPullRequests(prs, { draft: 'all', area: 'other' }, everyone, query)), [1, 2, 4]);
-  assert.deepEqual(ids(filterPullRequests(prs, { draft: 'all', area: 'all' }, new Set(['boris-k']), query)), [4]);
-  assert.deepEqual(ids(filterPullRequests(prs, { draft: 'all', area: 'all' }, everyone, parseQuery('pr 3'))), [3]);
+  assert.deepEqual(ids(filterPullRequests(prs, { draft: 'all', area: 'all', priority: [] }, everyone, query)), [1, 2, 3, 4, 5]);
+  assert.deepEqual(ids(filterPullRequests(prs, { draft: 'ready', area: 'all', priority: [] }, everyone, query)), [1, 3, 4, 5]);
+  assert.deepEqual(ids(filterPullRequests(prs, { draft: 'draft', area: 'all', priority: [] }, everyone, query)), [2]);
+  assert.deepEqual(ids(filterPullRequests(prs, { draft: 'all', area: 'fe', priority: [] }, everyone, query)), [5]);
+  assert.deepEqual(ids(filterPullRequests(prs, { draft: 'all', area: 'other', priority: [] }, everyone, query)), [1, 2, 4]);
+  assert.deepEqual(ids(filterPullRequests(prs, { draft: 'all', area: 'all', priority: [] }, new Set(['boris-k']), query)), [4]);
+  assert.deepEqual(ids(filterPullRequests(prs, { draft: 'all', area: 'all', priority: [] }, everyone, parseQuery('pr 3'))), [3]);
 });
 
 test('FILTER-2 TABLE-17 TABLE-18: quick filters combine with AND, then rows sort with ties newest first', () => {
@@ -137,4 +137,18 @@ test('FILTER-17: checked groups live in the address; an empty list checks none, 
   assert.equal(viewQuery({ ...DEFAULT_VIEW, groups: ['Monorepo & Co', 'Ungrouped'] }), 'groups=Monorepo+%26+Co%2CUngrouped');
   assert.equal(viewQuery({ ...DEFAULT_VIEW, groups: [] }), 'groups=');
   assert.equal(viewQuery(DEFAULT_VIEW), '');
+});
+
+test('FILTER-13: an inherited name is not a sort, a quick filter counts once, and a person called "bots" stays a person', () => {
+  for (const sort of ['__proto__', 'toString', 'constructor']) assert.equal(parseView('?sort=' + sort).sort, DEFAULT_VIEW.sort, sort);
+  assert.deepEqual(parseView('?quick=ci,ci,review').quick, ['ci', 'review']);
+  assert.equal(viewQuery({ ...DEFAULT_VIEW, authors: ['bots'] }), 'authors=bots%2C');
+  assert.deepEqual(parseView('?authors=bots,').authors, ['bots']);
+  assert.equal(parseView('?authors=bots').authors, 'bots');
+  assert.deepEqual(parseView('?authors=' + encodeURIComponent(' anna-dev , Anna-Dev,boris-k')).authors, ['anna-dev', 'boris-k']);
+});
+
+test('TABLE-16: text columns sort as the Authors menu does, so accented names sort among the others', () => {
+  const rows = ['Zed', 'Älva', 'anna'].map((title, i) => ({ number: i + 1, repo: 'acme/widgets', title, authorKey: 'a' }) as DerivedPullRequest);
+  assert.deepEqual(visibleRows(rows, { quick: [], sort: 'title', dir: 'asc' }).map((pr) => pr.title), ['Älva', 'anna', 'Zed']);
 });

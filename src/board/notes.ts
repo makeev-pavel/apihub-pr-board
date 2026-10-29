@@ -53,7 +53,7 @@ function isDayNote(value: unknown): value is DayNote {
 
 // One paragraph per day, newest first: "**2026-10-28** ✓ Fixed the tests".
 export function dayNotesToText(entries: unknown[]): string {
-  return entries.filter(isDayNote).sort((a, b) => (a.date < b.date ? 1 : -1))
+  return entries.filter(isDayNote).sort((a, b) => b.date.localeCompare(a.date))
     .map((entry) => '**' + entry.date + '**' + (entry.asked ? ' ✓' : '') + (entry.text ? ' ' + entry.text : ''))
     .join('\n\n');
 }
@@ -75,21 +75,29 @@ export function parseNotes(value: unknown): { notes: Notes; migrated: boolean } 
   return { notes, migrated };
 }
 
-// The notes as stored now, or null when storage cannot be read at all. A broken entry reads as no notes.
-export function readStoredNotes(): Notes | null {
+function readStored(): { notes: Notes; migrated: boolean } | null {
   let raw: string | null;
   try { raw = localStorage.getItem(NOTES_KEY); } catch { return null; }
   try {
-    const { notes, migrated } = parseNotes(JSON.parse(raw || 'null'));
-    if (migrated) saveNotes(notes);
-    return notes;
+    return parseNotes(JSON.parse(raw || 'null'));
   } catch {
-    return {};
+    return { notes: {}, migrated: false };
   }
 }
 
+// The notes as stored now, or null when storage cannot be read at all. A broken entry reads as no notes. It only
+// reads, so a save can call it to merge with what another tab stored.
+export function readStoredNotes(): Notes | null {
+  const stored = readStored();
+  return stored && stored.notes;
+}
+
+// The notes for the page, with notes of the earlier per-day version written back once in the new shape.
 export function loadNotes(): Notes {
-  return readStoredNotes() || {};
+  const stored = readStored();
+  if (!stored) return {};
+  if (stored.migrated) saveNotes(stored.notes);
+  return stored.notes;
 }
 
 // False when storage is blocked or full, so the page can say the note was not saved.

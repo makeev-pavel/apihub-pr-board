@@ -4,10 +4,11 @@ import { isColumnShown } from '../../board/columns.ts';
 import type { Column } from '../../board/columns.ts';
 import { AREAS } from '../../model/areas.ts';
 import { groupsToText, parseGroupLines } from '../../board/groups.ts';
+import { parseList } from '../../names.ts';
 import { checkRepositoryList } from '../../repository.ts';
 import type { Rules } from '../../model/rules.ts';
 import {
-  DEFAULT_SETTINGS, DENSITIES, REFRESH_INTERVALS, REVIEW_COLUMNS, isValidStaleDays, MAX_STALE_DAYS, MIN_STALE_DAYS, parseList, THEMES,
+  DEFAULT_SETTINGS, DENSITIES, REFRESH_INTERVALS, REVIEW_COLUMNS, isValidStaleDays, MAX_STALE_DAYS, MIN_STALE_DAYS, THEMES,
 } from '../../settings.ts';
 import type { Settings } from '../../settings.ts';
 import type { AreaId } from '../../types.ts';

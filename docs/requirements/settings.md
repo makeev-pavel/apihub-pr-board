@@ -52,8 +52,9 @@
   what is wrong with it.
 - **SET-17** The repositories and the extra bot logins (**SET-5**) live in the address, not in this browser, so a link
   or a bookmark carries them. The panel footer says what the address carries. **Reset to defaults** removes both from
-  the address. Extra bots that an earlier version saved in this browser move into the address on the first visit. When
-  that visit comes through a link with its own bots, the link's bots apply and the saved ones are dropped.
+  the address. Extra bots that an earlier version saved in this browser move into the address on the first visit,
+  checked like the bots of a link. When that visit comes through a link with its own bots, the link's bots apply and the
+  saved ones are dropped.
 - **SET-18** When the page needs a token and has none, a dialog explains how to create one: a link to GitHub's page
   for a new fine-grained token and short steps (any name and expiry; Repository access: Public repositories, read
   only; no extra permissions; copy the `github_pat_…` value). It has a token field with **Save and load** and **Not
@@ -64,8 +65,8 @@
   that is gone. A dialog that opens right after another one closes keeps the focus.
 - **SET-19** A Repository groups section, under Repositories, defines named groups in a text field, one per line:
   `<name>: owner/name, owner/name`. A leading `*` marks a group checked by default in the Repositories menu
-  (**FILTER-17**). It applies like a list (**SET-14**); a line without a name, with a comma or a semicolon in the name,
-  with a name that starts with `*`, named Ungrouped, or with an entry that is not `owner/name`, is not applied, and the
-  field says which line and why. Up to 20 groups. The groups are kept in this browser and travel in the address
-  (`repogroups`, **FILTER-14**), which does not save them; the board has none until the viewer adds them. Enter adds a
-  line; the field applies on blur or Ctrl+Enter. **Reset to defaults** clears the groups.
+  (**FILTER-17**). It applies like a list (**SET-14**); a line without a name, with a comma, a semicolon, or a colon in
+  the name, with a name that starts with `*`, named Ungrouped, or with an entry that is not `owner/name`, is not
+  applied, and the field says which line and why. Up to 20 groups. The groups are kept in this browser and travel in the
+  address (`repogroups`, **FILTER-14**), which does not save them; the board has none until the viewer adds them. Enter
+  adds a line; the field applies on blur or Ctrl+Enter. **Reset to defaults** clears the groups.

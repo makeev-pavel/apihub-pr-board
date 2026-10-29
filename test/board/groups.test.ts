@@ -31,8 +31,8 @@ test('SET-19: a leading * marks a default group; a name with a comma, a semicolo
   const parsed = parseGroupLines('* Core: acme/widgets\nTools: acme/tools');
   assert.deepEqual(parsed, { groups: [{ name: 'Core', repos: ['acme/widgets'], isDefault: true }, { name: 'Tools', repos: ['acme/tools'] }] });
   assert.equal(groupsToText((parsed as { groups: RepoGroup[] }).groups), '*Core: acme/widgets\nTools: acme/tools');
-  assert.deepEqual(parseGroupLines('Core, old: acme/widgets'), { error: 'Line 1: the group name "Core, old" has a comma or a semicolon.' });
-  assert.deepEqual(parseGroupLines('Core; old: acme/widgets'), { error: 'Line 1: the group name "Core; old" has a comma or a semicolon.' });
+  assert.deepEqual(parseGroupLines('Core, old: acme/widgets'), { error: 'Line 1: the group name "Core, old" has a comma, a semicolon, or a colon.' });
+  assert.deepEqual(parseGroupLines('Core; old: acme/widgets'), { error: 'Line 1: the group name "Core; old" has a comma, a semicolon, or a colon.' });
   assert.deepEqual(parseGroupLines('ungrouped: acme/widgets'),
     { error: 'Line 1: "Ungrouped" names the repositories in no group; choose another name.' });
   assert.deepEqual(parseGroupLines('**Core: acme/widgets'),

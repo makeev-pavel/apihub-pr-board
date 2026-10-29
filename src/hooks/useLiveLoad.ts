@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { LOAD_SUMMARY_MS } from '../board/format.ts';
+import { LOAD_SUMMARY_MS } from '../board/progress.ts';
 import { applyProgress, startProgress } from '../board/progress.ts';
 import type { LoadState } from '../components/common/LoadStatus.tsx';
 import { fetchOpenPullRequests } from '../github/graphql.ts';
