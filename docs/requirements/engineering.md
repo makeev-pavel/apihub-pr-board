@@ -31,10 +31,11 @@ and `npm run test:screenshots:update` (task 22).
 ```text
 src/            the page: App.tsx and main.tsx, settings.ts, markdown.ts, repository.ts, config.ts, context.ts
 src/model/      rules without UI: attention, bots, areas, search, derived fields, prs.json shape
-src/hooks/      popovers, loading prs.json, loading all comments of a PR, and column widths
+src/hooks/      popovers, loading prs.json, loading all comments of a PR, column widths, and settings
 src/components/ React components, one per file: common/, cells/, header/, toolbar/, table/, legend/, settings/
 src/styles/     tokens.css (colors and fonts for both themes) and one stylesheet per area of the page
-src/board/      board logic without React: states, columns, the view and its URL, rows, authors, formatting, storage
+src/board/      board logic without React: states, columns, the view and the address, rows, authors, formatting,
+                storage
 src/github/     the GraphQL query, raw types, normalization, and the GraphQL and REST clients
 dev/            the Vite plugin with the mocks, the DEV panel, scenarios/ (mock answers), and fixtures/ (mock PRs)
 scripts/        build-site.ts writes prs.json after vite build

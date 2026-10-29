@@ -35,7 +35,7 @@ jobs:
       - name: Run tests
         run: npm test
 
-      # The target repository is a repository variable, so the code never names it.
+      # The target repositories are a repository variable (owner/name, comma-separated), so the code never names them.
       - name: Build page
         env:
           PR_BOARD_REPO: ${{ vars.PR_BOARD_REPO }}

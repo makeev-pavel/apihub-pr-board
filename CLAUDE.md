@@ -1,6 +1,6 @@
 # PR board
 
-A board of the open pull requests of one GitHub repository, published on GitHub Pages.
+A board of the open pull requests of one or more GitHub repositories, published on GitHub Pages.
 
 - **Spec:** `docs/requirements/`. It is the source of truth: update the matching requirement in the same change
   when behavior changes, and keep requirement ids stable.
@@ -15,14 +15,18 @@ A board of the open pull requests of one GitHub repository, published on GitHub 
 - `src/types.ts`: the shape of `prs.json` and of derived rows. Raw GraphQL types live in `src/github/raw.ts`.
 - `src/model/`: rules without UI, one concern each: `rules.ts` (attention, bots, titles), `areas.ts`, `search.ts`,
   `derive.ts` (per-PR fields), `comments.ts`, `report.ts` (`prs.json` shape). Tests mirror it in `test/model/`.
-- `src/repository.ts` and `src/config.ts`: the target repository from `PR_BOARD_REPO`, passed to the page by Vite
-  `define`. `vite.config.ts` parses it once; with mock data the dev server always uses `acme/widgets`.
+- `src/repository.ts` and `src/config.ts`: the target repositories from `PR_BOARD_REPO` (a list), passed to the page
+  by Vite `define`. `vite.config.ts` parses it once; with mock data the dev server always uses `acme/widgets`.
+  A PR is identified by repository and number (`pullRequestKey` in `src/model/report.ts`), never by number alone.
 - `src/board/`: board logic without React: state codes (`states.ts`), columns and widths, the view and its URL,
-  filtering and sorting rows (`view.ts`), authors, failed-check grouping, text formatting, and `localStorage`.
+  filtering and sorting rows (`view.ts`), the repositories and extra bots in the address (`link.ts`), authors,
+  failed-check grouping, text formatting, and `localStorage`.
 - `src/hooks/`: `usePopover` (and `useDismiss`), `useReportData` (loads `prs.json`), `useAllComments` (the comments
-  panel's REST load, cached per PR version), `useColumnWidths` (saved, dragged, and fitted widths).
+  panel's REST load, cached per PR version), `useColumnWidths` (saved, dragged, and fitted widths),
+  `useBoardSettings` (stored settings plus the extra bots from the address).
   `src/context.ts`: the viewer's rules and the comments API.
-- `src/settings.ts`: personal settings in `localStorage`, validated on load.
+- `src/settings.ts`: personal settings in `localStorage`, validated on load. Extra bots are not stored there; they
+  live in the address (`bots`).
 - `src/markdown.ts`: comment Markdown through `marked` and DOMPurify; browser only.
 - `src/components/`: React components, one per file: `common/`, `cells/` (table cells and their popovers), `header/`,
   `toolbar/`, `table/`, `legend/`, and `settings/`.
@@ -30,8 +34,8 @@ A board of the open pull requests of one GitHub repository, published on GitHub 
 - `src/styles/`: `tokens.css` (all colors and fonts, both themes) and one file per area of the page.
 - `dev/mock-plugin.ts`: the Vite plugin that serves the mocks (helpers in `dev/http.ts`) and injects
   `dev/panel.ts`, the DEV panel. `dev/scenarios/`: what `/prs.json`, the GraphQL mock, and the REST mock answer.
-  `dev/fixtures/`: the fictional cast, the generated typical board, and the corner cases by topic (`cases/`; add a
-  case to the matching topic file).
+  `dev/fixtures/`: the fictional cast, the generated typical board, the second repository (`gadgets.ts`), and the
+  corner cases by topic (`cases/`; add a case to the matching topic file).
 - `scripts/build-site.ts` and `.github/workflows/pages.yml`: the hourly build and the Pages deploy.
 
 ## Working rules
