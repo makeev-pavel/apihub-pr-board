@@ -197,6 +197,37 @@ test.describe('loading prs.json', () => {
     await expect.poll(() => loads).toBe(3);
   });
 
+  test('SET-22 DATA-24 PANEL-8: Settings sets how often live data loads again, or turns it off', async ({ page }) => {
+    let loads = 0;
+    page.on('request', (request) => { if (request.url().endsWith('/__dev/graphql')) loads += 1; });
+    await page.addInitScript((key) => localStorage.setItem(key, 'mock-token'), TOKEN_KEY);
+    await openBoard(page, { report: 'missing', refresh: 'ok', query: 'repos=acme/gadgets' });
+    await expect(page.locator('.source-button')).toHaveText('live, just now');
+    expect(loads).toBe(1);
+
+    await page.getByRole('button', { name: /^Settings/ }).click();
+    const interval = page.getByRole('group', { name: 'Load live data again' });
+    await expect(interval.getByRole('button', { name: '5 min' })).toHaveAttribute('aria-pressed', 'true');
+    await interval.getByRole('button', { name: '2 min' }).click();
+    await page.keyboard.press('Escape');
+    await page.clock.runFor(2 * MINUTE_MS);
+    await expect.poll(() => loads).toBe(2);
+    await page.locator('.source-button').click();
+    await expect(page.getByRole('dialog', { name: 'Data source' })).toContainText('It loads again every 2 minutes while this tab is visible.');
+    await page.keyboard.press('Escape');
+
+    await page.getByRole('button', { name: /^Settings/ }).click();
+    await interval.getByRole('button', { name: 'Off' }).click();
+    await page.keyboard.press('Escape');
+    await page.clock.runFor(31 * MINUTE_MS);
+    expect(loads).toBe(2);
+    await page.locator('.source-button').click();
+    await expect(page.getByRole('dialog', { name: 'Data source' })).toContainText('It loads again only on Refresh; automatic loads are off in Settings.');
+    // The choice stays in this browser.
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('apihub-pr-board.settings')!).refreshMinutes);
+    expect(saved).toBe(0);
+  });
+
   test('DATA-24: a snapshot is not replaced on its own', async ({ page }) => {
     let loads = 0;
     page.on('request', (request) => { if (request.url().endsWith('/__dev/graphql')) loads += 1; });

@@ -126,6 +126,13 @@ test('SET-19: stored groups with the same name keep the first, and each holds up
   assert.deepEqual(settings.repoGroups.map((g) => [g.name, g.repos.length]), [['Core', 40]]);
 });
 
+test('SET-22: live loads repeat every 2, 5, 10, or 30 minutes or never, and anything else falls back to 5', () => {
+  assert.equal(DEFAULT_SETTINGS.refreshMinutes, 5);
+  assert.equal(parseSettings({ refreshMinutes: 30 }).refreshMinutes, 30);
+  assert.equal(parseSettings({ refreshMinutes: 0 }).refreshMinutes, 0);
+  for (const value of [1, 7, '10', null, -5]) assert.equal(parseSettings({ refreshMinutes: value }).refreshMinutes, 5, String(value));
+});
+
 test('SET-20: the Review column is a code or a list of reviewers, and anything else falls back to the code', () => {
   assert.equal(parseSettings({ reviewColumn: 'list' }).reviewColumn, 'list');
   assert.equal(parseSettings({ reviewColumn: 'people' }).reviewColumn, 'code');

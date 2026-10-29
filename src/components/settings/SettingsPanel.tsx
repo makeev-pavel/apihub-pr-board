@@ -7,7 +7,7 @@ import { groupsToText, parseGroupLines } from '../../board/groups.ts';
 import { checkRepositoryList } from '../../repository.ts';
 import type { Rules } from '../../model/rules.ts';
 import {
-  DEFAULT_SETTINGS, DENSITIES, REVIEW_COLUMNS, isValidStaleDays, MAX_STALE_DAYS, MIN_STALE_DAYS, parseList, THEMES,
+  DEFAULT_SETTINGS, DENSITIES, REFRESH_INTERVALS, REVIEW_COLUMNS, isValidStaleDays, MAX_STALE_DAYS, MIN_STALE_DAYS, parseList, THEMES,
 } from '../../settings.ts';
 import type { Settings } from '../../settings.ts';
 import type { AreaId } from '../../types.ts';
@@ -200,6 +200,15 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
       </section>
       <section>
         <h2>GitHub token</h2>
+        <div className="setting-row">
+          <span>Load live data again</span>
+          <div className="segmented" role="group" aria-label="Load live data again">
+            {REFRESH_INTERVALS.map(([value, label]) => (
+              <button key={value} type="button" aria-pressed={settings.refreshMinutes === value}
+                onClick={() => onChange({ ...settings, refreshMinutes: value })}>{label}</button>
+            ))}
+          </div>
+        </div>
         <form className="token-form" onSubmit={saveToken}>
           <p>Refresh queries GitHub directly with your personal token. It stays in this browser and is sent only to api.github.com.</p>
           <p><a href={TOKEN_HELP_URL} target="_blank" rel="noopener">Create a fine-grained token</a> with public repository read access. No extra permissions are needed.</p>

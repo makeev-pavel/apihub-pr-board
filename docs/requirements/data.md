@@ -75,9 +75,11 @@
   says to add a token in Settings. Without requested repositories, the table says to choose them in Settings or to open
   a link with `?repos=owner/name`; with repository groups and none checked, it says to check one in the Repositories
   menu.
-- **DATA-24** While the page shows live data and its tab is visible, it loads again every 5 minutes, counted from the
-  last load or attempt, so a failure is retried after 5 minutes too. A hidden tab pauses the countdown, and a tab that
-  comes back after 5 minutes loads at once. A snapshot is replaced only on **Refresh** or by loading without one.
+- **DATA-24** While the page shows live data and its tab is visible, it loads again at the interval set in Settings
+  (**SET-22**), 5 minutes by default, counted from the last load or attempt, so a failure is retried after the same
+  interval. A hidden tab pauses the countdown, and a tab that comes back after the interval loads at once. With the
+  setting Off, live data loads again only on **Refresh**. A snapshot is replaced only on **Refresh** or by loading
+  without one.
 - **DATA-26** A live load also reads the login and avatar of the token's owner, the viewer (**RULE-12**), and shows
   them at the top right with a link to their GitHub profile. A `prs.json` snapshot leaves the viewer out, because the
   token that wrote it is not the viewer's.

@@ -31,7 +31,7 @@ import { REPOSITORIES } from './config.ts';
 import { ApiContext, NotesContext, RulesContext, ReviewViewContext } from './context.ts';
 import { REST_URL } from './github/rest.ts';
 import { useBoardSettings } from './hooks/useBoardSettings.ts';
-import { AUTO_REFRESH_MS } from './board/format.ts';
+import { MINUTE_MS } from './board/format.ts';
 import { useAutoRefresh } from './hooks/useAutoRefresh.ts';
 import { useColumnWidths } from './hooks/useColumnWidths.ts';
 import { useLiveLoad } from './hooks/useLiveLoad.ts';
@@ -150,8 +150,10 @@ export function App() {
     autoLoaded.current = { key, token };
     if (!covered) refresh(token);
   });
-  // Live data loads again every 5 minutes while the tab is visible (DATA-24).
-  useAutoRefresh(data.source === 'live' && !!token && !refreshing, lastAttempt, AUTO_REFRESH_MS, () => refresh(token));
+  // Live data loads again at the chosen interval while the tab is visible (DATA-24, SET-22).
+  const autoRefresh = settings.refreshMinutes > 0;
+  useAutoRefresh(data.source === 'live' && !!token && !refreshing && autoRefresh, lastAttempt, settings.refreshMinutes * MINUTE_MS,
+    () => refresh(token));
   useEffect(() => {
     // It waits for the setup wizard, so the two dialogs never stack.
     if (data.noSnapshot && !token && wanted.length && !tokenDismissed.current && !wizardOpen) setAskingToken(true);
@@ -215,7 +217,7 @@ export function App() {
         <div className="masthead-side">
           <Tiles base={base} active={activeQuick} viewer={viewer}
             setQuick={(quick) => patch({ quick: !viewer && view.quick.includes('mine') ? [...quick, 'mine'] : quick })} />
-          {report ? <UpdateInfo report={report} live={data.source === 'live'} now={now} /> : null}
+          {report ? <UpdateInfo report={report} live={data.source === 'live'} now={now} refreshMinutes={settings.refreshMinutes} /> : null}
           <RefreshControl token={token} setToken={setToken} refreshing={refreshing} onRefresh={refresh} onAskToken={() => setAskingToken(true)}
             settings={settings} onSettingsChange={changeSettings} columns={offeredColumns}
             repositories={{ requested: link.repos, available: dataRepos, onChange: setRepos }}

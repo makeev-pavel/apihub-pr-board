@@ -13,6 +13,7 @@
 | **SET-7** | View | Theme: System, Light, or Dark. Density: Comfortable or Compact rows. | System, Comfortable |
 | **SET-8** | Columns | Show or hide each column except # and Pull request, kept in this browser and in the address (**FILTER-14**); **Reset column widths**. | All shown |
 | **SET-9** | GitHub token | Save, replace, or forget the token for Refresh and the comments panel. | None |
+| **SET-22** | GitHub token | Load live data again: Off, 2, 5, 10, or 30 minutes (**DATA-24**). Anything else stored falls back to the default. | 5 min |
 
 - **SET-10** When an attention rule differs from its default, the gear shows a dot, the legend shows **Custom
   rules**, and the Rules popover lists the values in use (**PANEL-7**). Other viewers may then see a different
@@ -22,9 +23,9 @@
   (**SET-21**) each under its own. The repositories and the extra bots live only in the address (**SET-17**); the hidden
   columns and the repository groups are stored and also travel in the address (**FILTER-14**). A stored value that is
   missing or invalid falls back to its default, field by field, so an old or edited entry never breaks the page.
-- **SET-12** **Reset to defaults** restores the rules, areas, view (theme, density, and the Review column), and columns,
-  clears the repository groups, and removes the repositories and extra bots from the address. It keeps the token, the
-  column widths, and the notes.
+- **SET-12** **Reset to defaults** restores the rules, areas, view (theme, density, and the Review column), the live
+  load interval, and columns, clears the repository groups, and removes the repositories and extra bots from the
+  address. It keeps the token, the column widths, and the notes.
 - **SET-13** **Refresh** without a token opens the token dialog (**SET-18**). Opening the settings panel from the
   gear does not jump to the token.
 - **SET-14** A number field keeps the last valid value: an invalid entry does not apply and is replaced when the
@@ -49,10 +50,10 @@
   commas, spaces, or new lines, and applies like a list (**SET-14**). Applying writes `repos` to the address
   (**FILTER-14**); an empty field removes it. A malformed entry is not applied, and the field names the entry and
   what is wrong with it.
-- **SET-17** The repositories and the extra bot logins (**SET-5**) live in the address, not in this browser, so a
-  link or a bookmark carries them. The panel footer says what the address carries. **Reset to defaults** removes both from the address.
-  Extra bots that an earlier version saved in this browser move into the address on the first visit. When that
-  visit comes through a link with its own bots, the link's bots apply and the saved ones are dropped.
+- **SET-17** The repositories and the extra bot logins (**SET-5**) live in the address, not in this browser, so a link
+  or a bookmark carries them. The panel footer says what the address carries. **Reset to defaults** removes both from
+  the address. Extra bots that an earlier version saved in this browser move into the address on the first visit. When
+  that visit comes through a link with its own bots, the link's bots apply and the saved ones are dropped.
 - **SET-18** When the page needs a token and has none, a dialog explains how to create one: a link to GitHub's page
   for a new fine-grained token and short steps (any name and expiry; Repository access: Public repositories, read
   only; no extra permissions; copy the `github_pat_…` value). It has a token field with **Save and load** and **Not

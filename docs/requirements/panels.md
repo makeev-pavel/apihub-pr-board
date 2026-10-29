@@ -19,8 +19,8 @@
 - **PANEL-7** Rules (in the legend): the attention rules in use (**RULE-6** to **RULE-8**) and how the states are
   read (**RULE-1** to **RULE-3**). With custom rules it also gives the team defaults.
 - **PANEL-8** Data source (in the header): whether the data is a snapshot or live, how old it is, the exact time,
-  and the workflow run link when there is one. For live data it says that the board loads again every 5 minutes
-  (**DATA-24**).
+  and the workflow run link when there is one. For live data it says how often the board loads again, or that automatic
+  loads are off (**DATA-24**, **SET-22**).
 
 ## Comments panel
 
