@@ -2,8 +2,8 @@
 
 ## Stack
 
-- TypeScript, React 19, and Vite. `vite build` bundles the page into `_site/`; the workflow then writes `prs.json`
-  next to it.
+- TypeScript, React 19, and Vite. `vite build` bundles the page into `_site/`. The workflow publishes it without
+  data (**DATA-3**); `scripts/build-site.ts` can write a `prs.json` snapshot next to it.
 - Node.js 22.18 or later runs the tests, the build script, and the dev mocks straight from `.ts` files with type
   stripping. That code uses only erasable syntax and imports with `.ts` extensions.
 - `marked` and DOMPurify render comment Markdown (**SEC-4**). `jsdom` gives the Markdown tests a DOM.
@@ -30,11 +30,12 @@ npm run test:screenshots:update  # capture new baselines after an intended visua
 ```text
 src/            the page: App.tsx and main.tsx, settings.ts, markdown.ts, repository.ts, config.ts, context.ts
 src/model/      rules without UI: attention, bots, areas, search, derived fields, prs.json shape
-src/hooks/      popovers, loading prs.json, loading all comments of a PR, column widths, and settings
+src/hooks/      popovers and dialogs, loading prs.json, the live load and auto refresh, all comments of a PR,
+                column widths, settings, and notes
 src/components/ React components, one per file: common/, cells/, header/, toolbar/, table/, legend/, settings/
 src/styles/     tokens.css (colors and fonts for both themes) and one stylesheet per area of the page
-src/board/      board logic without React: states, columns, the view and the address, rows, authors, formatting,
-                storage
+src/board/      board logic without React: states, columns, the view and the address, rows, authors, repository
+                groups, the Reviewers list, notes, the load status in words, formatting, storage
 src/github/     the GraphQL query, raw types, normalization, and the GraphQL and REST clients
 dev/            the Vite plugin with the mocks, the DEV panel, scenarios/ (mock answers), and fixtures/ (mock PRs)
 scripts/        build-site.ts writes prs.json after vite build
@@ -44,7 +45,7 @@ docs/           requirements/ (this spec) and adr/ (decision records)
 tasks/          the current plan and task list
 ```
 
-No source file is over about 300 lines; the largest is `App.tsx` at under 200.
+No source file is over about 300 lines; the largest, `App.tsx`, is just under that.
 
 ## Code style
 
@@ -71,11 +72,12 @@ export const COMMENT_BODY_LIMIT = 4000;
   the server keeps the chosen scenario. Test titles start with the requirement ids they cover. Each test was seen
   failing in a mutation pass before it was kept.
 - **Screenshot tests** (Playwright, `e2e/screenshots.spec.ts`, run locally on Windows) cover the board in both themes
-  and both densities, two repositories, every popover and menu, the comments and settings panels, the empty and
-  error states, a narrow window, and hidden columns. Baselines are committed for Windows only (`-win32` in the
-  name), so CI skips them. The fonts ship with the page and the clock is pinned, so the comparison threshold is
-  strict (0.05): a changed text color fails. After an intended change, run `test:screenshots:update`, look at every
-  changed image, and commit them with the change.
+  and both densities, two repositories, group colors with the Repositories menu in both themes, the Reviewers list,
+  every popover, the Authors menu, the comments and settings panels, the setup wizard, the empty and error states, a
+  narrow window, and hidden columns. Baselines are committed for Windows only (`-win32` in the name), so CI skips
+  them. The fonts ship with the page and the clock is pinned, so the comparison threshold is strict (0.05): a changed
+  text color fails. After an intended change, run `test:screenshots:update`, look at every changed image, and commit
+  them with the change.
 - All test data is mock data: a seeded typical board and topic-sorted corner cases on fictional people, with a fixed
   clock. No real repository, person, or PR appears in tests or fixtures.
 - Every test names the requirement ids it covers, and `npm run test:requirements` fails when a requirement has no
@@ -89,11 +91,11 @@ export const COMMENT_BODY_LIMIT = 4000;
   endpoint for Refresh, and the REST endpoints for the comments panel from mock scenarios, and injects the DEV
   panel. Vite restarts when files under `dev/` or `src/github/` change.
 - The DEV panel switches scenarios:
-  - `prs.json` on page load: typical board and corner cases, typical board only, corner cases only, no PRs,
-    300 PRs, project data unavailable, a three-day-old snapshot, a slow load, a missing file, invalid JSON, and JSON
-    without a PR list;
-  - Refresh: success, several pages, forbidden projects, fewer PRs than `totalCount`, a slow response, 401, 502,
-    repository not found, and a network failure.
+  - `prs.json` on page load: typical board and corner cases, typical board only, corner cases only, two
+    repositories, no PRs, 300 PRs, project data unavailable, a three-day-old snapshot, a slow load, a missing file,
+    invalid JSON, and JSON without a PR list;
+  - Refresh: success, several pages, forbidden projects, fewer PRs than `totalCount`, a slow response, pages one by
+    one for the load status, 401, 502, repository not found, and a network failure.
 - Corner cases are raw GraphQL nodes, so they go through the same normalization as real data.
 - `PR_BOARD_MOCK_NOW` (an ISO time) pins the mock clock, so every scenario returns the same dates on every run.
   Browser and screenshot tests set it; without it the mocks follow the real clock.

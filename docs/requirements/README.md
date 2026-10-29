@@ -15,8 +15,8 @@ These files are the spec. A change in behavior updates the matching requirement 
 
 ## Scope
 
-- One or more repositories, chosen by a link (**FILTER-14**) or in Settings (**SET-16**). Open pull requests only,
-  drafts included.
+- One or more repositories, up to 40 at a time, chosen by a link (**FILTER-14**), in Settings (**SET-16**), or
+  through repository groups (**SET-19**, **FILTER-17**). Open pull requests only, drafts included.
 - Read-only: the board never changes anything on GitHub.
 - Out of scope: closed or merged PRs, history and charts, GitHub OAuth login (it would need a server).
 
@@ -54,6 +54,8 @@ These files are the spec. A change in behavior updates the matching requirement 
 - Images in comments load from wherever their authors host them, so opening the comments panel lets those hosts
   see the viewer's address. GitHub itself proxies such images; the board does not.
 - Without a token the comments panel shares GitHub's limit of 60 REST requests an hour per address.
+- Repository groups travel in the address (**FILTER-14**), so many large groups make a long link: 20 groups of 40
+  repositories come to about 25 KB.
 - Project sites of one owner share the `<owner>.github.io` origin, so another Pages site of the same owner can read
   the token this board keeps in `localStorage`. The token only has public read access; a custom domain removes the
   shared origin.

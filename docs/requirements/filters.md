@@ -2,8 +2,8 @@
 
 ## Quick filters
 
-- **FILTER-1** Tiles in the header: Open PRs, CI failing, Without approval, Merge conflicts, Need attention. Each
-  shows how many PRs of the current view (authors, draft status, area, and search) match it.
+- **FILTER-1** Tiles in the header: Open PRs, CI failing, Without approval, Merge conflicts, Need attention. Each shows
+  how many PRs of the current view (repository groups, authors, draft status, area, priority, and search) match it.
 - **FILTER-18** With a known viewer, a Review requested tile counts the PRs waiting for the viewer's review
   (**RULE-12**) and adds how many of them are re-requested, such as "5 Review requested · 2 again". The `review:`
   qualifier also takes `requested` and `again`. Until the viewer is known, a link with this filter (`quick=mine`)
@@ -40,9 +40,11 @@
 
 ## Search
 
-- **FILTER-8** Plain words match the number, title, people, labels, target branch, linked issues (title, number
-  such as `885` or `#885`, type, and labels), projects, failed check names and workflows, both comments, and the
-  attention reasons, without regard to case. Every word must match; a leading minus excludes; quotes keep spaces.
+- **FILTER-8** Plain words match the number, repository, title, people, labels, target branch, the CI, review, conflict,
+  and draft states and the areas as words (`failing`, `changes requested`, `conflicts`, `draft`, `be`), linked issues
+  (title, number such as `885` or `#885`, type, labels, priority, and sprint), projects, failed check names and
+  workflows, both comments, and the attention reasons, without regard to case. Every word must match; a leading minus
+  excludes; quotes keep spaces.
 - **FILTER-9** Qualifiers narrow the list and also take a leading minus:
 
   | Qualifier | Example |

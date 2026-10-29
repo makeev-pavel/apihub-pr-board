@@ -2,12 +2,14 @@
 
 ## Header
 
-- **TABLE-1** The header shows the repository name and the title "Open pull requests". On the right, in this order:
-  the quick filter tiles (**FILTER-1**), the data source, **Refresh**, and the settings gear.
+- **TABLE-1** The header shows the repository name, or the names (**TABLE-27**), and the title "Open pull requests". On
+  the right, in this order: the quick filter tiles (**FILTER-1**), the data source, **Refresh**, the settings gear, and,
+  with live data, the viewer (**DATA-26**).
 - **TABLE-2** The data source is a dot with a short age next to it, such as "updated 12 min ago": gray for the
   snapshot, green and "live" for data loaded by Refresh. A click opens the details (**PANEL-8**).
-- **TABLE-3** Banners under the header report a failed refresh, a failed load (**DATA-16**), and data warnings
-  (**DATA-14**, **DATA-15**).
+- **TABLE-3** Banners under the header report a failed refresh, a failed load (**DATA-16**), requested repositories the
+  data lacks (**DATA-22**, **DATA-23**), with an **Add token** button when there is no token, and data warnings
+  (**DATA-14**, **DATA-15**, **DATA-18**).
 
 ## Columns
 
@@ -15,12 +17,13 @@
 
   | Column | Content |
   | --- | --- |
+  | Repository | Only with several repositories (**TABLE-26**). |
   | # | PR number, linked to the PR. |
   | Pull request | Title linked to the PR and the note icon (**NOTE-3**); chips; labels. |
   | Issue | The linked issues, or the project (**TABLE-8**). |
   | Author | Avatar and login; a `bot` chip for bots (**RULE-10**). |
   | CI | Status code (**TABLE-12**). **F** opens the failed checks. |
-  | Review | Status code, a reviewer count, and pending reviewers (**TABLE-13**). Opens the reviewers. |
+  | Review | Status code, a reviewer count, and pending reviewers (**TABLE-13**), which open the reviewers; or the list of reviewers (**TABLE-30**). |
   | Conflicts | Status code. |
   | Age · activity | Age in days since the PR was opened, and the time since its last update. |
   | Assignee | Avatars and logins, or "Unassigned". |
@@ -78,8 +81,8 @@
 
 ## Sorting
 
-- **TABLE-16** Clicking a column header sorts by it; a second click reverses the order. Assignee and Last comment
-  are not sortable. Title and Author sort A to Z first; the other columns sort descending first.
+- **TABLE-16** Clicking a column header sorts by it; a second click reverses the order. Issue, Assignee, and Last
+  comment are not sortable. Repository, Title, and Author sort A to Z first; the other columns sort descending first.
 - **TABLE-17** CI sorts failing, running, no checks, passing; Review sorts changes requested, no approval, approved;
   Conflicts sorts conflicts, checking, no conflicts; Age sorts by the opening time; Attention by the number of
   reasons. Ties fall back to the PR number, newest first.
@@ -91,7 +94,9 @@
   for `prs.json`, and with the live load's status (**DATA-27**) for **Refresh** and for a load without a snapshot
   (**DATA-23**). The spinner stops when the system asks for reduced motion (**QUAL-5**).
 - **TABLE-20** When no PR matches the view, the table shows "No pull requests match this view", a hint to clear the
-  search or select more authors, and a **Reset view** button.
+  search or select more authors, and a **Reset view** button. Without data it says instead what is missing: the
+  repositories to choose or a repository group to check (**DATA-23**), or "No pull requests loaded yet" when the
+  requested repositories wait for a token or the load failed.
 
 ## Layout
 

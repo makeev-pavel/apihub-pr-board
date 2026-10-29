@@ -17,20 +17,23 @@
 - **SET-10** When an attention rule differs from its default, the gear shows a dot, the legend shows **Custom
   rules**, and the Rules popover lists the values in use (**PANEL-7**). Other viewers may then see a different
   Attention count.
-- **SET-11** Settings other than the repositories and extra bots (**SET-17**), the token, and the column widths are
-  stored in this browser (`localStorage`), each under its own key, and survive reloads. A stored value that is
+- **SET-11** Settings are stored in this browser (`localStorage`) and survive reloads: the settings of this panel under
+  one key, and the token, the column widths, the notes (**NOTE-2**), and whether the setup wizard was closed
+  (**SET-21**) each under its own. The repositories and the extra bots live only in the address (**SET-17**); the hidden
+  columns and the repository groups are stored and also travel in the address (**FILTER-14**). A stored value that is
   missing or invalid falls back to its default, field by field, so an old or edited entry never breaks the page.
-- **SET-12** **Reset to defaults** restores the rules, areas, view, and columns, and removes the repositories and
-  extra bots from the address. It keeps the token and the column widths.
+- **SET-12** **Reset to defaults** restores the rules, areas, view (theme, density, and the Review column), and columns,
+  clears the repository groups, and removes the repositories and extra bots from the address. It keeps the token, the
+  column widths, and the notes.
 - **SET-13** **Refresh** without a token opens the token dialog (**SET-18**). Opening the settings panel from the
   gear does not jump to the token.
 - **SET-14** A number field keeps the last valid value: an invalid entry does not apply and is replaced when the
   field loses focus. Lists apply when their field loses focus or on Enter.
 - **SET-15** Compact density makes rows tighter and avatars smaller. Theme Light or Dark overrides the system
   setting; System follows it.
-- **SET-20** A Review column setting shows reviews as the Review code (**TABLE-8**), the default, or as a list of
-  reviewers (**TABLE-30**). It is kept in this browser; anything else stored falls back to the code. Switching it
-  drops a Review width dragged for the other layout, so each starts at its own default.
+- **SET-20** A Review column setting shows reviews as the Review code (**TABLE-12**, **TABLE-13**), the default, or as a
+  list of reviewers (**TABLE-30**). It is kept in this browser; anything else stored falls back to the code. Switching
+  it drops a Review width dragged for the other layout, so each starts at its own default.
 - **SET-21** A setup wizard walks through the look of the board in three steps: theme (System, Light, Dark), row
   density, and the Review column (**SET-20**). Each choice is a card with a small picture of the board drawn in that
   look, so both variants show side by side; System shows the light and the dark picture together. The Review column

@@ -2,24 +2,26 @@
 
 ## Configuration
 
-- **DATA-1** The published page needs no configuration: viewers name the repositories in the link (**FILTER-14**)
-  or in Settings (**SET-16**). `PR_BOARD_REPO` (`owner/name`, an environment variable) names them for a snapshot
-  (`scripts/build-site.ts`) and for live mode; when it is set but malformed, the build stops with a message naming
-  the variable. Nothing in the repository names the target organization.
+- **DATA-1** The published page needs no configuration: viewers name the repositories in the link (**FILTER-14**), in
+  Settings (**SET-16**), or through repository groups (**SET-19**). `PR_BOARD_REPO` (an environment variable, a list of
+  `owner/name`, **DATA-17**) names them for a snapshot (`scripts/build-site.ts`) and for live mode; when it is set but
+  malformed, the build stops with a message naming the variable. Nothing in the repository names the target
+  organization.
 - **DATA-2** With mock data the dev server always shows the fictional `acme/widgets`, whatever `PR_BOARD_REPO`
   says. Live mode (`npm run dev:live`) works like the published page; with `GITHUB_TOKEN` and `PR_BOARD_REPO` set, it
   also serves those repositories as a `prs.json` snapshot.
 
 ## Snapshot
 
-- **DATA-3** The workflow runs on every push to `main` and on demand. It builds the page and publishes it on GitHub
-  Pages without data: it calls no GitHub API and no step sees a token. A snapshot can be added back by running
-  `scripts/build-site.ts` after the build.
+- **DATA-3** The workflow runs on every push to `main` and on demand. It runs the type check, the unit tests with their
+  coverage gate, the requirements check, and the browser tests; only when they pass does it build the page and publish
+  it on GitHub Pages without data: it calls no GitHub API and no step sees a token. A snapshot can be added back by
+  running `scripts/build-site.ts` after the build.
 - **DATA-4** When `prs.json` is published next to the page, the page opens with it, so it works without a token. The
   dev server's mocks always serve one; the published page has none and loads live data (**DATA-23**).
-- **DATA-5** `prs.json` holds the repository name, the generation time, the workflow run link, warnings, and the
-  normalized PRs. The page checks its shape: a file without a PR list counts as broken, missing optional fields
-  get defaults, and an entry without a positive whole PR number is skipped.
+- **DATA-5** `prs.json` holds the repositories it covers (**DATA-19**), the generation time, the workflow run link,
+  warnings, and the normalized PRs. The page checks its shape: a file without a PR list counts as broken, missing
+  optional fields get defaults, and an entry without a positive whole PR number is skipped.
 
 ## Refresh
 
@@ -49,6 +51,10 @@
   empty or hold only HTML comment markers are skipped. Each kept body is cut at 4,000 characters and marked as cut.
 - **DATA-11** A label color that is not six hex digits is dropped, and the label shows in neutral colors.
 - **DATA-12** Entries that GitHub returns as `null` inside lists are skipped.
+- **DATA-25** For each linked issue, the query reads its items in up to 3 GitHub Projects and, in each, the fields
+  named Priority (single select: the option and its color), Estimate (number), and Sprint (iteration: its title,
+  start date, and length in days). The first project that sets a field gives its value. A forbidden project read is
+  a partial error, as in **DATA-14**: the data loads without these fields and the page shows a warning.
 
 ## Errors
 
@@ -57,12 +63,11 @@
 - **DATA-14** A forbidden Projects field is a partial error: the data loads, the page shows a warning, and project
   membership counts as unknown instead of empty.
 - **DATA-15** When GitHub returns fewer PRs than its `totalCount`, the page shows a warning.
-- **DATA-25** For each linked issue, the query reads its items in up to 3 GitHub Projects and, in each, the fields
-  named Priority (single select: the option and its color), Estimate (number), and Sprint (iteration: its title,
-  start date, and length in days). The first project that sets a field gives its value. A forbidden project read is
-  a partial error, as in **DATA-14**: the data loads without these fields and the page shows a warning.
 - **DATA-16** A missing `prs.json` (HTTP 404) means there is no snapshot, which is not an error (**DATA-23**). When
   it is broken or another HTTP error comes back, the page says so and suggests Refresh with a token.
+
+## Live data
+
 - **DATA-23** Without a snapshot, the page loads live data by itself when it has a saved token and requested
   repositories: as soon as it opens, and again when the requested repositories or the token change, unless the data
   already holds every requested repository for the same token. Each set of repositories and token loads once, so a
@@ -70,11 +75,9 @@
   says to add a token in Settings. Without requested repositories, the table says to choose them in Settings or to open
   a link with `?repos=owner/name`; with repository groups and none checked, it says to check one in the Repositories
   menu.
-
 - **DATA-24** While the page shows live data and its tab is visible, it loads again every 5 minutes, counted from the
   last load or attempt, so a failure is retried after 5 minutes too. A hidden tab pauses the countdown, and a tab that
   comes back after 5 minutes loads at once. A snapshot is replaced only on **Refresh** or by loading without one.
-
 - **DATA-26** A live load also reads the login and avatar of the token's owner, the viewer (**RULE-12**), and shows
   them at the top right with a link to their GitHub profile. A `prs.json` snapshot leaves the viewer out, because the
   token that wrote it is not the viewer's.
