@@ -58,6 +58,19 @@ test.describe('quality', () => {
     await expect(page.locator('h1 .repo')).toHaveCSS('font-family', /^"IBM Plex Mono"/);
   });
 
+  test('SEC-8 QUAL-7: the page loads its fonts from its own host and makes no request to another one', async ({ page }) => {
+    const external: string[] = [];
+    page.on('request', (request) => {
+      if (new URL(request.url()).hostname !== 'localhost') external.push(request.url());
+    });
+    await openBoard(page, { report: 'mixed' });
+    await page.evaluate(() => document.fonts.ready);
+    expect(await page.evaluate(() => document.fonts.check('500 14px "IBM Plex Sans"') && document.fonts.check('400 12px "IBM Plex Mono"'))).toBe(true);
+    const loaded = await page.evaluate(() => [...document.fonts].filter((font) => font.status === 'loaded').map((font) => font.family));
+    expect(loaded).toEqual(expect.arrayContaining(['IBM Plex Sans', 'IBM Plex Mono']));
+    expect(external).toEqual([]);
+  });
+
   test('QUAL-10: relative times move on every minute without a reload', async ({ page }) => {
     await openBoard(page, { report: 'typical' });
     const source = page.locator('.source-age');

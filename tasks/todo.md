@@ -359,7 +359,7 @@ tests, and fails when a requirement has no test or a test names an unknown id.
 off animations, so the same state renders the same pixels.
 
 **Acceptance criteria:**
-- [ ] The test page makes no request outside localhost.
+- [x] The test page makes no request outside localhost (SEC-8 browser test; fonts from `@fontsource` 5.3.0).
 
 **Verification:** a browser test that fails on any external request. **Dependencies:** Tasks 2 and 6.
 **Files:** `package.json`, `index.html`, `src/styles/tokens.css`, `e2e/helpers.ts`. **Scope:** S.

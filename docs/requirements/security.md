@@ -26,6 +26,6 @@
 
 - **SEC-7** New dependencies need a reason, and the standard library or an existing dependency comes first. A new
   version must have been published at least two weeks earlier. Packages that touch untrusted content (`marked`,
-  `dompurify`) and test tooling with a DOM (`jsdom`) are pinned to exact versions.
-- **SEC-8** The page loads no script, style, or font from another host. *Planned: task 21 self-hosts the fonts,
-  which load from Google Fonts now.*
+  `dompurify`), test tooling with a DOM (`jsdom`), and the fonts (`@fontsource/*`) are pinned to exact versions.
+- **SEC-8** The page loads no script, style, or font from another host: the fonts ship with the page from
+  `@fontsource`. Images in comments are the exception (see the known limitations).
