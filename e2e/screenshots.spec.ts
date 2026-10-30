@@ -121,6 +121,18 @@ test.describe('screenshots', () => {
     await expect(page.getByRole('group', { name: 'Authors' })).toHaveScreenshot('menu-authors.png');
   });
 
+  test('NOTE-1 NOTE-9: the notes panel with what was asked at the standup', async ({ page }) => {
+    const note = '## Standup\n\n- **Asked:** split the parser change from the UI change\n- **Promised:** a new PR by Friday\n\n'
+      + '- [x] Rebased on main\n- [ ] Tests for the empty rule';
+    await page.addInitScript(([key, value]) => localStorage.setItem(key, value),
+      ['apihub-pr-board.notes', JSON.stringify({ 'acme/widgets#206': { text: note, updatedAt: '2026-10-28T09:00:00Z' } })]);
+    await openBoard(page, { report: 'typical', query: ALL });
+    await page.getByRole('button', { name: 'Notes for PR #206' }).click();
+    await expect(page.getByRole('dialog', { name: 'Notes for PR #206' }).getByRole('heading', { name: 'Standup' })).toBeVisible();
+    await settle(page);
+    await expect(page).toHaveScreenshot('panel-notes.png');
+  });
+
   test('PANEL-9 PANEL-10: the comments panel', async ({ page }) => {
     const row = await onlyCase(page, 'import packages from an OpenAPI registry');
     await row.locator('.comment-preview').click();

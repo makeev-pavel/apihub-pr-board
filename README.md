@@ -6,23 +6,85 @@ such as `?repos=owner/name`, and each viewer loads the data with their own GitHu
 
 The requirements are in [docs/requirements/](docs/requirements/README.md).
 
-## Screenshots
+## A tour of the board
 
-The pictures are the screenshot test baselines, taken on fictional mock data, so they always match the interface.
+Nine steps, from the first look to a board set up your way. The pictures are the screenshot test baselines, taken on
+fictional data, so they always match the interface.
 
-![The board in the light theme: tiles, filters, and one row per pull request](e2e/__screenshots__/board-light-comfortable-win32.png)
+### 1. Every open PR on one screen
 
-| Dark theme | Repository groups with their tints |
+Each row is a pull request with its CI, review, and conflict state as short codes, its linked issue, its age, and its
+last comment. A stripe on the left repeats CI at a glance: red for failing, yellow for running, green for passing. The
+board sorts the PRs that need attention to the top.
+
+![The board: tiles, filters, and one row per pull request](e2e/__screenshots__/board-light-comfortable-win32.png)
+
+### 2. Start with what needs attention
+
+The tiles at the top count the PRs with failing CI, without approval, with merge conflicts, or that break a team rule;
+click one to see only those. The ! icon on a row lists why that PR needs attention: an unconventional title, no
+linked issue, or an age past the limit.
+
+![Why a PR needs attention](e2e/__screenshots__/popover-attention-win32.png)
+
+### 3. See why CI fails
+
+Click **F** in the CI column for the checks that failed, each linked to its log, with the workflow and the kind of
+failure. A summary job that fails because others did goes last, so the real cause comes first.
+
+![The failed checks of a PR](e2e/__screenshots__/popover-checks-win32.png)
+
+### 4. Know who still has to review
+
+The Review code says approved, changes requested, or no approval, and ◷ counts the reviewers who have not answered.
+Click it for who approved, who asked for changes, and who is still waiting. Prefer names to codes? The Review column
+can list every reviewer with GitHub's icons, in the order you choose, with your own pending review highlighted.
+
+| The reviewers of a PR | The Review column as a list |
 | --- | --- |
-| ![The board in the dark theme](e2e/__screenshots__/board-dark-comfortable-win32.png) | ![Two repositories, their names tinted by group, with the Repositories menu open](e2e/__screenshots__/board-groups-light-win32.png) |
-| **The Reviewers list, with your review due** | **Every comment of a PR, as GitHub Markdown** |
-| ![The Review column as a list of reviewers](e2e/__screenshots__/board-reviewers-list-win32.png) | ![The comments panel](e2e/__screenshots__/panel-comments-win32.png) |
-| **The first visit: the board, and a card that offers a tour** | **The tour: a picture for every choice** |
-| ![The board with the card that offers the setup wizard](e2e/__screenshots__/state-first-visit-win32.png) | ![The setup wizard's Labels step](e2e/__screenshots__/wizard-labels-win32.png) |
+| ![The reviewers popover](e2e/__screenshots__/popover-reviewers-win32.png) | ![The Review column as a list of reviewers](e2e/__screenshots__/board-reviewers-list-win32.png) |
 
-| Failed checks | Search syntax | Settings |
-| --- | --- | --- |
-| ![The failed checks popover](e2e/__screenshots__/popover-checks-win32.png) | ![The search syntax popover](e2e/__screenshots__/popover-search-win32.png) | ![The settings panel](e2e/__screenshots__/panel-settings-win32.png) |
+### 5. Search the way GitHub does
+
+Type plain words, or GitHub-style qualifiers such as `label:bug`, `author:anna-dev`, `ci:failing`, `review:requested`,
+or `-is:draft`. The **?** button lists them all with examples you can click. The whole view, search included, lives in
+the link, so you can send someone exactly what you see.
+
+![The search syntax](e2e/__screenshots__/popover-search-win32.png)
+
+### 6. Read the whole conversation
+
+Click the last comment to open every comment and review of the PR in a panel on the right, rendered as GitHub
+Markdown, with tables, task lists, and code.
+
+![Every comment of a PR](e2e/__screenshots__/panel-comments-win32.png)
+
+### 7. Keep notes for the standup
+
+The ✎ after a title opens a Markdown note for that PR: what was asked at the standup and what was promised. Notes stay
+in your browser, and `note:` searches them.
+
+![A note for a PR](e2e/__screenshots__/panel-notes-win32.png)
+
+### 8. Several repositories, grouped
+
+One board can follow up to 40 repositories. Put them in groups in Settings, such as Backend and Frontend, check the
+groups you want in the Repositories menu, and each repository name takes its group's tint. Only the checked groups
+load, and the link carries the groups to whoever opens it.
+
+![Two repositories with their names tinted by group, and the Repositories menu](e2e/__screenshots__/board-groups-light-win32.png)
+
+### 9. Make it yours
+
+On the first visit the board shows at once, with a small card that offers a short tour. The tour shows every choice
+as a picture: light, dark, or system theme, row density, the Review column, the reviewers order, and labels. Settings
+has the rest: attention rules, BE and FE areas, columns and their order, and how often live data loads again.
+
+| The first visit | The tour |
+| --- | --- |
+| ![The board with the card that offers the tour](e2e/__screenshots__/state-first-visit-win32.png) | ![The tour's Reviewers order step](e2e/__screenshots__/wizard-reviewers-order-win32.png) |
+| **The dark theme** | **Settings** |
+| ![The board in the dark theme](e2e/__screenshots__/board-dark-comfortable-win32.png) | ![The settings panel](e2e/__screenshots__/panel-settings-win32.png) |
 
 ## How it works
 

@@ -74,7 +74,7 @@ export const COMMENT_BODY_LIMIT = 4000;
   failing in a mutation pass before it was kept.
 - **Screenshot tests** (Playwright, `e2e/screenshots.spec.ts`, run locally on Windows) cover the board in both themes
   and both densities, two repositories, group colors with the Repositories menu in both themes, the Reviewers list,
-  every popover, the Authors menu, the comments and settings panels, the first-visit card, the setup wizard with its
+  every popover, the Authors menu, the comments, notes, and settings panels, the first-visit card, the setup wizard with its
   Reviewers order and Labels steps, the empty and error states, a narrow window, and hidden columns. Baselines are
   committed for Windows only (`-win32` in the name), so CI skips them. The fonts ship with the page and the clock is
   pinned, so the comparison threshold is strict (0.05): a changed text color fails. After an intended change, run

@@ -6,8 +6,9 @@
 .markdown h1 { font-size: 15px; }
 .markdown h2 { font-size: 14px; }
 .markdown ul, .markdown ol { padding-left: 20px; }
-.markdown li:has(> input[type="checkbox"]) { list-style: none; }
-.markdown li > input[type="checkbox"] { margin: 0 6px 0 -18px; vertical-align: -2px; }
+/* A task list item has no bullet, as on GitHub; in a loose list marked wraps the item in a paragraph. */
+.markdown li:has(> input[type="checkbox"]), .markdown li:has(> p:first-child > input[type="checkbox"]) { list-style: none; }
+.markdown li > input[type="checkbox"], .markdown li > p:first-child > input[type="checkbox"] { margin: 0 6px 0 -18px; vertical-align: -2px; }
 .markdown code { font-family: var(--font-mono); font-size: 12px; background: var(--surface-2); padding: 1px 4px; border-radius: 4px; }
 .markdown pre { background: var(--surface-2); padding: 8px 10px; border-radius: 6px; overflow: auto; }
 .markdown pre code { padding: 0; background: none; white-space: pre; overflow-wrap: normal; }
