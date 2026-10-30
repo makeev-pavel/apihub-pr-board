@@ -26,9 +26,9 @@
   columns, the column order, and the repository groups are stored and also travel in the address (**FILTER-14**). A
   stored value that is missing or invalid falls back to its default, field by field, so an old or edited entry never
   breaks the page.
-- **SET-12** **Reset to defaults** restores the rules, areas, view (theme, density, the Review column, and labels), the
-  live load interval, and columns with their order, clears the repository groups, and removes the repositories and extra
-  bots from the address. It keeps the token, the column widths, and the notes.
+- **SET-12** **Reset to defaults** restores the rules, areas, view (theme, density, the Review column, the reviewers
+  order, and labels), the live load interval, and columns with their order, clears the repository groups, and removes
+  the repositories and extra bots from the address. It keeps the token, the column widths, and the notes.
 - **SET-13** **Refresh** without a token opens the token dialog (**SET-18**). Opening the settings panel from the
   gear does not jump to the token.
 - **SET-14** A number field keeps the last valid value: an invalid entry does not apply and is replaced when the field
@@ -39,16 +39,21 @@
 - **SET-20** A Review column setting shows reviews as the Review code (**TABLE-12**, **TABLE-13**), the default, or as a
   list of reviewers (**TABLE-30**). It is kept in this browser; anything else stored falls back to the code. Switching
   it drops a Review width dragged for the other layout, so each starts at its own default.
-- **SET-21** A setup wizard walks through the look of the board in four steps: theme (System, Light, Dark), row density,
-  the Review column (**SET-20**), and labels (**SET-23**). Each choice is a card with a small picture of the board drawn
-  in that look, so both variants show side by side; System shows the light and the dark picture together. The Review
-  column step shows only Review cells, large enough to read, in both layouts, and the Labels step the rows with and
-  without labels. A choice applies at once. The wizard never opens by itself: on the first visit in a browser the board
-  shows at once, with a small card in the corner that offers a tour of how the board can look, with **Take the tour**
-  and **Not now**. Either button answers the card for good in this browser. The card gives way to the token dialog
-  (**SET-18**) while it is open. The wizard also opens from **Setup wizard** in Settings. **Skip**, Escape, and **Done**
-  close it, and a click outside does not. Focus starts on the card picked, stays in the wizard, and returns where it
-  was, or to the Settings button, when it closes.
+- **SET-25** A Reviewers order list in the View section orders the groups of the Reviewers list (**TABLE-30**):
+  requested changes, not reviewed yet (pending and asked again), left comments, review dismissed, and approved, each
+  moved up or down with arrow buttons; the first and the last cannot move further. The default is that order. It is kept
+  in this browser; a stored order is completed with the missing groups in the default order.
+- **SET-21** A setup wizard walks through the look of the board in five steps: theme (System, Light, Dark), row density,
+  the Review column (**SET-20**), the reviewers order (**SET-25**), and labels (**SET-23**). The reviewers order step
+  offers three ready orders, Changes first, Waiting first, and Approvals first, each with a picture of one PR's list.
+  Each choice is a card with a small picture of the board drawn in that look, so both variants show side by side; System
+  shows the light and the dark picture together. The Review column step shows only Review cells, large enough to read,
+  in both layouts, and the Labels step the rows with and without labels. A choice applies at once. The wizard never
+  opens by itself: on the first visit in a browser the board shows at once, with a small card in the corner that offers
+  a tour of how the board can look, with **Take the tour** and **Not now**. Either button answers the card for good in
+  this browser. The card gives way to the token dialog (**SET-18**) while it is open. The wizard also opens from **Setup
+  wizard** in Settings. **Skip**, Escape, and **Done** close it, and a click outside does not. Focus starts on the card
+  picked, stays in the wizard, and returns where it was, or to the Settings button, when it closes.
 
 ## Settings in the address
 

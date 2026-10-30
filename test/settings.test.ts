@@ -140,3 +140,9 @@ test('SET-23: labels show by default, and anything stored but true or false fall
   assert.equal(parseSettings({ showLabels: false }).showLabels, false);
   assert.equal(parseSettings({ showLabels: 'no' }).showLabels, true);
 });
+
+test('SET-25: the reviewer order defaults to requested changes first, and a stored one is completed', () => {
+  assert.deepEqual(DEFAULT_SETTINGS.reviewerOrder, ['changes', 'waiting', 'commented', 'dismissed', 'approved']);
+  assert.deepEqual(parseSettings({ reviewerOrder: ['approved'] }).reviewerOrder, ['approved', 'changes', 'waiting', 'commented', 'dismissed']);
+  assert.deepEqual(parseSettings({ reviewerOrder: 'approved' }).reviewerOrder, DEFAULT_SETTINGS.reviewerOrder);
+});

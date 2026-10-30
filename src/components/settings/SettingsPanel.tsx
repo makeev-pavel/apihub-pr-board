@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { isColumnShown, moveColumn, orderToKeep } from '../../board/columns.ts';
+import { moveReviewerGroup, REVIEWER_GROUPS } from '../../board/reviewers.ts';
 import type { Column } from '../../board/columns.ts';
 import { AREAS } from '../../model/areas.ts';
 import { groupsToText, parseGroupLines } from '../../board/groups.ts';
@@ -234,6 +235,22 @@ export function SettingsPanel({ settings, onChange, token, setToken, refreshing,
             ))}
           </div>
         </div>
+        <span className="stacked-field" id="reviewer-order-label">Reviewers order</span>
+        <p className="hint">When the Review column lists reviewers, these groups come in this order. Move them with the arrows.</p>
+        <ol className="column-options" aria-labelledby="reviewer-order-label">
+          {settings.reviewerOrder.map((group, index) => {
+            const label = REVIEWER_GROUPS.find(([id]) => id === group)![1];
+            return (
+              <li key={group}>
+                <span className="order-label">{label}</span>
+                <button type="button" className="btn icon-only" aria-label={'Move ' + label + ' up'} disabled={index === 0}
+                  onClick={() => onChange({ ...settings, reviewerOrder: moveReviewerGroup(settings.reviewerOrder, group, -1) })}>↑</button>
+                <button type="button" className="btn icon-only" aria-label={'Move ' + label + ' down'} disabled={index === settings.reviewerOrder.length - 1}
+                  onClick={() => onChange({ ...settings, reviewerOrder: moveReviewerGroup(settings.reviewerOrder, group, 1) })}>↓</button>
+              </li>
+            );
+          })}
+        </ol>
       </section>
       <section>
         <h2>Columns</h2>

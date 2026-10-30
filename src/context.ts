@@ -1,4 +1,6 @@
 import { createContext } from 'react';
+import { DEFAULT_REVIEWER_ORDER } from './board/reviewers.ts';
+import type { ReviewerGroup } from './board/reviewers.ts';
 import type { Notes } from './board/notes.ts';
 import { REST_URL } from './github/rest.ts';
 import { DEFAULT_RULES } from './model/rules.ts';
@@ -32,5 +34,7 @@ export const NotesContext = createContext<NotesApi>({ notes: {}, update: () => {
 interface ReviewView {
   list: boolean;
   viewer: string;
+  // The order of the reviewer groups (SET-25).
+  order: ReviewerGroup[];
 }
-export const ReviewViewContext = createContext<ReviewView>({ list: false, viewer: '' });
+export const ReviewViewContext = createContext<ReviewView>({ list: false, viewer: '', order: DEFAULT_REVIEWER_ORDER });

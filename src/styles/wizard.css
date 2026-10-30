@@ -56,6 +56,10 @@
 .vp-person.mine { background: var(--warn-soft); box-shadow: inset 2px 0 0 var(--warn); font-weight: 600; }
 .vp-mini-avatar.big { width: 14px; height: 14px; }
 .vp-login { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Five reviewers in half a card: tighter, so every status icon stays in view. */
+.vp-order .vp-cell { padding: 6px; }
+.vp-order .vp-person { gap: 4px; padding: 1px 3px; font-size: 11px; }
+.vp-order .vp-icon { flex: none; }
 
 /* The first-visit card that offers the wizard (SET-21), bottom left, clear of the DEV panel and the load status. */
 .wizard-invite {

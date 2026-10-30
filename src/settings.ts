@@ -3,6 +3,8 @@
 
 import { groupNameError, MAX_GROUPS } from './board/groups.ts';
 import type { RepoGroup } from './board/groups.ts';
+import { completeReviewerOrder, DEFAULT_REVIEWER_ORDER } from './board/reviewers.ts';
+import type { ReviewerGroup } from './board/reviewers.ts';
 import { AREAS } from './model/areas.ts';
 import { COLUMNS, orderToKeep } from './board/columns.ts';
 import { isRepositoryName, MAX_REPOSITORIES } from './repository.ts';
@@ -13,6 +15,7 @@ import type { Rules } from './model/rules.ts';
 export type Theme = 'system' | 'light' | 'dark';
 export type Density = 'comfortable' | 'compact';
 export type ReviewColumn = 'code' | 'list';
+
 // Minutes between live loads (SET-22); 0 turns them off.
 export type RefreshMinutes = 0 | 2 | 5 | 10 | 30;
 
@@ -22,6 +25,8 @@ export interface Settings {
   density: Density;
   // The Review column as a code or as GitHub's Reviewers list (SET-20).
   reviewColumn: ReviewColumn;
+  // The order of the reviewer groups in the Reviewers list (SET-25).
+  reviewerOrder: ReviewerGroup[];
   refreshMinutes: RefreshMinutes;
   // Labels of the PR and its linked issues show in the table (SET-23); search finds them either way.
   showLabels: boolean;
@@ -33,7 +38,7 @@ export interface Settings {
   repoGroups: RepoGroup[];
 }
 
-export const DEFAULT_SETTINGS: Settings = { rules: DEFAULT_RULES, theme: 'system', density: 'comfortable', reviewColumn: 'code', refreshMinutes: 5, showLabels: true, hiddenColumns: [], columnOrder: [], repoGroups: [] };
+export const DEFAULT_SETTINGS: Settings = { rules: DEFAULT_RULES, theme: 'system', density: 'comfortable', reviewColumn: 'code', reviewerOrder: DEFAULT_REVIEWER_ORDER, refreshMinutes: 5, showLabels: true, hiddenColumns: [], columnOrder: [], repoGroups: [] };
 export const MIN_STALE_DAYS = 1;
 export const MAX_STALE_DAYS = 365;
 export const THEMES: [Theme, string][] = [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']];
@@ -93,6 +98,7 @@ export function parseSettings(value: unknown): Settings {
     theme: pick(stored.theme, THEMES, DEFAULT_SETTINGS.theme),
     density: pick(stored.density, DENSITIES, DEFAULT_SETTINGS.density),
     reviewColumn: pick(stored.reviewColumn, REVIEW_COLUMNS, DEFAULT_SETTINGS.reviewColumn),
+    reviewerOrder: Array.isArray(stored.reviewerOrder) ? completeReviewerOrder(stored.reviewerOrder) : DEFAULT_SETTINGS.reviewerOrder,
     refreshMinutes: pick(stored.refreshMinutes, REFRESH_INTERVALS, DEFAULT_SETTINGS.refreshMinutes),
     showLabels: typeof stored.showLabels === 'boolean' ? stored.showLabels : DEFAULT_SETTINGS.showLabels,
     // An id no column has any more, such as one from an older version, is dropped (SET-8).

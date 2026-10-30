@@ -75,10 +75,10 @@ export const COMMENT_BODY_LIMIT = 4000;
 - **Screenshot tests** (Playwright, `e2e/screenshots.spec.ts`, run locally on Windows) cover the board in both themes
   and both densities, two repositories, group colors with the Repositories menu in both themes, the Reviewers list,
   every popover, the Authors menu, the comments and settings panels, the first-visit card, the setup wizard with its
-  Labels step, the empty and error states, a narrow window, and hidden columns. Baselines are committed for Windows only (`-win32` in the name), so CI skips
-  them. The fonts ship with the page and the clock is pinned, so the comparison threshold is strict (0.05): a changed
-  text color fails. After an intended change, run `test:screenshots:update`, look at every changed image, and commit
-  them with the change.
+  Reviewers order and Labels steps, the empty and error states, a narrow window, and hidden columns. Baselines are
+  committed for Windows only (`-win32` in the name), so CI skips them. The fonts ship with the page and the clock is
+  pinned, so the comparison threshold is strict (0.05): a changed text color fails. After an intended change, run
+  `test:screenshots:update`, look at every changed image, and commit them with the change.
 - All test data is mock data: a seeded typical board and topic-sorted corner cases on fictional people, with a fixed
   clock. No real repository, person, or PR appears in tests or fixtures.
 - Every test names the requirement ids it covers, and `npm run test:requirements` fails when a requirement has no

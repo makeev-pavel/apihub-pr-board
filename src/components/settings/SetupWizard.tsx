@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
+import { REVIEWER_PRESETS } from '../../board/reviewers.ts';
+import type { ReviewerPreset } from '../../board/reviewers.ts';
 import { useModal } from '../../hooks/useModal.ts';
 import type { Settings } from '../../settings.ts';
 import { SETTINGS_BUTTON_ID } from '../common/ids.ts';
-import { ReviewCellPreview, ViewPreview } from './ViewPreview.tsx';
+import { ReviewCellPreview, ReviewerOrderPreview, ViewPreview } from './ViewPreview.tsx';
 
 interface Choice {
   label: string;
@@ -25,7 +27,7 @@ export function SetupWizard({ settings, onChange, onClose }: { settings: Setting
     if (picked) picked.focus();
   }, [step, dialog]);
 
-  const { theme, density, reviewColumn, showLabels } = settings;
+  const { theme, density, reviewColumn, reviewerOrder, showLabels } = settings;
   // The other steps draw in the theme picked, or in light and dark when it follows the system.
   const shown = theme === 'system' ? 'split' : theme;
   const set = (change: Partial<Settings>) => onChange({ ...settings, ...change });
@@ -60,6 +62,21 @@ export function SetupWizard({ settings, onChange, onClose }: { settings: Setting
           pick: () => set({ reviewColumn: 'code' }), preview: <ReviewCellPreview theme={shown} review="code" /> },
         { label: 'Reviewers', hint: 'Every reviewer with GitHub\'s icons; your own pending review stands out.', picked: reviewColumn === 'list',
           pick: () => set({ reviewColumn: 'list' }), preview: <ReviewCellPreview theme={shown} review="list" /> },
+      ],
+    },
+    {
+      title: 'Reviewers order',
+      text: 'Pick who leads the list of reviewers, when the Review column lists them. Settings can order every group.',
+      choices: [
+        ...([
+          ['changes', 'Changes first', 'Requested changes, then reviews not given yet; approvals last.'],
+          ['waiting', 'Waiting first', 'Who still owes a review, then requested changes; approvals last.'],
+          ['approved', 'Approvals first', 'How close the PR is to merging: approvals, then requested changes.'],
+        ] as [ReviewerPreset, string, string][]).map(([preset, label, hint]) => ({
+          label, hint, picked: reviewerOrder.join(',') === REVIEWER_PRESETS[preset].join(','),
+          pick: () => set({ reviewerOrder: REVIEWER_PRESETS[preset] }),
+          preview: <ReviewerOrderPreview theme={shown} order={REVIEWER_PRESETS[preset]} />,
+        })),
       ],
     },
     {

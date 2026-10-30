@@ -1,3 +1,5 @@
+import { reviewerRanks } from '../../board/reviewers.ts';
+import type { ReviewerGroup, ReviewerStatus } from '../../board/reviewers.ts';
 import type { Density, ReviewColumn } from '../../settings.ts';
 import { Octicon } from '../common/Octicon.tsx';
 import type { OcticonName } from '../common/Octicon.tsx';
@@ -90,6 +92,54 @@ function ReviewCells({ theme, review }: { theme: 'light' | 'dark'; review: Revie
           )}
         </div>
       ))}
+    </div>
+  );
+}
+
+// One PR's reviewers for the Reviewers order step (SET-25): two approvals, requested changes, and two reviews not given
+// yet, one of them the made-up viewer's.
+const ORDER_REVIEWERS: { login: string; status: ReviewerStatus; mine?: boolean }[] = [
+  { login: 'anna-dev', status: 'approved' },
+  { login: 'hana-docs', status: 'pending' },
+  { login: 'dara-ops', status: 'changes' },
+  { login: 'boris-k', status: 'pending', mine: true },
+  { login: 'chen-li', status: 'approved' },
+];
+const STATUS_ICON: Partial<Record<ReviewerStatus, { icon: OcticonName; tone: Tone }>> = {
+  approved: { icon: 'check', tone: 'good' },
+  changes: { icon: 'fileDiff', tone: 'bad' },
+  pending: { icon: 'dot', tone: 'warn' },
+};
+
+function OrderedCell({ theme, order }: { theme: 'light' | 'dark'; order: ReviewerGroup[] }) {
+  const rank = reviewerRanks(order);
+  // The viewer's own request leads the reviews not given yet, as on the board.
+  const sorted = [...ORDER_REVIEWERS].sort((a, b) => rank[a.status] - rank[b.status] || Number(!!b.mine) - Number(!!a.mine));
+  return (
+    <div className={'view-preview vp-cells vp-order theme-' + theme}>
+      <div className="vp-cell-head">Review</div>
+      <div className="vp-cell">
+        <span className="vp-people">
+          {sorted.map((r) => (
+            <span key={r.login} className={'vp-person' + (r.mine ? ' mine' : '')}>
+              <span className="vp-mini-avatar big" />
+              <span className="vp-login">{r.login}</span>
+              <span className={'vp-icon ' + STATUS_ICON[r.status]!.tone}><Octicon name={STATUS_ICON[r.status]!.icon} size={11} /></span>
+            </span>
+          ))}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// One PR's Reviewers list in a given order; "split" draws it in light and dark side by side.
+export function ReviewerOrderPreview({ theme, order }: { theme: 'light' | 'dark' | 'split'; order: ReviewerGroup[] }) {
+  if (theme !== 'split') return <div className="preview-frame" aria-hidden="true"><OrderedCell theme={theme} order={order} /></div>;
+  return (
+    <div className="preview-frame vp-split" aria-hidden="true">
+      <OrderedCell theme="light" order={order} />
+      <OrderedCell theme="dark" order={order} />
     </div>
   );
 }

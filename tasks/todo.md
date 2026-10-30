@@ -623,3 +623,5 @@ Requested on October 29, 2026.
 - [x] **N3. Column order:** arrows in Settings move columns; the order is saved and travels in the address as `cols`
   (SET-24, FILTER-14).
 - [x] **N4. README pictures:** the screenshot baselines in the README, with a test that every picture exists.
+- [x] **N5. Reviewers order:** Settings orders the reviewer groups with arrows; the wizard offers three ready orders
+  with a picture each (SET-25, SET-21, TABLE-30). Requested on October 30, 2026.

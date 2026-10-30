@@ -1,6 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { reviewerEntries } from '../../src/board/reviewers.ts';
+import {
+  completeReviewerOrder, DEFAULT_REVIEWER_ORDER, moveReviewerGroup, REVIEWER_PRESETS, reviewerEntries,
+} from '../../src/board/reviewers.ts';
+import type { ReviewerGroup } from '../../src/board/reviewers.ts';
 import type { PullRequest } from '../../src/types.ts';
 
 const person = (login: string) => ({ login, avatarUrl: null, bot: false, team: false });
@@ -39,4 +42,23 @@ test('TABLE-30: only the viewer\'s own line is marked as theirs, never a team of
   } as unknown as PullRequest;
   assert.deepEqual(reviewerEntries(pr, 'Boris-K').map((e) => e.actor.login + ':' + e.mine), ['boris-k:false', 'anna-dev:false', 'boris-k:true']);
   assert.ok(reviewerEntries(pr).every((e) => !e.mine), 'no viewer, no line of theirs');
+});
+
+test('SET-25: the reviewer groups come in the order chosen, and the viewer still leads the reviews not given yet', () => {
+  const pr = {
+    reviewers: [review('anna-dev', 'APPROVED'), review('dara-ops', 'CHANGES_REQUESTED'), review('gleb-be', 'DISMISSED')],
+    requestedReviewers: [person('hana-docs'), person('boris-k')],
+  } as unknown as PullRequest;
+  const order = (groups: ReviewerGroup[]) => reviewerEntries(pr, 'boris-k', groups).map((e) => e.actor.login);
+  assert.deepEqual(order(REVIEWER_PRESETS.changes), ['dara-ops', 'boris-k', 'hana-docs', 'gleb-be', 'anna-dev']);
+  assert.deepEqual(order(REVIEWER_PRESETS.waiting), ['boris-k', 'hana-docs', 'dara-ops', 'gleb-be', 'anna-dev']);
+  assert.deepEqual(order(REVIEWER_PRESETS.approved), ['anna-dev', 'dara-ops', 'boris-k', 'hana-docs', 'gleb-be']);
+  assert.deepEqual(order(['dismissed']), ['gleb-be', 'dara-ops', 'boris-k', 'hana-docs', 'anna-dev'], 'the rest follow in the default order');
+});
+
+test('SET-25: a group moves one place, the ends stay, and an old or edited order still gives every group once', () => {
+  assert.deepEqual(moveReviewerGroup(DEFAULT_REVIEWER_ORDER, 'approved', -1).slice(-2), ['approved', 'dismissed']);
+  assert.deepEqual(moveReviewerGroup(DEFAULT_REVIEWER_ORDER, 'changes', -1), DEFAULT_REVIEWER_ORDER);
+  assert.deepEqual(moveReviewerGroup(DEFAULT_REVIEWER_ORDER, 'approved', 1), DEFAULT_REVIEWER_ORDER);
+  assert.deepEqual(completeReviewerOrder(['approved', 'nope', 'approved', 7]), ['approved', 'changes', 'waiting', 'commented', 'dismissed']);
 });

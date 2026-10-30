@@ -191,7 +191,8 @@ export function App() {
   const isDefault = viewQuery(view) === '';
 
   const api = useMemo(() => ({ token, restUrl: DEV ? DEV.restUrl : REST_URL }), [token]);
-  const reviewView = useMemo(() => ({ list: settings.reviewColumn === 'list', viewer }), [settings.reviewColumn, viewer]);
+  const reviewView = useMemo(() => ({ list: settings.reviewColumn === 'list', viewer, order: settings.reviewerOrder }),
+    [settings.reviewColumn, viewer, settings.reviewerOrder]);
   const headerRepos = plan.headerRepos;
 
   return (

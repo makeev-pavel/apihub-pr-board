@@ -24,9 +24,9 @@ const REVIEWERS_POPOVER_PX = 260;
 
 // The Review column as GitHub's Reviewers list (TABLE-30). The viewer's own line stands out when their review is due.
 export function ReviewersList({ pr }: { pr: DerivedPullRequest }) {
-  const { viewer } = useContext(ReviewViewContext);
+  const { viewer, order } = useContext(ReviewViewContext);
   const prName = useContext(PrNameContext);
-  const entries = reviewerEntries(pr, viewer);
+  const entries = reviewerEntries(pr, viewer, order);
   const { open, position, ref, toggle } = usePopover(REVIEWERS_POPOVER_PX, entries.length > VISIBLE_REVIEWERS);
   if (!entries.length) return <div className="reviewers-wrap"><span className="dash">No reviewers</span></div>;
   const cut = entries.length > VISIBLE_REVIEWERS ? VISIBLE_REVIEWERS - 1 : entries.length;

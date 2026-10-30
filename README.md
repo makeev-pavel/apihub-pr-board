@@ -51,14 +51,14 @@ The pictures are the screenshot test baselines, taken on fictional mock data, so
 - **Column widths** change by dragging the header edge, or with the arrow keys on a focused edge. They are saved
   in this browser; double-click an edge to reset that column. **Column order** changes with the arrows in Settings
   and travels in the link.
-- **Setup wizard:** the first visit opens the board at once, with a small card that offers a short tour. The tour
-  shows the theme, the row density, the Review column, and labels as cards with a picture of the board in each look;
-  every choice applies at once. **Setup wizard** in Settings opens it again.
-- **Settings** (the gear next to Refresh): repositories and repository groups, attention rules, BE/FE lists, extra
-  bots, theme, density, labels, the Review column as a code or as GitHub's list of reviewers, the columns and their
-  order, how often live data loads again, and the GitHub token. The page address carries the repositories, extra
-  bots, hidden columns, column order, and groups, so a copied link or a bookmark carries them; the rest is saved in
-  this browser.
+- **Setup wizard:** the first visit opens the board at once, with a small card that offers a short tour. The tour shows
+  the theme, the row density, the Review column, the reviewers order, and labels as cards with a picture of the board in
+  each look; every choice applies at once. **Setup wizard** in Settings opens it again.
+- **Settings** (the gear next to Refresh): repositories and repository groups, attention rules, BE/FE lists, extra bots,
+  theme, density, labels, the Review column as a code or as GitHub's list of reviewers, the order of the reviewer groups
+  in that list, the columns and their order, how often live data loads again, and the GitHub token. The page address
+  carries the repositories, extra bots, hidden columns, column order, and groups, so a copied link or a bookmark carries
+  them; the rest is saved in this browser.
 - **Repository groups:** define groups in Settings, one per line (`Backend: owner/a, owner/b`), with a leading `*`
   for a group checked when the board opens. The Repositories menu then shows the rows of the checked groups, and
   Ungrouped those of the repositories in no group. Without repositories in the link, only the checked groups load.

@@ -99,6 +99,27 @@ test.describe('settings', () => {
     await expect(page.locator('.board .label-chip')).toHaveCount(0);
   });
 
+  test('SET-25: Settings orders the reviewer groups with arrows, and the Reviewers list follows', async ({ page }) => {
+    // Seeded once, so the reload below reads what Settings saved.
+    await page.addInitScript(() => {
+      if (sessionStorage.getItem('seeded')) return;
+      localStorage.setItem('apihub-pr-board.settings', JSON.stringify({ reviewColumn: 'list' }));
+      sessionStorage.setItem('seeded', '1');
+    });
+    await openBoard(page, { report: 'mixed', query: ALL + '&q=' + encodeURIComponent('publish packages in batches') });
+    const first = rows(page).first().getByRole('listitem').first();
+    await expect(first.getByRole('img', { name: 'requested changes' })).toBeVisible();
+    const panel = await openSettings(page);
+    const order = panel.getByRole('list', { name: 'Reviewers order' });
+    await expect(order.getByRole('listitem')).toHaveText([/Requested changes/, /Not reviewed yet/, /Left comments/, /Review dismissed/, /Approved/]);
+    await expect(panel.getByRole('button', { name: 'Move Approved down' })).toBeDisabled();
+    for (let i = 0; i < 4; i++) await panel.getByRole('button', { name: 'Move Approved up' }).click();
+    await expect(order.getByRole('listitem').first()).toHaveText(/Approved/);
+    await expect(first.getByRole('img', { name: 'approved' })).toBeVisible();
+    await page.reload();
+    await expect(rows(page).first().getByRole('listitem').first().getByRole('img', { name: 'approved' })).toBeVisible();
+  });
+
   test('SET-6 RULE-11: adding a scope to an area moves its PRs there', async ({ page }) => {
     await openBoard(page, { report: 'typical', query: ALL + '&area=other' });
     const other = await rows(page).locator('td.c-num').count();
