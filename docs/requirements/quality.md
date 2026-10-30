@@ -27,7 +27,8 @@
 ## Size and browsers
 
 - **QUAL-8** The board stays responsive with 300 open PRs: filtering, sorting, and opening popovers take no visible
-  delay on an ordinary laptop.
+  delay on an ordinary laptop. `docs/performance.md` says how to measure it, and records the numbers and what was
+  tried.
 - **QUAL-9** Supported browsers: the current versions of Chrome, Edge, Firefox, and Safari. *Manual check: the
   browser tests run in Chromium only, so open the board in Firefox and Safari before a release.*
 - **QUAL-10** Times show relative to now and refresh every minute without a reload.

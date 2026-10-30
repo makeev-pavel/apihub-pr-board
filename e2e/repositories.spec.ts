@@ -59,6 +59,22 @@ test.describe('several repositories', () => {
     await expect(header).toHaveText('#');
   });
 
+  test('TABLE-26 FILTER-17: the Repository column goes when the rows the groups let through come from one repository', async ({ page }) => {
+    await openBoard(page, { report: 'two-repos', query: ALL + '&repogroups=Widgets:acme/widgets;Gadgets:acme/gadgets' });
+    const first = page.locator('.board > thead > tr > th').first();
+    await expect(first).toHaveText('Repository');
+    await page.getByRole('button', { name: /^Repositories:/ }).click();
+    await page.getByRole('group', { name: 'Repositories' }).getByRole('checkbox', { name: 'Widgets' }).uncheck();
+    await expect(rows(page)).toHaveCount(4);
+    await expect(first).toHaveText('#');
+    // The search does not count, so a search that finds one repository keeps the column.
+    await page.getByRole('group', { name: 'Repositories' }).getByRole('checkbox', { name: 'Widgets' }).check();
+    await page.keyboard.press('Escape');
+    await page.getByLabel('Search pull requests').fill('repo:gadgets');
+    await expect(rows(page)).toHaveCount(4);
+    await expect(first).toHaveText('Repository');
+  });
+
   test('FILTER-14: repos in the address narrow the board, and Reset view and Copy link keep them', async ({ page, context }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
     await openBoard(page, { report: 'two-repos', query: ALL + '&q=pairing&repos=acme/gadgets' });

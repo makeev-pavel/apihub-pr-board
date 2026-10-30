@@ -79,10 +79,6 @@ export function App() {
   const [showProblem, setShowProblem] = useState(false);
   useEffect(() => { if (!problem) setShowProblem(false); }, [problem]);
 
-  const offeredColumns = useMemo(() => boardColumns(repos.length, settings.columnOrder), [repos.length, settings.columnOrder]);
-  const columns = useMemo(() => offeredColumns.filter((c) => isColumnShown(c, settings.hiddenColumns)), [offeredColumns, settings.hiddenColumns]);
-  const { tableWrapRef, widths, tableWidth, resize, canResetWidths, resetWidths } =
-    useColumnWidths(columns, settings.reviewColumn === 'list' ? REVIEWERS_LIST_WIDTHS : undefined);
   const patch = useCallback((changes: Partial<View>) => setView((prev) => ({ ...prev, ...changes })), []);
   const onToggleLabel = useCallback((name: string) => {
     setView((prev) => ({ ...prev, q: toggleLabelFilter(prev.q, name) }));
@@ -163,6 +159,13 @@ export function App() {
     const shows = groupFilter(groups, checked);
     return allPrs.filter((pr) => shows(pr.repo));
   }, [allPrs, groups, checked]);
+  // The Repository column shows when the rows the groups let through come from more than one repository (TABLE-26);
+  // the search does not count, so the column does not come and go while typing.
+  const rowRepoCount = useMemo(() => new Set(prs.map((pr) => pr.repo.toLowerCase())).size, [prs]);
+  const offeredColumns = useMemo(() => boardColumns(rowRepoCount, settings.columnOrder), [rowRepoCount, settings.columnOrder]);
+  const columns = useMemo(() => offeredColumns.filter((c) => isColumnShown(c, settings.hiddenColumns)), [offeredColumns, settings.hiddenColumns]);
+  const { tableWrapRef, widths, tableWidth, resize, canResetWidths, resetWidths } =
+    useColumnWidths(columns, settings.reviewColumn === 'list' ? REVIEWERS_LIST_WIDTHS : undefined);
 
   const authors = useMemo(() => collectAuthors(prs), [prs]);
   const priorities = useMemo(() => collectPriorities(prs), [prs]);
